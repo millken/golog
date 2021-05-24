@@ -4,11 +4,8 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"reflect"
-	"runtime"
 	"strconv"
 	"sync"
-	"unsafe"
 
 	"github.com/mailru/easyjson"
 )
@@ -32,15 +29,6 @@ type JSONFormatter struct {
 	EnableCaller bool
 }
 
-func bytesToString(bytes []byte) (s string) {
-	slice := (*reflect.SliceHeader)(unsafe.Pointer(&bytes))
-	str := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	str.Data = slice.Data
-	str.Len = slice.Len
-	runtime.KeepAlive(&bytes) // this line is essential.
-	return s
-}
-
 func (f *JSONFormatter) Format(entry *Entry) error {
 	buff := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buff)
@@ -56,7 +44,7 @@ func (f *JSONFormatter) Format(entry *Entry) error {
 		fields[b2s(field.key)] = field.value
 	}
 
-	fields[MessageFieldName] = bytesToString(entry.Data)
+	fields[MessageFieldName] = b2s(entry.Data)
 	fields[LevelFieldName] = entry.Level.String()
 	fields[TimestampFieldName] = entry.Timestamp
 
