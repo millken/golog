@@ -12,6 +12,6 @@ func (h *FileHandler) SetOutput(output io.Writer) {
 }
 
 func (h *FileHandler) Handle(entry *Entry) error {
-	_, err := h.Output.Write(entry.Formatted)
+	_, err := h.Output.Write(entry.Data)
 	return err
 }
