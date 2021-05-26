@@ -18,17 +18,10 @@ type Entry struct {
 var (
 	entryPool = &sync.Pool{
 		New: func() interface{} {
-			return &Entry{
-				Data: make([]byte, 0, 500),
-			}
+			return &Entry{}
 		},
 	}
 )
-
-func init() {
-	entry := acquireEntry()
-	releaseEntry(entry)
-}
 
 func acquireEntry() *Entry {
 	return entryPool.Get().(*Entry)

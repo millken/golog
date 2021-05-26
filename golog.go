@@ -31,7 +31,6 @@ func (l *logger) output(level Level, msg string, fields ...field) error {
 			continue
 		}
 		entry := acquireEntry()
-		defer releaseEntry(entry)
 		entry.Fields = fields
 
 		entry.Message = msg
@@ -47,6 +46,7 @@ func (l *logger) output(level Level, msg string, fields ...field) error {
 			}
 		}
 		handler.Handle(entry)
+		releaseEntry(entry)
 	}
 	return err
 }
