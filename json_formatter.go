@@ -41,10 +41,10 @@ func (f *JSONFormatter) Format(entry *Entry) error {
 	fields := make(Fields, mapLen)
 
 	for _, field := range entry.Fields {
-		fields[b2s(field.key)] = field.value
+		fields[field.key] = field.val
 	}
 
-	fields[MessageFieldName] = b2s(entry.Data)
+	fields[MessageFieldName] = entry.Message
 	fields[LevelFieldName] = entry.Level.String()
 	fields[TimestampFieldName] = entry.Timestamp
 

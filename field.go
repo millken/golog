@@ -1,76 +1,84 @@
 package golog
 
 import (
-	"io"
 	"reflect"
 	"unsafe"
 )
 
 type field struct {
-	key   []byte
-	value interface{}
+	key string
+	val interface{}
 }
 
-type fields []field
-
-func (d *fields) Set(key string, value interface{}) {
-	args := *d
-	n := len(args)
-	for i := 0; i < n; i++ {
-		kv := &args[i]
-		if string(kv.key) == key {
-			kv.value = value
-			return
-		}
-	}
-
-	c := cap(args)
-	if c > n {
-		args = args[:n+1]
-		kv := &args[n]
-		kv.key = append(kv.key[:0], key...)
-		kv.value = value
-		*d = args
-		return
-	}
-
-	kv := field{}
-	kv.key = append(kv.key[:0], key...)
-	kv.value = value
-	*d = append(args, kv)
+func Field(key string, val interface{}) field {
+	return field{key, val}
 }
 
-func (d *fields) SetBytes(key []byte, value interface{}) {
-	d.Set(b2s(key), value)
-}
+// type field struct {
+// 	key   []byte
+// 	value interface{}
+// }
 
-func (d *fields) Get(key string) interface{} {
-	args := *d
-	n := len(args)
-	for i := 0; i < n; i++ {
-		kv := &args[i]
-		if string(kv.key) == key {
-			return kv.value
-		}
-	}
-	return nil
-}
+// type fields []field
 
-func (d *fields) GetBytes(key []byte) interface{} {
-	return d.Get(b2s(key))
-}
+// func (d *fields) Set(key string, value interface{}) {
+// 	args := *d
+// 	n := len(args)
+// 	for i := 0; i < n; i++ {
+// 		kv := &args[i]
+// 		if string(kv.key) == key {
+// 			kv.value = value
+// 			return
+// 		}
+// 	}
 
-func (d *fields) Reset() {
-	args := *d
-	n := len(args)
-	for i := 0; i < n; i++ {
-		v := args[i].value
-		if vc, ok := v.(io.Closer); ok {
-			vc.Close()
-		}
-	}
-	*d = (*d)[:0]
-}
+// 	c := cap(args)
+// 	if c > n {
+// 		args = args[:n+1]
+// 		kv := &args[n]
+// 		kv.key = append(kv.key[:0], key...)
+// 		kv.value = value
+// 		*d = args
+// 		return
+// 	}
+
+// 	kv := field{}
+// 	kv.key = append(kv.key[:0], key...)
+// 	kv.value = value
+// 	*d = append(args, kv)
+// }
+
+// func (d *fields) SetBytes(key []byte, value interface{}) {
+// 	d.Set(b2s(key), value)
+// }
+
+// func (d *fields) Get(key string) interface{} {
+// 	args := *d
+// 	n := len(args)
+// 	for i := 0; i < n; i++ {
+// 		kv := &args[i]
+// 		if string(kv.key) == key {
+// 			return kv.value
+// 		}
+// 	}
+// 	return nil
+// }
+
+// func (d *fields) GetBytes(key []byte) interface{} {
+// 	return d.Get(b2s(key))
+// }
+
+// func (d *fields) Reset() {
+// 	args := *d
+// 	n := len(args)
+// 	for i := 0; i < n; i++ {
+// 		v := args[i].value
+// 		if vc, ok := v.(io.Closer); ok {
+// 			vc.Close()
+// 		}
+// 	}
+// 	*d = (*d)[:0]
+// }
 
 // b2s converts byte slice to a string without memory allocation.
 // See https://groups.google.com/forum/#!msg/Golang-Nuts/ENgbUzYvCuU/90yGx7GUAgAJ .

@@ -8,11 +8,11 @@ import (
 )
 
 type Entry struct {
-	Data      []byte
+	Message   string
 	Formatted []byte
 	Timestamp time.Time
 	Level     Level
-	Fields    fields
+	Fields    []field
 }
 
 var (
@@ -23,12 +23,17 @@ var (
 	}
 )
 
+func init() {
+	entry := acquireEntry()
+	releaseEntry(entry)
+}
+
 func acquireEntry() *Entry {
 	return entryPool.Get().(*Entry)
 }
 
 func releaseEntry(e *Entry) {
-	e.Data = e.Data[:0]
+	e.Message = e.Message[:0]
 	e.Formatted = e.Formatted[:0]
 	e.Fields = e.Fields[:0]
 	entryPool.Put(e)

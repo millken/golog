@@ -1,7 +1,7 @@
 package golog
 
 import (
-	"encoding/json"
+	json "encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -75,8 +75,8 @@ func (f *TextFormatter) writeFields(entry *Entry) {
 
 	i := 0
 	for _, field := range entry.Fields {
-		name := b2s(field.key)
-		fValue := field.value
+		name := field.key
+		fValue := field.val
 		i++
 		if name == ErrorFieldName {
 			// if f.FormatErrFieldName == nil {
@@ -202,7 +202,7 @@ func (f *TextFormatter) defaultFormatCaller(entry *Entry) {
 }
 
 func (f *TextFormatter) defaultFormatMessage(entry *Entry) {
-	entry.Write(entry.Data)
+	entry.WriteString(entry.Message)
 }
 
 func (f *TextFormatter) defaultFormatFieldValue(entry *Entry, value interface{}) {
