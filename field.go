@@ -1,7 +1,8 @@
 package golog
 
 import (
-	"reflect"
+	"net"
+	"time"
 	"unsafe"
 )
 
@@ -14,93 +15,232 @@ func Field(key string, val interface{}) field {
 	return field{key, val}
 }
 
-// type field struct {
-// 	key   []byte
-// 	value interface{}
-// }
-
-// type fields []field
-
-// func (d *fields) Set(key string, value interface{}) {
-// 	args := *d
-// 	n := len(args)
-// 	for i := 0; i < n; i++ {
-// 		kv := &args[i]
-// 		if string(kv.key) == key {
-// 			kv.value = value
-// 			return
-// 		}
-// 	}
-
-// 	c := cap(args)
-// 	if c > n {
-// 		args = args[:n+1]
-// 		kv := &args[n]
-// 		kv.key = append(kv.key[:0], key...)
-// 		kv.value = value
-// 		*d = args
-// 		return
-// 	}
-
-// 	kv := field{}
-// 	kv.key = append(kv.key[:0], key...)
-// 	kv.value = value
-// 	*d = append(args, kv)
-// }
-
-// func (d *fields) SetBytes(key []byte, value interface{}) {
-// 	d.Set(b2s(key), value)
-// }
-
-// func (d *fields) Get(key string) interface{} {
-// 	args := *d
-// 	n := len(args)
-// 	for i := 0; i < n; i++ {
-// 		kv := &args[i]
-// 		if string(kv.key) == key {
-// 			return kv.value
-// 		}
-// 	}
-// 	return nil
-// }
-
-// func (d *fields) GetBytes(key []byte) interface{} {
-// 	return d.Get(b2s(key))
-// }
-
-// func (d *fields) Reset() {
-// 	args := *d
-// 	n := len(args)
-// 	for i := 0; i < n; i++ {
-// 		v := args[i].value
-// 		if vc, ok := v.(io.Closer); ok {
-// 			vc.Close()
-// 		}
-// 	}
-// 	*d = (*d)[:0]
-// }
-
-// b2s converts byte slice to a string without memory allocation.
-// See https://groups.google.com/forum/#!msg/Golang-Nuts/ENgbUzYvCuU/90yGx7GUAgAJ .
-//
-// Note it may break if string and/or slice header will change
-// in the future go versions.
-func b2s(b []byte) string {
-	/* #nosec G103 */
-	return *(*string)(unsafe.Pointer(&b))
+func isNilValue(i interface{}) bool {
+	return (*[2]uintptr)(unsafe.Pointer(&i))[1] == 0
 }
 
-// s2b converts string to a byte slice without memory allocation.
-//
-// Note it may break if string and/or slice header will change
-// in the future go versions.
-func s2b(s string) (b []byte) {
-	/* #nosec G103 */
-	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
-	/* #nosec G103 */
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	bh.Data = sh.Data
-	bh.Len = sh.Len
-	bh.Cap = sh.Len
-	return b
+func appendVal(dst []byte, value interface{}) []byte {
+	switch val := value.(type) {
+	case string:
+		dst = enc.AppendString(dst, val)
+	case []byte:
+		dst = enc.AppendBytes(dst, val)
+	case error:
+		switch m := ErrorMarshalFunc(val).(type) {
+		case error:
+			if m == nil || isNilValue(m) {
+				dst = enc.AppendNil(dst)
+			} else {
+				dst = enc.AppendString(dst, m.Error())
+			}
+		case string:
+			dst = enc.AppendString(dst, m)
+		default:
+			dst = enc.AppendInterface(dst, m)
+		}
+	case []error:
+		dst = enc.AppendArrayStart(dst)
+		for i, err := range val {
+			switch m := ErrorMarshalFunc(err).(type) {
+			case error:
+				if m == nil || isNilValue(m) {
+					dst = enc.AppendNil(dst)
+				} else {
+					dst = enc.AppendString(dst, m.Error())
+				}
+			case string:
+				dst = enc.AppendString(dst, m)
+			default:
+				dst = enc.AppendInterface(dst, m)
+			}
+
+			if i < (len(val) - 1) {
+				enc.AppendArrayDelim(dst)
+			}
+		}
+		dst = enc.AppendArrayEnd(dst)
+	case bool:
+		dst = enc.AppendBool(dst, val)
+	case int:
+		dst = enc.AppendInt(dst, val)
+	case int8:
+		dst = enc.AppendInt8(dst, val)
+	case int16:
+		dst = enc.AppendInt16(dst, val)
+	case int32:
+		dst = enc.AppendInt32(dst, val)
+	case int64:
+		dst = enc.AppendInt64(dst, val)
+	case uint:
+		dst = enc.AppendUint(dst, val)
+	case uint8:
+		dst = enc.AppendUint8(dst, val)
+	case uint16:
+		dst = enc.AppendUint16(dst, val)
+	case uint32:
+		dst = enc.AppendUint32(dst, val)
+	case uint64:
+		dst = enc.AppendUint64(dst, val)
+	case float32:
+		dst = enc.AppendFloat32(dst, val)
+	case float64:
+		dst = enc.AppendFloat64(dst, val)
+	case time.Time:
+		dst = enc.AppendTime(dst, val, TimeFieldFormat)
+	case time.Duration:
+		dst = enc.AppendDuration(dst, val, DurationFieldUnit, DurationFieldInteger)
+	case *string:
+		if val != nil {
+			dst = enc.AppendString(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *bool:
+		if val != nil {
+			dst = enc.AppendBool(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *int:
+		if val != nil {
+			dst = enc.AppendInt(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *int8:
+		if val != nil {
+			dst = enc.AppendInt8(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *int16:
+		if val != nil {
+			dst = enc.AppendInt16(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *int32:
+		if val != nil {
+			dst = enc.AppendInt32(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *int64:
+		if val != nil {
+			dst = enc.AppendInt64(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *uint:
+		if val != nil {
+			dst = enc.AppendUint(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *uint8:
+		if val != nil {
+			dst = enc.AppendUint8(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *uint16:
+		if val != nil {
+			dst = enc.AppendUint16(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *uint32:
+		if val != nil {
+			dst = enc.AppendUint32(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *uint64:
+		if val != nil {
+			dst = enc.AppendUint64(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *float32:
+		if val != nil {
+			dst = enc.AppendFloat32(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *float64:
+		if val != nil {
+			dst = enc.AppendFloat64(dst, *val)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *time.Time:
+		if val != nil {
+			dst = enc.AppendTime(dst, *val, TimeFieldFormat)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case *time.Duration:
+		if val != nil {
+			dst = enc.AppendDuration(dst, *val, DurationFieldUnit, DurationFieldInteger)
+		} else {
+			dst = enc.AppendNil(dst)
+		}
+	case []string:
+		dst = enc.AppendStrings(dst, val)
+	case []bool:
+		dst = enc.AppendBools(dst, val)
+	case []int:
+		dst = enc.AppendInts(dst, val)
+	case []int8:
+		dst = enc.AppendInts8(dst, val)
+	case []int16:
+		dst = enc.AppendInts16(dst, val)
+	case []int32:
+		dst = enc.AppendInts32(dst, val)
+	case []int64:
+		dst = enc.AppendInts64(dst, val)
+	case []uint:
+		dst = enc.AppendUints(dst, val)
+	// case []uint8:
+	// 	dst = enc.AppendUints8(dst, val)
+	case []uint16:
+		dst = enc.AppendUints16(dst, val)
+	case []uint32:
+		dst = enc.AppendUints32(dst, val)
+	case []uint64:
+		dst = enc.AppendUints64(dst, val)
+	case []float32:
+		dst = enc.AppendFloats32(dst, val)
+	case []float64:
+		dst = enc.AppendFloats64(dst, val)
+	case []time.Time:
+		dst = enc.AppendTimes(dst, val, TimeFieldFormat)
+	case []time.Duration:
+		dst = enc.AppendDurations(dst, val, DurationFieldUnit, DurationFieldInteger)
+	case nil:
+		dst = enc.AppendNil(dst)
+	case net.IP:
+		dst = enc.AppendIPAddr(dst, val)
+	case net.IPNet:
+		dst = enc.AppendIPPrefix(dst, val)
+	case net.HardwareAddr:
+		dst = enc.AppendMACAddr(dst, val)
+	default:
+		dst = enc.AppendInterface(dst, val)
+	}
+	return dst
+}
+
+func appendKeyVal(dst []byte, key string, value interface{}) []byte {
+	dst = enc.AppendKey(dst, key)
+	dst = appendVal(dst, value)
+
+	return dst
+}
+
+func appendFields(dst []byte, fields ...field) []byte {
+	for _, field := range fields {
+		dst = appendKeyVal(dst, field.key, field.val)
+	}
+	return dst
 }

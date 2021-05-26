@@ -18,7 +18,9 @@ type Entry struct {
 var (
 	entryPool = &sync.Pool{
 		New: func() interface{} {
-			return new(Entry)
+			return &Entry{
+				Data: make([]byte, 0, 500),
+			}
 		},
 	}
 )

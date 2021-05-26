@@ -262,20 +262,18 @@ func (f *TextFormatter) defaultFormatLevel(entry *Entry) {
 	ll := entry.Level
 	noColor := f.NoColor
 	switch ll {
-	case TraceLevel:
-		l = colorize(ll.String(), colorMagenta, noColor)
 	case DebugLevel:
-		l = colorize(ll.String(), colorYellow, noColor)
+		l = colorize(*ll.String(), colorYellow, noColor)
 	case InfoLevel:
-		l = colorize(ll.String(), colorGreen, noColor)
+		l = colorize(*ll.String(), colorGreen, noColor)
 	case WarnLevel:
-		l = colorize(ll.String(), colorRed, noColor)
+		l = colorize(*ll.String(), colorRed, noColor)
 	case ErrorLevel:
-		l = colorize(colorize(ll.String(), colorRed, noColor), colorBold, noColor)
+		l = colorize(colorize(*ll.String(), colorRed, noColor), colorBold, noColor)
 	case FatalLevel:
-		l = colorize(colorize(ll.String(), colorRed, noColor), colorBold, noColor)
+		l = colorize(colorize(*ll.String(), colorRed, noColor), colorBold, noColor)
 	case PanicLevel:
-		l = colorize(colorize(ll.String(), colorRed, noColor), colorBold, noColor)
+		l = colorize(colorize(*ll.String(), colorRed, noColor), colorBold, noColor)
 	default:
 		l = colorize("???", colorBold, noColor)
 	}

@@ -3,45 +3,13 @@ package golog
 import (
 	"fmt"
 	"time"
-
-	"github.com/pkg/errors"
-
-	"github.com/millken/golog/pool"
 )
-
-// Event pool
-var loggerPool = pool.NewReferenceCountedPool(
-	func(counter pool.ReferenceCounter) pool.ReferenceCountable {
-		br := new(logger)
-		br.ReferenceCounter = counter
-		return br
-	}, resetLogger)
-
-// Method to get new Event
-func acquireLogger() *logger {
-	return loggerPool.Get().(*logger)
-}
-
-// Method to reset Event
-// Used by reference countable pool
-func resetLogger(i interface{}) error {
-	obj, ok := i.(*logger)
-	if !ok {
-		errors.Errorf("illegal object sent to ResetEvent %v", i)
-	}
-	obj.Reset()
-	return nil
-}
-
-//easyjson:json
-type Fields map[string]interface{}
 
 type Logger struct {
 	*logger
 }
 
 type logger struct {
-	pool.ReferenceCounter
 	handlers []Handler
 }
 
