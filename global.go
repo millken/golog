@@ -1,7 +1,9 @@
 package golog
 
 import (
+	"reflect"
 	"time"
+	"unsafe"
 )
 
 var (
@@ -13,7 +15,7 @@ var (
 
 	// LevelFieldMarshalFunc allows customization of global level field marshaling
 	LevelFieldMarshalFunc = func(l Level) string {
-		return l.String()
+		return *l.String()
 	}
 
 	// MessageFieldName is the field name used for the message field.
@@ -82,30 +84,47 @@ const (
 	// Disabled disables the logger.
 	Disabled
 
-	// TraceLevel defines trace log level.
-	TraceLevel Level = -1
-
 	DefaultLevel = InfoLevel
 )
 
-func (l Level) String() string {
-	switch l {
-	case TraceLevel:
-		return "trace"
-	case DebugLevel:
-		return "debug"
-	case InfoLevel:
-		return "info"
-	case WarnLevel:
-		return "warn"
-	case ErrorLevel:
-		return "error"
-	case FatalLevel:
-		return "fatal"
-	case PanicLevel:
-		return "panic"
-	case NoLevel:
-		return ""
+var (
+	levelMessages = []string{
+		DebugLevel: "debug",
+		InfoLevel:  "info",
+		WarnLevel:  "warn",
+		ErrorLevel: "error",
+		FatalLevel: "fatal",
+		PanicLevel: "panic",
 	}
-	return ""
+)
+
+//using pointer can reduce allocs
+func (l Level) String() *string {
+
+	return &levelMessages[l]
+}
+
+// b2s converts byte slice to a string without memory allocation.
+// See https://groups.google.com/forum/#!msg/Golang-Nuts/ENgbUzYvCuU/90yGx7GUAgAJ .
+//
+// Note it may break if string and/or slice header will change
+// in the future go versions.
+func b2s(b []byte) string {
+	/* #nosec G103 */
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// s2b converts string to a byte slice without memory allocation.
+//
+// Note it may break if string and/or slice header will change
+// in the future go versions.
+func s2b(s string) (b []byte) {
+	/* #nosec G103 */
+	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	/* #nosec G103 */
+	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	bh.Data = sh.Data
+	bh.Len = sh.Len
+	bh.Cap = sh.Len
+	return b
 }

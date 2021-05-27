@@ -16,10 +16,11 @@ func TestFileHandler(t *testing.T) {
 	})
 	logger := NewLogger()
 	logger.AddHandler(fh)
-	logger.Debug(DebugLevel.String())
-	logger.WithFields(Fields{"a": 123, "b": true}).Info(InfoLevel.String())
-	logger.Warn(WarnLevel.String())
-	logger.WithFields(Fields{"abcd": false}).Error(ErrorLevel.String())
+	logger.Debug("debug message")
+	logger.Info("info message")
+	logger.Warn("warning message")
+	logger.Error("error message")
+	logger.Debug("debug message with 2 fields", Field("a", 1), Field("b", true))
 }
 
 func TestFileHandlerWithJSONFormatter(t *testing.T) {
@@ -32,10 +33,12 @@ func TestFileHandlerWithJSONFormatter(t *testing.T) {
 	})
 	logger := NewLogger()
 	logger.AddHandler(fh)
-	logger.Debug(DebugLevel.String())
-	logger.WithFields(Fields{"a": 123, "b": true}).Info(InfoLevel.String())
-	logger.Warn(WarnLevel.String())
-	logger.WithFields(Fields{"abcd": false}).Error(ErrorLevel.String())
+	logger.Debug("debug message")
+	logger.Info("info message")
+	logger.Warn("warning message")
+	logger.Error("error message")
+	logger.Debug("debug message", Field("a", 1), Field("b", true))
+
 }
 
 func BenchmarkFileHandler(b *testing.B) {
@@ -56,13 +59,14 @@ func BenchmarkFileHandlerWithFields(b *testing.B) {
 	fh := &FileHandler{
 		Output: io.Discard,
 	}
+
 	fh.SetFormatter(&TextFormatter{})
 	logger := NewLogger()
 	logger.AddHandler(fh)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.WithFields(Fields{"a": 123, "b": true}).Debug("abcde1234")
+		logger.Debug("abcde1234", Field("a", 1), Field("b", true))
 
 	}
 }
@@ -91,7 +95,7 @@ func BenchmarkJSONFormatterFileHandlerWithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.WithFields(Fields{"a": 123, "b": true}).Debug("abcde1234")
+		logger.Debug("abcde1234", Field("a", 1), Field("b", true))
 
 	}
 }

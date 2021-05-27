@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync"
-
-	"github.com/mailru/easyjson"
 )
 
 var bufferPool = &sync.Pool{
@@ -29,24 +27,13 @@ type JSONFormatter struct {
 	EnableCaller bool
 }
 
+const levelName = "entry.Level"
+
 func (f *JSONFormatter) Format(entry *Entry) error {
-	buff := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buff)
-	buff.Reset()
-
-	mapLen := len(entry.Fields) + 3
-	if f.EnableCaller {
-		mapLen = +1
-	}
-	fields := make(Fields, mapLen)
-
-	for _, field := range entry.Fields {
-		fields[b2s(field.key)] = field.value
-	}
-
-	fields[MessageFieldName] = b2s(entry.Data)
-	fields[LevelFieldName] = entry.Level.String()
-	fields[TimestampFieldName] = entry.Timestamp
+	entry.Data = enc.AppendBeginMarker(entry.Data)
+	entry.Data = appendKeyVal(entry.Data, TimestampFieldName, &entry.Timestamp)
+	entry.Data = appendKeyVal(entry.Data, LevelFieldName, entry.Level.String())
+	entry.Data = appendKeyVal(entry.Data, MessageFieldName, &entry.Message)
 
 	if f.EnableCaller {
 		file, line := entry.GetCaller(CallerSkipFrameCount)
@@ -58,15 +45,10 @@ func (f *JSONFormatter) Format(entry *Entry) error {
 				}
 			}
 		}
-		fields[CallerFieldName] = c
-
+		entry.Data = appendKeyVal(entry.Data, CallerFieldName, c)
 	}
-	data, err := easyjson.Marshal(fields)
-
-	if err != nil {
-		return err
-	}
-	data = append(data, []byte("\n")...)
-	_, err = entry.Write(data)
-	return err
+	entry.Data = appendFields(entry.Data, entry.Fields[:entry.fieldsLen]...)
+	entry.Data = enc.AppendEndMarker(entry.Data)
+	entry.Data = enc.AppendLineBreak(entry.Data)
+	return nil
 }

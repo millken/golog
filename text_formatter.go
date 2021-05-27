@@ -1,7 +1,7 @@
 package golog
 
 import (
-	"encoding/json"
+	json "encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -69,14 +69,14 @@ func (f *TextFormatter) Format(entry *Entry) error {
 
 // writeFields appends formatted key-fValueue pairs to buf.
 func (f *TextFormatter) writeFields(entry *Entry) {
-	if cap(entry.Fields) > 0 {
+	if entry.fieldsLen > 0 {
 		entry.WriteByte(' ')
 	}
 
 	i := 0
-	for _, field := range entry.Fields {
-		name := b2s(field.key)
-		fValue := field.value
+	for _, field := range entry.Fields[:entry.fieldsLen] {
+		name := field.key
+		fValue := field.val
 		i++
 		if name == ErrorFieldName {
 			// if f.FormatErrFieldName == nil {
@@ -104,7 +104,7 @@ func (f *TextFormatter) writeFields(entry *Entry) {
 			}
 		}
 
-		if i < len(entry.Fields) { // Skip space for last field
+		if i < entry.fieldsLen { // Skip space for last field
 			entry.WriteByte(' ')
 		}
 	}
@@ -202,57 +202,57 @@ func (f *TextFormatter) defaultFormatCaller(entry *Entry) {
 }
 
 func (f *TextFormatter) defaultFormatMessage(entry *Entry) {
-	entry.Write(entry.Data)
+	entry.WriteString(entry.Message)
 }
 
 func (f *TextFormatter) defaultFormatFieldValue(entry *Entry, value interface{}) {
 	switch fValue := value.(type) {
 	case string:
 		if needsQuote(fValue) {
-			entry.Formatted = append(entry.Formatted, strconv.Quote(fValue)...)
+			entry.Data = append(entry.Data, strconv.Quote(fValue)...)
 		} else {
-			entry.Formatted = append(entry.Formatted, fValue...)
+			entry.Data = append(entry.Data, fValue...)
 		}
 	case int:
-		entry.Formatted = strconv.AppendInt(entry.Formatted, int64(fValue), 10)
+		entry.Data = strconv.AppendInt(entry.Data, int64(fValue), 10)
 	case int8:
-		entry.Formatted = strconv.AppendInt(entry.Formatted, int64(fValue), 10)
+		entry.Data = strconv.AppendInt(entry.Data, int64(fValue), 10)
 	case int16:
-		entry.Formatted = strconv.AppendInt(entry.Formatted, int64(fValue), 10)
+		entry.Data = strconv.AppendInt(entry.Data, int64(fValue), 10)
 	case int32:
-		entry.Formatted = strconv.AppendInt(entry.Formatted, int64(fValue), 10)
+		entry.Data = strconv.AppendInt(entry.Data, int64(fValue), 10)
 	case int64:
-		entry.Formatted = strconv.AppendInt(entry.Formatted, fValue, 10)
+		entry.Data = strconv.AppendInt(entry.Data, fValue, 10)
 	case uint:
-		entry.Formatted = strconv.AppendUint(entry.Formatted, uint64(fValue), 10)
+		entry.Data = strconv.AppendUint(entry.Data, uint64(fValue), 10)
 	case uint8:
-		entry.Formatted = strconv.AppendUint(entry.Formatted, uint64(fValue), 10)
+		entry.Data = strconv.AppendUint(entry.Data, uint64(fValue), 10)
 	case uint16:
-		entry.Formatted = strconv.AppendUint(entry.Formatted, uint64(fValue), 10)
+		entry.Data = strconv.AppendUint(entry.Data, uint64(fValue), 10)
 	case uint32:
-		entry.Formatted = strconv.AppendUint(entry.Formatted, uint64(fValue), 10)
+		entry.Data = strconv.AppendUint(entry.Data, uint64(fValue), 10)
 	case uint64:
-		entry.Formatted = strconv.AppendUint(entry.Formatted, fValue, 10)
+		entry.Data = strconv.AppendUint(entry.Data, fValue, 10)
 	case float32:
-		entry.Formatted = strconv.AppendFloat(entry.Formatted, float64(fValue), 'f', -1, 64)
+		entry.Data = strconv.AppendFloat(entry.Data, float64(fValue), 'f', -1, 64)
 	case float64:
-		entry.Formatted = strconv.AppendFloat(entry.Formatted, float64(fValue), 'f', -1, 64)
+		entry.Data = strconv.AppendFloat(entry.Data, float64(fValue), 'f', -1, 64)
 	case bool:
-		entry.Formatted = strconv.AppendBool(entry.Formatted, fValue)
+		entry.Data = strconv.AppendBool(entry.Data, fValue)
 	case error:
-		entry.Formatted = append(entry.Formatted, fValue.Error()...)
+		entry.Data = append(entry.Data, fValue.Error()...)
 	case []byte:
-		entry.Formatted = append(entry.Formatted, fValue...)
+		entry.Data = append(entry.Data, fValue...)
 	case time.Time:
-		entry.Formatted = fValue.AppendFormat(entry.Formatted, consoleDefaultTimeFormat)
+		entry.Data = fValue.AppendFormat(entry.Data, consoleDefaultTimeFormat)
 	case json.Number:
-		entry.Formatted = append(entry.Formatted, fValue.String()...)
+		entry.Data = append(entry.Data, fValue.String()...)
 	default:
 		b, err := json.Marshal(fValue)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			entry.Formatted = append(entry.Formatted, b...)
+			entry.Data = append(entry.Data, b...)
 		}
 	}
 }
@@ -262,20 +262,18 @@ func (f *TextFormatter) defaultFormatLevel(entry *Entry) {
 	ll := entry.Level
 	noColor := f.NoColor
 	switch ll {
-	case TraceLevel:
-		l = colorize(ll.String(), colorMagenta, noColor)
 	case DebugLevel:
-		l = colorize(ll.String(), colorYellow, noColor)
+		l = colorize(*ll.String(), colorYellow, noColor)
 	case InfoLevel:
-		l = colorize(ll.String(), colorGreen, noColor)
+		l = colorize(*ll.String(), colorGreen, noColor)
 	case WarnLevel:
-		l = colorize(ll.String(), colorRed, noColor)
+		l = colorize(*ll.String(), colorRed, noColor)
 	case ErrorLevel:
-		l = colorize(colorize(ll.String(), colorRed, noColor), colorBold, noColor)
+		l = colorize(colorize(*ll.String(), colorRed, noColor), colorBold, noColor)
 	case FatalLevel:
-		l = colorize(colorize(ll.String(), colorRed, noColor), colorBold, noColor)
+		l = colorize(colorize(*ll.String(), colorRed, noColor), colorBold, noColor)
 	case PanicLevel:
-		l = colorize(colorize(ll.String(), colorRed, noColor), colorBold, noColor)
+		l = colorize(colorize(*ll.String(), colorRed, noColor), colorBold, noColor)
 	default:
 		l = colorize("???", colorBold, noColor)
 	}
@@ -283,12 +281,12 @@ func (f *TextFormatter) defaultFormatLevel(entry *Entry) {
 }
 
 func (f *TextFormatter) defaultFormatFieldName(entry *Entry, name string) {
-	entry.Formatted = append(entry.Formatted, colorize(name+"=", colorCyan, f.NoColor)...)
+	entry.Data = append(entry.Data, colorize(name+"=", colorCyan, f.NoColor)...)
 }
 
 func (f *TextFormatter) defaultFormatTimestamp(entry *Entry, timeFormat string) {
 	if timeFormat == "" {
 		timeFormat = consoleDefaultTimeFormat
 	}
-	entry.Formatted = entry.Timestamp.AppendFormat(entry.Formatted, timeFormat)
+	entry.Data = entry.Timestamp.AppendFormat(entry.Data, timeFormat)
 }
