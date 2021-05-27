@@ -69,12 +69,12 @@ func (f *TextFormatter) Format(entry *Entry) error {
 
 // writeFields appends formatted key-fValueue pairs to buf.
 func (f *TextFormatter) writeFields(entry *Entry) {
-	if cap(entry.Fields) > 0 {
+	if entry.fieldsLen > 0 {
 		entry.WriteByte(' ')
 	}
 
 	i := 0
-	for _, field := range entry.Fields {
+	for _, field := range entry.Fields[:entry.fieldsLen] {
 		name := field.key
 		fValue := field.val
 		i++
@@ -104,7 +104,7 @@ func (f *TextFormatter) writeFields(entry *Entry) {
 			}
 		}
 
-		if i < len(entry.Fields) { // Skip space for last field
+		if i < entry.fieldsLen { // Skip space for last field
 			entry.WriteByte(' ')
 		}
 	}

@@ -13,12 +13,16 @@ type Entry struct {
 	Timestamp time.Time
 	Level     Level
 	Fields    []field
+	fieldsLen int
 }
 
 var (
 	entryPool = &sync.Pool{
 		New: func() interface{} {
-			return &Entry{}
+			return &Entry{
+				Data:   make([]byte, 0, 500),
+				Fields: make([]field, 0, 32),
+			}
 		},
 	}
 )
@@ -31,6 +35,7 @@ func releaseEntry(e *Entry) {
 	e.Message = e.Message[:0]
 	e.Data = e.Data[:0]
 	e.Fields = e.Fields[:0]
+	e.fieldsLen = 0
 	entryPool.Put(e)
 }
 

@@ -20,7 +20,7 @@ func TestFileHandler(t *testing.T) {
 	logger.Info("info message")
 	logger.Warn("warning message")
 	logger.Error("error message")
-	logger.Debug("debug message", Field("a", 1), Field("b", true))
+	logger.Debug("debug message with 2 fields", Field("a", 1), Field("b", true))
 }
 
 func TestFileHandlerWithJSONFormatter(t *testing.T) {

@@ -47,7 +47,7 @@ func (f *JSONFormatter) Format(entry *Entry) error {
 		}
 		entry.Data = appendKeyVal(entry.Data, CallerFieldName, c)
 	}
-	entry.Data = appendFields(entry.Data, entry.Fields...)
+	entry.Data = appendFields(entry.Data, entry.Fields[:entry.fieldsLen]...)
 	entry.Data = enc.AppendEndMarker(entry.Data)
 	entry.Data = enc.AppendLineBreak(entry.Data)
 	return nil

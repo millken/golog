@@ -31,7 +31,7 @@ func (l *logger) output(level Level, msg string, fields ...field) error {
 			continue
 		}
 		entry := acquireEntry()
-		entry.Fields = fields
+		entry.fieldsLen = copy(entry.Fields[:len(fields)], fields)
 
 		entry.Message = msg
 		entry.Level = level
