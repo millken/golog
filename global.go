@@ -1,7 +1,9 @@
 package golog
 
 import (
+	"os"
 	"reflect"
+	"runtime"
 	"time"
 	"unsafe"
 )
@@ -96,6 +98,8 @@ var (
 		FatalLevel: "fatal",
 		PanicLevel: "panic",
 	}
+
+	_cwd, _ = os.Getwd()
 )
 
 //using pointer can reduce allocs
@@ -127,4 +131,9 @@ func s2b(s string) (b []byte) {
 	bh.Len = sh.Len
 	bh.Cap = sh.Len
 	return b
+}
+
+func caller(skip int) (string, int) {
+	_, file, line, _ := runtime.Caller(skip)
+	return file, line
 }

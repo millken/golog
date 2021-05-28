@@ -18,7 +18,7 @@ func TestLoggerWithFields(t *testing.T) {
 // go test -benchmem -bench=. golog/*.go -memprofile profile_mem.out
 // go tool pprof golog.test profile_mem.out
 // */
-func BenchmarkLogger(b *testing.B) {
+func BenchmarkLoggerNoHandler(b *testing.B) {
 	logger := NewLogger()
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -27,7 +27,7 @@ func BenchmarkLogger(b *testing.B) {
 	}
 }
 
-func BenchmarkLoggerWithFields(b *testing.B) {
+func BenchmarkLoggerNoHandlerWithFields(b *testing.B) {
 	logger := NewLogger()
 	b.ReportAllocs()
 	b.ResetTimer()

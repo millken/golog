@@ -3,56 +3,61 @@ package golog
 import (
 	"io"
 	"os"
+	"sync"
 )
 
-var std = newStd()
+var (
+	stdOnce         sync.Once
+	stdHandler      Handler
+	stdLogger       *Logger
+	stdFormatter    Formatter
+	StdTimeFormat   = "2006-01-02 15:04:05"
+	StdNoColor      = true
+	StdEnableCaller = false
+)
 
-type stdlog struct {
-	handler Handler
-	logger  *logger
-}
-
-func newStd() *stdlog {
-	handler := &FileHandler{
-		Output: os.Stderr,
-	}
-	handler.SetLevel(InfoLevel)
-	handler.SetFormatter(&TextFormatter{
-		CallerSkipFrameCount: 7,
-		EnableCaller:         true,
+func init() {
+	stdOnce.Do(func() {
+		stdHandler = &FileHandler{
+			Output: os.Stderr,
+		}
+		stdHandler.SetLevel(InfoLevel)
+		stdFormatter = &TextFormatter{
+			NoColor:              StdNoColor,
+			TimeFormat:           StdTimeFormat,
+			CallerSkipFrameCount: 6,
+			EnableCaller:         StdEnableCaller,
+		}
+		stdHandler.SetFormatter(stdFormatter)
+		stdLogger = NewLogger()
+		stdLogger.AddHandler(stdHandler)
 	})
-	logger := newLogger()
-	logger.AddHandler(handler)
-	return &stdlog{
-		handler: handler,
-		logger:  logger,
-	}
 }
 
 func SetLevel(level Level) {
-	std.handler.SetLevel(level)
+	stdHandler.SetLevel(level)
 }
 
 func SetOutput(output io.Writer) {
-	std.handler.(*FileHandler).SetOutput(output)
+	stdHandler.(*FileHandler).SetOutput(output)
 }
 
 func Fatal(msg string, fields ...field) {
-	std.logger.Fatal(msg, fields...)
+	stdLogger.Fatal(msg, fields...)
 }
 
 func Error(msg string, fields ...field) {
-	std.logger.Error(msg, fields...)
+	stdLogger.Error(msg, fields...)
 }
 
 func Warn(msg string, fields ...field) {
-	std.logger.Warn(msg, fields...)
+	stdLogger.Warn(msg, fields...)
 }
 
 func Info(msg string, fields ...field) {
-	std.logger.Info(msg, fields...)
+	stdLogger.Info(msg, fields...)
 }
 
 func Debug(msg string, fields ...field) {
-	std.logger.Debug(msg, fields...)
+	stdLogger.Debug(msg, fields...)
 }

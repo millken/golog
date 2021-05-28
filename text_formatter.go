@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -185,18 +186,18 @@ func (f *TextFormatter) defaultFormatCaller(entry *Entry) {
 	var c string
 	skip := f.CallerSkipFrameCount
 	if skip == 0 {
-		skip = CallerSkipFrameCount + 2
+		skip = CallerSkipFrameCount + 1
 	}
 	noColor := f.NoColor
-	file, line := entry.GetCaller(skip)
+	//2 allocs
+	_, file, line, _ := runtime.Caller(skip)
+
 	c = file + ":" + strconv.Itoa(line)
 	if len(c) > 0 {
-		if cwd, err := os.Getwd(); err == nil {
-			if rel, err := filepath.Rel(cwd, c); err == nil {
-				c = rel
-			}
+		if rel, err := filepath.Rel(_cwd, c); err == nil {
+			c = rel
 		}
-		c = colorize(c, colorBold, noColor) + colorize(" >", colorCyan, noColor)
+		c = colorize(c, colorBold, noColor)
 	}
 	entry.WriteString(c)
 }

@@ -2,7 +2,6 @@ package golog
 
 import (
 	"io"
-	"runtime"
 	"sync"
 	"time"
 )
@@ -65,9 +64,4 @@ func (e *Entry) WriteTo(w io.Writer) (int64, error) {
 
 func (e *Entry) Reset() {
 	e.Data = e.Data[:0]
-}
-
-func (e *Entry) GetCaller(skip int) (string, int) {
-	_, file, line, _ := runtime.Caller(skip)
-	return file, line
 }
