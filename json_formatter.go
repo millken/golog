@@ -10,8 +10,6 @@ type JSONFormatter struct {
 	EnableCaller bool
 }
 
-const levelName = "entry.Level"
-
 func (f *JSONFormatter) Format(entry *Entry) error {
 	entry.Data = enc.AppendBeginMarker(entry.Data)
 	entry.Data = appendKeyVal(entry.Data, TimestampFieldName, &entry.Timestamp)
