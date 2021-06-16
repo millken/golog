@@ -34,7 +34,7 @@ func main() {
 
 > Note: By default log writes to `os.Stderr`, The default log level for is *info*
 
-## Performance on Apple M1 16G
+## Performance on Mac M1 16G
 ```
 BenchmarkFileHandler
 BenchmarkFileHandler-8                                   3512186               332.7 ns/op             0 B/op          0 allocs/op
