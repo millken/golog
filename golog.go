@@ -2,6 +2,7 @@ package golog
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -73,6 +74,7 @@ func (l *logger) Error(msg string, fields ...field) {
 
 func (l *logger) Fatal(msg string, fields ...field) {
 	l.output(FatalLevel, msg, fields...)
+	os.Exit(1)
 }
 
 func (l *logger) Reset() {

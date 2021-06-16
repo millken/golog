@@ -31,8 +31,8 @@ func main() {
 
 // Output: 2021-05-29 15:48:06 info  hello world
 ```
-> Note: By default log writes to `os.Stderr`
-> Note: The default log level for is *info*
+
+> Note: By default log writes to `os.Stderr`, The default log level for is *info*
 
 ## Performance on Apple M1 16G
 ```
