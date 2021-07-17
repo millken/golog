@@ -44,14 +44,12 @@ type TextFormatter struct {
 	// PartsExclude defines parts to not display in output.
 	PartsExclude []string
 
-	FormatTimestamp     func(*Entry)
-	FormatLevel         func(*Entry)
-	FormatCaller        func(*Entry)
-	FormatMessage       func(*Entry)
-	FormatFieldName     func(*Entry, string)
-	FormatFieldValue    func(*Entry, interface{})
-	FormatErrFieldName  Formatter
-	FormatErrFieldValue Formatter
+	FormatTimestamp  func(*Entry)
+	FormatLevel      func(*Entry)
+	FormatCaller     func(*Entry)
+	FormatMessage    func(*Entry)
+	FormatFieldName  func(*Entry, string)
+	FormatFieldValue func(*Entry, interface{})
 }
 
 func (f *TextFormatter) Format(entry *Entry) error {
@@ -79,30 +77,16 @@ func (f *TextFormatter) writeFields(entry *Entry) {
 		name := field.key
 		fValue := field.val
 		i++
-		if name == ErrorFieldName {
-			// if f.FormatErrFieldName == nil {
-			// 	consoleDefaultFormatErrFieldName(f.NoColor)
-			// } else {
-			// 	fn = f.FormatErrFieldName
-			// }
-
-			// if f.FormatErrFieldValue == nil {
-			// 	fv = consoleDefaultFormatErrFieldValue(f.NoColor)
-			// } else {
-			// 	fv = f.FormatErrFieldValue
-			// }
+		if f.FormatFieldName == nil {
+			f.defaultFormatFieldName(entry, name)
 		} else {
-			if f.FormatFieldName == nil {
-				f.defaultFormatFieldName(entry, name)
-			} else {
-				f.FormatFieldName(entry, name)
-			}
+			f.FormatFieldName(entry, name)
+		}
 
-			if f.FormatFieldValue == nil {
-				f.defaultFormatFieldValue(entry, fValue)
-			} else {
-				f.FormatFieldValue(entry, fValue)
-			}
+		if f.FormatFieldValue == nil {
+			f.defaultFormatFieldValue(entry, fValue)
+		} else {
+			f.FormatFieldValue(entry, fValue)
 		}
 
 		if i < entry.fieldsLen { // Skip space for last field

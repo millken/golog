@@ -11,9 +11,9 @@ var (
 	stdHandler      Handler
 	stdLogger       *Logger
 	stdFormatter    Formatter
-	StdTimeFormat   = "2006-01-02 15:04:05"
-	StdNoColor      = true
-	StdEnableCaller = false
+	stdTimeFormat   = "2006-01-02 15:04:05"
+	stdNoColor      = false
+	stdEnableCaller = false
 )
 
 func init() {
@@ -23,10 +23,10 @@ func init() {
 		}
 		stdHandler.SetLevel(InfoLevel)
 		stdFormatter = &TextFormatter{
-			NoColor:              StdNoColor,
-			TimeFormat:           StdTimeFormat,
+			NoColor:              stdNoColor,
+			TimeFormat:           stdTimeFormat,
 			CallerSkipFrameCount: 6,
-			EnableCaller:         StdEnableCaller,
+			EnableCaller:         stdEnableCaller,
 		}
 		stdHandler.SetFormatter(stdFormatter)
 		stdLogger = NewLogger()
@@ -34,14 +34,20 @@ func init() {
 	})
 }
 
-func SetLevel(level Level) {
+func StdSetLevel(level Level) {
 	stdHandler.SetLevel(level)
 }
 
-func SetOutput(output io.Writer) {
+func StdSetOutput(output io.Writer) {
 	stdHandler.(*FileHandler).SetOutput(output)
 }
 
+func StdEnableCaller() {
+	stdHandler.(*FileHandler).GetFormatter().(*TextFormatter).EnableCaller = true
+}
+func StdNoColor() {
+	stdHandler.(*FileHandler).GetFormatter().(*TextFormatter).NoColor = true
+}
 func Fatal(msg string, fields ...field) {
 	stdLogger.Fatal(msg, fields...)
 }
