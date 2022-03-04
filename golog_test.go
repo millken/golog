@@ -1,6 +1,7 @@
 package golog
 
 import (
+	"os"
 	"testing"
 	"time"
 )
@@ -10,8 +11,25 @@ func TestLogger(t *testing.T) {
 	logger.Debug("abdef", Field("a", 1), Field("b", true), Field("c", "hell"), Field("d", time.Now()))
 }
 func TestLoggerWithFields(t *testing.T) {
+	stdHandler = &FileHandler{
+		Output: os.Stdout,
+	}
+	stdHandler.SetLevel(DebugLevel)
+	stdFormatter = &TextFormatter{
+		NoColor:              stdNoColor,
+		TimeFormat:           stdTimeFormat,
+		CallerSkipFrameCount: 6,
+		EnableCaller:         true,
+	}
+	stdHandler.SetFormatter(stdFormatter)
 	logger := NewLogger()
-	logger.Debug("abdef")
+	logger.AddHandler(stdHandler)
+
+	l := logger.WithFields(Field("a", 1), Field("b", true))
+	l.Debugf("hello %s", "hell")
+	l.Infof("hello %d", 435)
+	l.WithField("c", "hell").Infof("hello 123")
+	logger.Errorf("abcde1234")
 }
 
 // /*
