@@ -1,121 +1,98 @@
 package golog
 
 import (
-	"fmt"
+	"io"
 	"os"
-	"time"
+	"sync"
 )
 
-type Logger struct {
-	*logger
-}
+var (
+	stdOnce         sync.Once
+	stdHandler      Handler
+	stdLogger       *Logger
+	stdFormatter    Formatter
+	stdTimeFormat   = "2006-01-02 15:04:05"
+	stdNoColor      = false
+	stdEnableCaller = false
+)
 
-type logger struct {
-	handlers []Handler
-	fields   []field
-}
-
-func NewLogger() *Logger {
-	log := &Logger{
-		newLogger(),
-	}
-	return log
-}
-
-func newLogger() *logger {
-	return &logger{}
-}
-
-func (l *logger) output(level Level, msg string, fields ...field) error {
-	var err error
-	for _, handler := range l.handlers {
-		if handler.GetLevel() > level {
-			continue
+func init() {
+	stdOnce.Do(func() {
+		stdHandler = &FileHandler{
+			Output: os.Stderr,
 		}
-		entry := acquireEntry()
-		copy(entry.Fields[0:len(fields)], fields)
-		entry.fieldsLen = len(fields)
-
-		entry.Message = msg
-		entry.Level = level
-		entry.Timestamp = time.Now()
-		entry.Reset()
-
-		formatter := handler.GetFormatter()
-		if formatter != nil {
-			err = formatter.Format(entry)
-			if err != nil {
-				fmt.Println(err)
-			}
+		stdHandler.SetLevel(InfoLevel)
+		stdFormatter = &TextFormatter{
+			NoColor:              stdNoColor,
+			TimeFormat:           stdTimeFormat,
+			CallerSkipFrameCount: 6,
+			EnableCaller:         stdEnableCaller,
 		}
-		handler.Handle(entry)
-		releaseEntry(entry)
-	}
-	return err
+		stdHandler.SetFormatter(stdFormatter)
+		stdLogger = NewLogger()
+		stdLogger.AddHandler(stdHandler)
+	})
 }
 
-func (l *logger) AddHandler(handler Handler) {
-	l.handlers = append(l.handlers, handler)
+func StdSetLevel(level Level) {
+	stdHandler.SetLevel(level)
 }
 
-func (l *logger) Debug(msg string, fields ...field) {
-	l.output(DebugLevel, msg, fields...)
+func StdSetOutput(output io.Writer) {
+	stdHandler.(*FileHandler).SetOutput(output)
 }
 
-func (l *logger) Info(msg string, fields ...field) {
-	l.output(InfoLevel, msg, fields...)
+func StdEnableCaller() {
+	stdHandler.(*FileHandler).GetFormatter().(*TextFormatter).EnableCaller = true
 }
 
-func (l *logger) Warn(msg string, fields ...field) {
-	l.output(WarnLevel, msg, fields...)
+func StdNoColor() {
+	stdHandler.(*FileHandler).GetFormatter().(*TextFormatter).NoColor = true
+}
+func Fatal(msg string, fields ...field) {
+	stdLogger.Fatal(msg, fields...)
 }
 
-func (l *logger) Error(msg string, fields ...field) {
-	l.output(ErrorLevel, msg, fields...)
+func Error(msg string, fields ...field) {
+	stdLogger.Error(msg, fields...)
 }
 
-func (l *logger) Fatal(msg string, fields ...field) {
-	l.output(FatalLevel, msg, fields...)
-	os.Exit(1)
+func Warn(msg string, fields ...field) {
+	stdLogger.Warn(msg, fields...)
 }
 
-func (l *logger) WithField(k string, v interface{}) *logger {
-	return l.WithFields(field{k, v})
+func Info(msg string, fields ...field) {
+	stdLogger.Info(msg, fields...)
 }
 
-func (l *logger) WithFields(fields ...field) *logger {
-	return &logger{
-		handlers: l.handlers,
-		fields:   append(l.fields, fields...),
-	}
+func Debug(msg string, fields ...field) {
+	stdLogger.Debug(msg, fields...)
 }
 
-func (l *logger) logf(level Level, format string, args ...interface{}) {
-	l.output(level, fmt.Sprintf(format, args...), l.fields...)
+func Fatalf(format string, args ...interface{}) {
+	stdLogger.Fatalf(format, args...)
 }
 
-func (l *logger) Debugf(format string, args ...interface{}) {
-	l.logf(DebugLevel, format, args...)
+func Errorf(format string, args ...interface{}) {
+	stdLogger.Errorf(format, args...)
 }
 
-func (l *logger) Infof(format string, args ...interface{}) {
-	l.logf(InfoLevel, format, args...)
+func Warnf(format string, args ...interface{}) {
+	stdLogger.Warnf(format, args...)
 }
 
-func (l *logger) Warnf(format string, args ...interface{}) {
-	l.logf(WarnLevel, format, args...)
+func Infof(format string, args ...interface{}) {
+	stdLogger.Infof(format, args...)
 }
 
-func (l *logger) Errorf(format string, args ...interface{}) {
-	l.logf(ErrorLevel, format, args...)
+func Debugf(format string, args ...interface{}) {
+	stdLogger.Debugf(format, args...)
 }
 
-func (l *logger) Fatalf(format string, args ...interface{}) {
-	l.logf(FatalLevel, format, args...)
-	os.Exit(1)
+func WithField(k string, v interface{}) *Logger {
+	return stdLogger.WithFields(field{k, v})
 }
 
-func (l *logger) Reset() {
-	l.handlers = l.handlers[:0]
-	l.fields = l.fields[:0]
+func WithFields(fields ...field) *Logger {
+	return stdLogger.WithFields(fields...)
 }
