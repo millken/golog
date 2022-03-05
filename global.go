@@ -1,8 +1,10 @@
 package golog
 
 import (
+	"io"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -28,7 +30,7 @@ var (
 	CallerFieldName = "caller"
 
 	// CallerSkipFrameCount is the number of stack frames to skip to find the caller.
-	CallerSkipFrameCount = 4
+	CallerSkipFrameCount = 5
 
 	// ErrorStackFieldName is the field name used for error stacks.
 	ErrorStackFieldName = "stack"
@@ -108,4 +110,72 @@ func (l Level) String() *string {
 func caller(skip int) (string, int) {
 	_, file, line, _ := runtime.Caller(skip)
 	return file, line
+}
+
+var (
+	_globalMu sync.RWMutex
+	_globalL  = NewStdLog().Logger
+)
+
+// ReplaceGlobals replaces the global Logger, and returns a
+// function to restore the original values. It's safe for concurrent use.
+func ReplaceGlobals(logger *Logger) func() {
+	_globalMu.Lock()
+	prev := _globalL
+	_globalL = logger
+	_globalMu.Unlock()
+	return func() { ReplaceGlobals(prev) }
+}
+
+func SetLevel(level Level) {
+	l := saveLogger()
+	for _, h := range l.handlers {
+		h.SetLevel(level)
+	}
+}
+
+func SetOutput(w io.Writer) {
+	l := saveLogger()
+	for _, h := range l.handlers {
+		if h, ok := h.(*FileHandler); ok {
+			h.SetOutput(w)
+		}
+	}
+}
+
+func Fatalf(format string, args ...interface{}) {
+	saveLogger().Fatalf(format, args...)
+}
+
+func Errorf(format string, args ...interface{}) {
+	saveLogger().Errorf(format, args...)
+}
+
+func Warnf(format string, args ...interface{}) {
+	saveLogger().Warnf(format, args...)
+}
+
+func Infof(format string, args ...interface{}) {
+	saveLogger().Infof(format, args...)
+}
+
+func Debugf(format string, args ...interface{}) {
+	saveLogger().Debugf(format, args...)
+}
+
+func WithField(k string, v interface{}) *Logger {
+	return saveLogger().WithFields(field{k, v})
+}
+
+func WithFields(fields ...field) *Logger {
+	return saveLogger().WithFields(fields...)
+}
+
+// saveLogger returns the global Logger, which can be reconfigured with ReplaceGlobals.
+// It's safe for concurrent use.
+func saveLogger() *Logger {
+	_globalMu.RLock()
+	l := _globalL
+	_globalMu.RUnlock()
+	return l
 }

@@ -4,19 +4,29 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestLogger(t *testing.T) {
 	logger := NewLogger()
-	logger.Debug("abdef", Field("a", 1), Field("b", true), Field("c", "hell"), Field("d", time.Now()))
+	logger.WithFields(Field("a", 1), Field("b", true), Field("c", "hell"), Field("d", time.Now())).Debugf("abdef")
 }
+
+func TestLoggerWithOptions(t *testing.T) {
+	require := require.New(t)
+	logger := NewLogger()
+	logger.WithOptions(WithOptionFieldSize(32))
+	require.Equal(32, cap(logger.fields))
+}
+
 func TestLoggerWithFields(t *testing.T) {
-	stdHandler = &FileHandler{
+	stdHandler := &FileHandler{
 		Output: os.Stdout,
 	}
 	stdHandler.SetLevel(DebugLevel)
-	stdFormatter = &TextFormatter{
-		NoColor:              stdNoColor,
+	stdFormatter := &TextFormatter{
+		NoColor:              false,
 		TimeFormat:           stdTimeFormat,
 		CallerSkipFrameCount: 6,
 		EnableCaller:         true,
@@ -41,7 +51,7 @@ func BenchmarkLoggerNoHandler(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Debug("abcde1234")
+		logger.Debugf("abcde1234")
 	}
 }
 
@@ -50,7 +60,7 @@ func BenchmarkLoggerNoHandlerWithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Debug("abcde1234", Field("a", 1), Field("b", true))
+		logger.WithFields(Field("a", 1), Field("b", true)).Debugf("abcde1234")
 
 	}
 }

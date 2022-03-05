@@ -16,11 +16,11 @@ func TestFileHandler(t *testing.T) {
 	})
 	logger := NewLogger()
 	logger.AddHandler(fh)
-	logger.Debug("debug message")
-	logger.Info("info message")
-	logger.Warn("warning message")
-	logger.Error("error message")
-	logger.Debug("debug message with 2 fields", Field("a", 1), Field("b", true))
+	logger.Debugf("debug message")
+	logger.Infof("info message")
+	logger.Warnf("warning message")
+	logger.Errorf("error message")
+	logger.WithFields(Field("a", 1), Field("b", true)).Debugf("debug message with %d fields", 2)
 }
 
 func TestFileHandlerWithJSONFormatter(t *testing.T) {
@@ -33,11 +33,11 @@ func TestFileHandlerWithJSONFormatter(t *testing.T) {
 	})
 	logger := NewLogger()
 	logger.AddHandler(fh)
-	logger.Debug("debug message")
-	logger.Info("info message")
-	logger.Warn("warning message")
-	logger.Error("error message")
-	logger.Debug("debug message", Field("a", 1), Field("b", true))
+	logger.Debugf("debug message")
+	logger.Infof("info message")
+	logger.Warnf("warning message")
+	logger.Errorf("error message")
+	logger.WithFields(Field("a", 1), Field("b", true)).Debugf("debug message")
 
 }
 
@@ -51,7 +51,7 @@ func BenchmarkFileHandler(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Debug("abcde1234")
+		logger.Debugf("abcde1234")
 	}
 }
 
@@ -66,7 +66,7 @@ func BenchmarkFileHandlerWithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Debug("abcde1234", Field("a", 1), Field("b", true))
+		logger.WithFields(Field("a", 1), Field("b", true)).Debugf("abcde1234")
 
 	}
 }
@@ -81,7 +81,7 @@ func BenchmarkJSONFormatterFileHandler(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Debug("abcde1234")
+		logger.Debugf("abcde1234")
 	}
 }
 
@@ -95,7 +95,7 @@ func BenchmarkJSONFormatterFileHandlerWithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Debug("abcde1234", Field("a", 1), Field("b", true))
+		logger.WithFields(Field("a", 1), Field("b", true)).Debugf("abcde1234")
 
 	}
 }

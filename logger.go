@@ -12,12 +12,24 @@ type Logger struct {
 }
 
 func NewLogger() *Logger {
-	log := &Logger{}
+	log := &Logger{
+		handlers: make([]Handler, 0),
+		fields:   make([]field, 0, 32),
+	}
 	return log
 }
 
-func (l *Logger) output(level Level, msg string, fields ...field) error {
-	var err error
+func (l *Logger) WithOptions(opts ...Option) *Logger {
+	for _, opt := range opts {
+		opt.apply(l)
+	}
+	return l
+}
+
+func (l *Logger) output(level Level, msg string, fields ...field) {
+	if len(l.handlers) == 0 {
+		return
+	}
 	for _, handler := range l.handlers {
 		if handler.GetLevel() > level {
 			continue
@@ -33,40 +45,18 @@ func (l *Logger) output(level Level, msg string, fields ...field) error {
 
 		formatter := handler.GetFormatter()
 		if formatter != nil {
-			err = formatter.Format(entry)
+			err := formatter.Format(entry)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Fprintln(os.Stderr, err)
 			}
 		}
 		handler.Handle(entry)
 		releaseEntry(entry)
 	}
-	return err
 }
 
 func (l *Logger) AddHandler(handler Handler) {
 	l.handlers = append(l.handlers, handler)
-}
-
-func (l *Logger) Debug(msg string, fields ...field) {
-	l.output(DebugLevel, msg, fields...)
-}
-
-func (l *Logger) Info(msg string, fields ...field) {
-	l.output(InfoLevel, msg, fields...)
-}
-
-func (l *Logger) Warn(msg string, fields ...field) {
-	l.output(WarnLevel, msg, fields...)
-}
-
-func (l *Logger) Error(msg string, fields ...field) {
-	l.output(ErrorLevel, msg, fields...)
-}
-
-func (l *Logger) Fatal(msg string, fields ...field) {
-	l.output(FatalLevel, msg, fields...)
-	os.Exit(1)
 }
 
 func (l *Logger) WithField(k string, v interface{}) *Logger {
