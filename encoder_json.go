@@ -1,3 +1,4 @@
+//go:build !binary_log
 // +build !binary_log
 
 package golog
@@ -14,19 +15,3 @@ var (
 
 	enc = json.Encoder{}
 )
-
-func appendJSON(dst []byte, j []byte) []byte {
-	return append(dst, j...)
-}
-
-func decodeIfBinaryToString(in []byte) string {
-	return string(in)
-}
-
-func decodeObjectToStr(in []byte) string {
-	return string(in)
-}
-
-func decodeIfBinaryToBytes(in []byte) []byte {
-	return in
-}
