@@ -44,9 +44,9 @@ func (l *stdLogger) SetOutput(output io.Writer) {
 }
 
 func (l *stdLogger) EnableCaller(enable bool) {
-	l.handler.(*FileHandler).GetFormatter().(*TextFormatter).EnableCaller = enable
+	l.handler.(*FileHandler).Formatter().(*TextFormatter).EnableCaller = enable
 }
 
 func (l *stdLogger) EnableColor(enable bool) {
-	l.handler.(*FileHandler).GetFormatter().(*TextFormatter).NoColor = !enable
+	l.handler.(*FileHandler).Formatter().(*TextFormatter).NoColor = !enable
 }

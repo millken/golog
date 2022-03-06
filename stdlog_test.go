@@ -1,7 +1,6 @@
 package golog
 
 import (
-	"errors"
 	"io"
 	"testing"
 )
@@ -13,7 +12,7 @@ func TestStdLog(t *testing.T) {
 	stdLog.Warnf("std warning message")
 	stdLog.Errorf("std error message")
 	stdLog.SetLevel(DebugLevel)
-	stdLog.WithField("err", errors.New("error")).Debugf("std debug message")
+	// stdLog.WithField("err", errors.New("error")).Debugf("std debug message")
 	stdLog.WithFields(Field("a", 1), Field("b", true)).Infof("std info message with %d fields", 2)
 	stdLog.SetOutput(io.Discard)
 	stdLog.Debugf("std debug message")

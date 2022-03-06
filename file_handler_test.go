@@ -60,14 +60,16 @@ func BenchmarkFileHandlerWithFields(b *testing.B) {
 		Output: io.Discard,
 	}
 
-	fh.SetFormatter(&TextFormatter{})
+	fh.SetFormatter(&TextFormatter{
+		DisableTimestamp: true,
+		NoColor:          true,
+	})
 	logger := NewLogger()
 	logger.AddHandler(fh)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		logger.WithFields(Field("a", 1), Field("b", true)).Debugf("abcde1234")
-
 	}
 }
 

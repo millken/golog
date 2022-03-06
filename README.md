@@ -31,7 +31,7 @@ import (
 )
 
 func main() {
-    golog.Info("hello world")
+    golog.Infof("hello world")
 }
 
 // Output: 2021-05-29 15:48:06 info  hello world
@@ -42,19 +42,21 @@ func main() {
 ## Performance on Mac M1 16G
 ```
 BenchmarkFileHandler
-BenchmarkFileHandler-8                                   3512186               332.7 ns/op             0 B/op          0 allocs/op
+BenchmarkFileHandler-8                                   3563302               325.6 ns/op             0 B/op          0 allocs/op
 BenchmarkFileHandlerWithFields
-BenchmarkFileHandlerWithFields-8                         2621605               428.4 ns/op             0 B/op          0 allocs/op
+BenchmarkFileHandlerWithFields-8                         2612840               461.6 ns/op             0 B/op          0 allocs/op
 BenchmarkJSONFormatterFileHandler
-BenchmarkJSONFormatterFileHandler-8                      3326818               360.3 ns/op             0 B/op          0 allocs/op
+BenchmarkJSONFormatterFileHandler-8                      3396434               353.3 ns/op             0 B/op          0 allocs/op
 BenchmarkJSONFormatterFileHandlerWithFields
-BenchmarkJSONFormatterFileHandlerWithFields-8            2949661               368.9 ns/op             0 B/op          0 allocs/op
+BenchmarkJSONFormatterFileHandlerWithFields-8            2952370               407.1 ns/op             0 B/op          0 allocs/op
+BenchmarkGlobalLogger
+BenchmarkGlobalLogger-8                                  3920433               305.7 ns/op             0 B/op          0 allocs/op
 BenchmarkLoggerNoHandler
-BenchmarkLoggerNoHandler-8                              570979944                2.073 ns/op           0 B/op          0 allocs/op
+BenchmarkLoggerNoHandler-8                              371451189                3.197 ns/op           0 B/op          0 allocs/op
 BenchmarkLoggerNoHandlerWithFields
-BenchmarkLoggerNoHandlerWithFields-8                    253720461                4.723 ns/op           0 B/op          0 allocs/op
+BenchmarkLoggerNoHandlerWithFields-8                    100000000               11.50 ns/op            0 B/op          0 allocs/op
 BenchmarkStdlog
-BenchmarkStdlog-8                                        4189542               284.7 ns/op             0 B/op          0 allocs/op
+BenchmarkStdlog-8                                        3984559               301.1 ns/op             0 B/op          0 allocs/op
 BenchmarkStdlogWithFields
-BenchmarkStdlogWithFields-8                              3464176               345.8 ns/op             0 B/op          0 allocs/op
+BenchmarkStdlogWithFields-8                              2733052               436.1 ns/op             0 B/op          0 allocs/op
 ```

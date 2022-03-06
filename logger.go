@@ -31,7 +31,11 @@ func (l *Logger) output(level Level, msg string, fields ...field) {
 		return
 	}
 	for _, handler := range l.handlers {
-		if handler.GetLevel() > level {
+		if len(handler.Levels()) > 0 {
+			if !handler.Levels().Contains(level) {
+				continue
+			}
+		} else if handler.Level() > level {
 			continue
 		}
 		entry := acquireEntry()
@@ -43,7 +47,7 @@ func (l *Logger) output(level Level, msg string, fields ...field) {
 		entry.Timestamp = time.Now()
 		entry.Reset()
 
-		formatter := handler.GetFormatter()
+		formatter := handler.Formatter()
 		if formatter != nil {
 			err := formatter.Format(entry)
 			if err != nil {

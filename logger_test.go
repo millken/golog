@@ -38,7 +38,7 @@ func TestLoggerWithFields(t *testing.T) {
 	l := logger.WithFields(Field("a", 1), Field("b", true))
 	l.Debugf("hello %s", "hell")
 	l.Infof("hello %d", 435)
-	l.WithField("c", "hell").Infof("hello 123")
+	// l.WithField("c", "hell").Infof("hello 123")
 	logger.Errorf("abcde1234")
 }
 

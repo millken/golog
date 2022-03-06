@@ -6,6 +6,17 @@ import (
 	"unsafe"
 )
 
+type Fields map[string]interface{}
+
+func mergeFields(dst Fields, fields ...Fields) Fields {
+	for _, fields := range fields {
+		for k, v := range fields {
+			dst[k] = v
+		}
+	}
+	return dst
+}
+
 type field struct {
 	key string
 	val interface{}

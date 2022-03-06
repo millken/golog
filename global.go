@@ -107,6 +107,17 @@ func (l Level) String() *string {
 	return &levelMessages[l]
 }
 
+type Levels []Level
+
+func (l Levels) Contains(level Level) bool {
+	for _, lv := range l {
+		if lv == level {
+			return true
+		}
+	}
+	return false
+}
+
 func caller(skip int) (string, int) {
 	_, file, line, _ := runtime.Caller(skip)
 	return file, line
@@ -128,14 +139,14 @@ func ReplaceGlobals(logger *Logger) func() {
 }
 
 func SetLevel(level Level) {
-	l := saveLogger()
+	l := safeLogger()
 	for _, h := range l.handlers {
 		h.SetLevel(level)
 	}
 }
 
 func SetOutput(w io.Writer) {
-	l := saveLogger()
+	l := safeLogger()
 	for _, h := range l.handlers {
 		if h, ok := h.(*FileHandler); ok {
 			h.SetOutput(w)
@@ -144,36 +155,40 @@ func SetOutput(w io.Writer) {
 }
 
 func Fatalf(format string, args ...interface{}) {
-	saveLogger().Fatalf(format, args...)
+	safeLogger().Fatalf(format, args...)
 }
 
 func Errorf(format string, args ...interface{}) {
-	saveLogger().Errorf(format, args...)
+	safeLogger().Errorf(format, args...)
 }
 
 func Warnf(format string, args ...interface{}) {
-	saveLogger().Warnf(format, args...)
+	safeLogger().Warnf(format, args...)
 }
 
 func Infof(format string, args ...interface{}) {
-	saveLogger().Infof(format, args...)
+	safeLogger().Infof(format, args...)
 }
 
 func Debugf(format string, args ...interface{}) {
-	saveLogger().Debugf(format, args...)
+	safeLogger().Debugf(format, args...)
 }
 
 func WithField(k string, v interface{}) *Logger {
-	return saveLogger().WithFields(field{k, v})
+	return safeLogger().WithFields(field{k, v})
 }
 
 func WithFields(fields ...field) *Logger {
-	return saveLogger().WithFields(fields...)
+	return safeLogger().WithFields(fields...)
 }
 
-// saveLogger returns the global Logger, which can be reconfigured with ReplaceGlobals.
+func AddHandler(handler Handler) {
+	safeLogger().AddHandler(handler)
+}
+
+// safeLogger returns the global Logger, which can be reconfigured with ReplaceGlobals.
 // It's safe for concurrent use.
-func saveLogger() *Logger {
+func safeLogger() *Logger {
 	_globalMu.RLock()
 	l := _globalL
 	_globalMu.RUnlock()

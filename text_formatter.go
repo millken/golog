@@ -37,7 +37,9 @@ type TextFormatter struct {
 
 	// TimeFormat specifies the format for timestamp in output.
 	TimeFormat string
-
+	// Disable timestamp logging. useful when output is redirected to logging
+	// system that already adds timestamps.
+	DisableTimestamp bool
 	// PartsOrder defines the order of parts in output.
 	PartsOrder []string
 
@@ -97,6 +99,12 @@ func (f *TextFormatter) writeFields(entry *Entry) {
 
 // writePart appends a formatted part to buf.
 func (f *TextFormatter) writePart(entry *Entry, p string) {
+	if f.DisableTimestamp && p == TimestampFieldName {
+		return
+	}
+	if !f.EnableCaller && p == CallerFieldName {
+		return
+	}
 
 	if f.PartsExclude != nil && len(f.PartsExclude) > 0 {
 		for _, exclude := range f.PartsExclude {
@@ -126,12 +134,10 @@ func (f *TextFormatter) writePart(entry *Entry, p string) {
 			f.FormatMessage(entry)
 		}
 	case CallerFieldName:
-		if f.EnableCaller {
-			if f.FormatCaller == nil {
-				f.defaultFormatCaller(entry)
-			} else {
-				f.FormatCaller(entry)
-			}
+		if f.FormatCaller == nil {
+			f.defaultFormatCaller(entry)
+		} else {
+			f.FormatCaller(entry)
 		}
 	}
 	if p != f.PartsOrder[len(f.PartsOrder)-1] { // Skip space for last part
