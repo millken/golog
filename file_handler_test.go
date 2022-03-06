@@ -1,9 +1,12 @@
 package golog
 
 import (
+	"bytes"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFileHandler(t *testing.T) {
@@ -41,12 +44,46 @@ func TestFileHandlerWithJSONFormatter(t *testing.T) {
 
 }
 
+func TestDifferentLevelsGoToDifferentWriters(t *testing.T) {
+	var a, b bytes.Buffer
+
+	log := NewLogger()
+	hand1 := &FileHandler{
+		Output: &a,
+	}
+	hand1.SetLevels(WarnLevel)
+	hand1.SetFormatter(&TextFormatter{
+		DisableTimestamp: true,
+		PartsOrder:       []string{"level", "message"},
+		NoColor:          true,
+	})
+
+	log.AddHandler(hand1)
+
+	hand2 := &FileHandler{
+		Output: &b,
+	}
+	hand2.SetLevels(InfoLevel)
+	hand2.SetFormatter(&TextFormatter{
+		DisableTimestamp: true,
+		PartsOrder:       []string{"level", "message"},
+		NoColor:          true,
+	})
+	log.AddHandler(hand2)
+	log.Warnf("send to a")
+	log.Infof("send to b")
+
+	assert.Equal(t, a.String(), "warn send to a\n")
+	assert.Equal(t, b.String(), "info send to b\n")
+}
+
 func BenchmarkFileHandler(b *testing.B) {
 	fh := &FileHandler{
 		Output: io.Discard,
 	}
 	formatter := NewTextFormatter()
 	formatter.EnableCaller = false
+	formatter.DisableTimestamp = true
 	fh.SetFormatter(formatter)
 	logger := NewLogger()
 	logger.AddHandler(fh)
@@ -80,7 +117,10 @@ func BenchmarkJSONFormatterFileHandler(b *testing.B) {
 	fh := &FileHandler{
 		Output: io.Discard,
 	}
-	fh.SetFormatter(&JSONFormatter{})
+	fh.SetFormatter(&JSONFormatter{
+		DisableTimestamp: true,
+		EnableCaller:     false,
+	})
 	logger := NewLogger()
 	logger.AddHandler(fh)
 	b.ReportAllocs()
@@ -94,7 +134,10 @@ func BenchmarkJSONFormatterFileHandlerWithFields(b *testing.B) {
 	fh := &FileHandler{
 		Output: io.Discard,
 	}
-	fh.SetFormatter(&JSONFormatter{})
+	fh.SetFormatter(&JSONFormatter{
+		DisableTimestamp: true,
+		EnableCaller:     false,
+	})
 	logger := NewLogger()
 	logger.AddHandler(fh)
 	b.ReportAllocs()

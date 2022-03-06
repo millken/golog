@@ -7,12 +7,15 @@ import (
 
 type JSONFormatter struct {
 	// EnableCaller enabled caller
-	EnableCaller bool
+	EnableCaller     bool
+	DisableTimestamp bool
 }
 
 func (f *JSONFormatter) Format(entry *Entry) error {
 	entry.Data = enc.AppendBeginMarker(entry.Data)
-	entry.Data = appendKeyVal(entry.Data, TimestampFieldName, &entry.Timestamp)
+	if !f.DisableTimestamp {
+		entry.Data = appendKeyVal(entry.Data, TimestampFieldName, &entry.Timestamp)
+	}
 	entry.Data = appendKeyVal(entry.Data, LevelFieldName, entry.Level.String())
 	entry.Data = appendKeyVal(entry.Data, MessageFieldName, &entry.Message)
 

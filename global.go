@@ -165,10 +165,6 @@ func WithFields(fields ...field) *Logger {
 	return safeLogger().WithFields(fields...)
 }
 
-func AddHandler(handler Handler) {
-	safeLogger().AddHandler(handler)
-}
-
 // safeLogger returns the global Logger, which can be reconfigured with ReplaceGlobals.
 // It's safe for concurrent use.
 func safeLogger() *Logger {
