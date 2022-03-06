@@ -6,24 +6,15 @@ import (
 	"unsafe"
 )
 
-type Fields map[string]interface{}
-
-func mergeFields(dst Fields, fields ...Fields) Fields {
-	for _, fields := range fields {
-		for k, v := range fields {
-			dst[k] = v
-		}
-	}
-	return dst
+// Field is a key/value pair.
+type Field struct {
+	Key string
+	Val interface{}
 }
 
-type field struct {
-	key string
-	val interface{}
-}
-
-func Field(key string, val interface{}) field {
-	return field{key, val}
+// F is a helper to create fields.
+func F(key string, val interface{}) Field {
+	return Field{key, val}
 }
 
 func isNilValue(i interface{}) bool {
@@ -249,9 +240,9 @@ func appendKeyVal(dst []byte, key string, value interface{}) []byte {
 	return dst
 }
 
-func appendFields(dst []byte, fields ...field) []byte {
+func appendFields(dst []byte, fields ...Field) []byte {
 	for _, field := range fields {
-		dst = appendKeyVal(dst, field.key, field.val)
+		dst = appendKeyVal(dst, field.Key, field.Val)
 	}
 	return dst
 }

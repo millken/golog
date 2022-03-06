@@ -1,8 +1,10 @@
 package golog
 
 import (
+	"fmt"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -85,17 +87,18 @@ const (
 	// Disabled disables the logger.
 	Disabled
 
+	// DefaultLevel defines the default log level.
 	DefaultLevel = InfoLevel
 )
 
 var (
 	levelMessages = []string{
-		DebugLevel: "debug",
-		InfoLevel:  "info",
-		WarnLevel:  "warn",
-		ErrorLevel: "error",
-		FatalLevel: "fatal",
-		PanicLevel: "panic",
+		DebugLevel: "DEBUG",
+		InfoLevel:  "INFO",
+		WarnLevel:  "WARN",
+		ErrorLevel: "ERROR",
+		FatalLevel: "FATAL",
+		PanicLevel: "PANIC",
 	}
 
 	_cwd, _ = os.Getwd()
@@ -106,8 +109,31 @@ func (l Level) String() *string {
 	return &levelMessages[l]
 }
 
+// ParseLevel takes a string level and returns the Logrus log level constant.
+func ParseLevel(lvl string) (Level, error) {
+	switch strings.ToLower(lvl) {
+	case "panic":
+		return PanicLevel, nil
+	case "fatal":
+		return FatalLevel, nil
+	case "error":
+		return ErrorLevel, nil
+	case "warn", "warning":
+		return WarnLevel, nil
+	case "info":
+		return InfoLevel, nil
+	case "debug":
+		return DebugLevel, nil
+	}
+
+	var l Level
+	return l, fmt.Errorf("not a valid Level: %q", lvl)
+}
+
+// Levels returns the available logging levels.
 type Levels []Level
 
+// Contains returns true if the slice contains the level.
 func (l Levels) Contains(level Level) bool {
 	for _, lv := range l {
 		if lv == level {
@@ -137,31 +163,38 @@ func ReplaceGlobals(logger *Logger) func() {
 	return func() { ReplaceGlobals(prev) }
 }
 
+// Fatalf logs a message using Fatal level and exits with status 1.
 func Fatalf(format string, args ...interface{}) {
 	safeLogger().Fatalf(format, args...)
 }
 
+// Errorf logs a message using Error level.
 func Errorf(format string, args ...interface{}) {
 	safeLogger().Errorf(format, args...)
 }
 
+// Warnf logs a message using Warn level.
 func Warnf(format string, args ...interface{}) {
 	safeLogger().Warnf(format, args...)
 }
 
+// Infof logs a message using Info level.
 func Infof(format string, args ...interface{}) {
 	safeLogger().Infof(format, args...)
 }
 
+// Debugf logs a message using Debug level.
 func Debugf(format string, args ...interface{}) {
 	safeLogger().Debugf(format, args...)
 }
 
+// WithField returns a logger configured with the key-value pair.
 func WithField(k string, v interface{}) *Logger {
-	return safeLogger().WithFields(field{k, v})
+	return safeLogger().WithFields(Field{k, v})
 }
 
-func WithFields(fields ...field) *Logger {
+// WithFields returns a logger configured with the key-value pairs.
+func WithFields(fields ...Field) *Logger {
 	return safeLogger().WithFields(fields...)
 }
 

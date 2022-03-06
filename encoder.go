@@ -1,8 +1,19 @@
+//go:build !binary_log
+// +build !binary_log
+
 package golog
 
 import (
 	"net"
 	"time"
+
+	"github.com/millken/golog/internal/json"
+)
+
+var (
+	_ encoder = (*json.Encoder)(nil)
+
+	enc = json.Encoder{}
 )
 
 type encoder interface {

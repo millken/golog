@@ -6,27 +6,22 @@ import (
 	"time"
 )
 
+// Logger is a simple logger.
 type Logger struct {
 	handlers []Handler
-	fields   []field
+	fields   []Field
 }
 
+// NewLogger creates a new Logger.
 func NewLogger() *Logger {
 	log := &Logger{
 		handlers: make([]Handler, 0),
-		fields:   make([]field, 0, 512),
+		fields:   make([]Field, 0, 512),
 	}
 	return log
 }
 
-func (l *Logger) WithOptions(opts ...Option) *Logger {
-	for _, opt := range opts {
-		opt.apply(l)
-	}
-	return l
-}
-
-func (l *Logger) output(level Level, msg string, fields ...field) {
+func (l *Logger) output(level Level, msg string, fields ...Field) {
 	if len(l.handlers) == 0 {
 		return
 	}
@@ -56,20 +51,25 @@ func (l *Logger) output(level Level, msg string, fields ...field) {
 				fmt.Fprintln(os.Stderr, err)
 			}
 		}
-		handler.Handle(entry)
+		if err := handler.Handle(entry); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
 		releaseEntry(entry)
 	}
 }
 
+// AddHandler adds a handler.
 func (l *Logger) AddHandler(handler Handler) {
 	l.handlers = append(l.handlers, handler)
 }
 
+// WithField returns a new logger with the field added.
 func (l *Logger) WithField(k string, v interface{}) *Logger {
-	return l.WithFields(field{k, v})
+	return l.WithFields(Field{k, v})
 }
 
-func (l *Logger) WithFields(fields ...field) *Logger {
+// WithFields returns a new logger with the fields added.
+func (l *Logger) WithFields(fields ...Field) *Logger {
 	return &Logger{
 		handlers: l.handlers,
 		fields:   append(l.fields, fields...),
@@ -86,27 +86,33 @@ func (l *Logger) logf(level Level, format string, args ...interface{}) {
 	l.output(level, msg, l.fields...)
 }
 
+// Debugf logs a message at debug level.
 func (l *Logger) Debugf(format string, args ...interface{}) {
 	l.logf(DebugLevel, format, args...)
 }
 
+// Infof logs a message at info level.
 func (l *Logger) Infof(format string, args ...interface{}) {
 	l.logf(InfoLevel, format, args...)
 }
 
+// Warnf logs a message at warn level.
 func (l *Logger) Warnf(format string, args ...interface{}) {
 	l.logf(WarnLevel, format, args...)
 }
 
+// Errorf logs a message at error level.
 func (l *Logger) Errorf(format string, args ...interface{}) {
 	l.logf(ErrorLevel, format, args...)
 }
 
+// Fatalf logs a message using Fatal level and exits with status 1.
 func (l *Logger) Fatalf(format string, args ...interface{}) {
 	l.logf(FatalLevel, format, args...)
 	os.Exit(1)
 }
 
+// Reset resets the logger.
 func (l *Logger) Reset() {
 	l.handlers = l.handlers[:0]
 	l.fields = l.fields[:0]

@@ -1,7 +1,7 @@
 package golog
 
 import (
-	json "encoding/json"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,18 +28,19 @@ const (
 	consoleDefaultTimeFormat = time.RFC3339
 )
 
+// TextFormatter formats log entries into text.
 type TextFormatter struct {
 	// NoColor disables the colorized output.
 	NoColor bool
 	// EnableCaller enabled caller
-	EnableCaller         bool
+	EnableCaller bool
+	// Disable timestamp logging. useful when output is redirected to logging
+	// system that already adds timestamps.
+	DisableTimestamp     bool
 	CallerSkipFrameCount int
 
 	// TimeFormat specifies the format for timestamp in output.
 	TimeFormat string
-	// Disable timestamp logging. useful when output is redirected to logging
-	// system that already adds timestamps.
-	DisableTimestamp bool
 	// PartsOrder defines the order of parts in output.
 	PartsOrder []string
 
@@ -54,6 +55,7 @@ type TextFormatter struct {
 	FormatFieldValue func(*Entry, interface{})
 }
 
+// NewTextFormatter returns a new TextFormatter.
 func NewTextFormatter() *TextFormatter {
 	return &TextFormatter{
 		TimeFormat: consoleDefaultTimeFormat,
@@ -61,27 +63,25 @@ func NewTextFormatter() *TextFormatter {
 	}
 }
 
+// Format renders a single log entry
 func (f *TextFormatter) Format(entry *Entry) error {
-
 	for _, p := range f.PartsOrder {
 		f.writePart(entry, p)
 	}
-
 	f.writeFields(entry)
-
 	return entry.WriteByte('\n')
 }
 
 // writeFields appends formatted key-fValueue pairs to buf.
 func (f *TextFormatter) writeFields(entry *Entry) {
 	if entry.fieldsLen > 0 {
-		entry.WriteByte(' ')
+		_ = entry.WriteByte(' ')
 	}
 
 	i := 0
 	for _, field := range entry.Fields[:entry.fieldsLen] {
-		name := field.key
-		fValue := field.val
+		name := field.Key
+		fValue := field.Val
 		i++
 		if f.FormatFieldName == nil {
 			f.defaultFormatFieldName(entry, name)
@@ -96,7 +96,7 @@ func (f *TextFormatter) writeFields(entry *Entry) {
 		}
 
 		if i < entry.fieldsLen { // Skip space for last field
-			entry.WriteByte(' ')
+			_ = entry.WriteByte(' ')
 		}
 	}
 }
@@ -193,11 +193,11 @@ func (f *TextFormatter) defaultFormatCaller(entry *Entry) {
 		}
 		c = colorize(c, colorBold, noColor)
 	}
-	entry.WriteString(c)
+	_, _ = entry.WriteString(c)
 }
 
 func (f *TextFormatter) defaultFormatMessage(entry *Entry) {
-	entry.WriteString(entry.Message)
+	_, _ = entry.WriteString(entry.Message)
 }
 
 func (f *TextFormatter) defaultFormatFieldValue(entry *Entry, value interface{}) {
@@ -259,6 +259,8 @@ func (f *TextFormatter) defaultFormatLevel(entry *Entry) {
 	ll := entry.Level
 	noColor := f.NoColor
 	switch ll {
+	case NoLevel, Disabled:
+		l = ""
 	case DebugLevel:
 		l = colorize(*ll.String(), colorYellow, noColor)
 	case InfoLevel:

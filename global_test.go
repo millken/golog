@@ -20,8 +20,27 @@ func TestGlobalLog(t *testing.T) {
 	Warnf("std warning message")
 	Errorf("std error message")
 	WithField("err", errors.New("error")).Debugf("std debug message")
-	WithFields(Field("a", 1), Field("b", true)).Infof("std info message with %d fields", 2)
+	WithFields(F("a", 1), F("b", true)).Infof("std info message with %d fields", 2)
 	Debugf("std debug message")
+}
+
+func TestParseLevel(t *testing.T) {
+	for _, test := range []struct {
+		in   string
+		want Level
+	}{
+		{"debug", DebugLevel},
+		{"info", InfoLevel},
+		{"warn", WarnLevel},
+		{"error", ErrorLevel},
+		{"fatal", FatalLevel},
+		{"", NoLevel},
+		{"foo", NoLevel},
+	} {
+		if got, _ := ParseLevel(test.in); got != test.want {
+			t.Errorf("ParseLevel(%q) = %v, want %v", test.in, got, test.want)
+		}
+	}
 }
 
 func BenchmarkGlobalLogger(b *testing.B) {

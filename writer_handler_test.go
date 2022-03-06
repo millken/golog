@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestFileHandler(t *testing.T) {
-	fh := &FileHandler{
+func TestWriterHandler(t *testing.T) {
+	fh := &WriterHandler{
 		Output: os.Stdout,
 	}
 	fh.SetLevel(DebugLevel)
@@ -23,11 +23,11 @@ func TestFileHandler(t *testing.T) {
 	logger.Infof("info message")
 	logger.Warnf("warning message")
 	logger.Errorf("error message")
-	logger.WithFields(Field("a", 1), Field("b", true)).Debugf("debug message with %d fields", 2)
+	logger.WithFields(F("a", 1), F("b", true)).Debugf("debug message with %d fields", 2)
 }
 
-func TestFileHandlerWithJSONFormatter(t *testing.T) {
-	fh := &FileHandler{
+func TestWriterHandlerWithJSONFormatter(t *testing.T) {
+	fh := &WriterHandler{
 		Output: os.Stdout,
 	}
 	fh.SetLevel(DebugLevel)
@@ -40,15 +40,16 @@ func TestFileHandlerWithJSONFormatter(t *testing.T) {
 	logger.Infof("info message")
 	logger.Warnf("warning message")
 	logger.Errorf("error message")
-	logger.WithFields(Field("a", 1), Field("b", true)).Debugf("debug message")
+	logger.WithFields(F("a", 1), F("b", true)).Debugf("debug message")
 
 }
 
 func TestDifferentLevelsGoToDifferentWriters(t *testing.T) {
+	require := require.New(t)
 	var a, b bytes.Buffer
 
 	log := NewLogger()
-	hand1 := &FileHandler{
+	hand1 := &WriterHandler{
 		Output: &a,
 	}
 	hand1.SetLevels(WarnLevel)
@@ -60,7 +61,7 @@ func TestDifferentLevelsGoToDifferentWriters(t *testing.T) {
 
 	log.AddHandler(hand1)
 
-	hand2 := &FileHandler{
+	hand2 := &WriterHandler{
 		Output: &b,
 	}
 	hand2.SetLevels(InfoLevel)
@@ -73,12 +74,12 @@ func TestDifferentLevelsGoToDifferentWriters(t *testing.T) {
 	log.Warnf("send to a")
 	log.Infof("send to b")
 
-	assert.Equal(t, a.String(), "warn send to a\n")
-	assert.Equal(t, b.String(), "info send to b\n")
+	require.Equal(a.String(), "WARN send to a\n")
+	require.Equal(b.String(), "INFO send to b\n")
 }
 
-func BenchmarkFileHandler(b *testing.B) {
-	fh := &FileHandler{
+func BenchmarkWriterHandler(b *testing.B) {
+	fh := &WriterHandler{
 		Output: io.Discard,
 	}
 	formatter := NewTextFormatter()
@@ -94,8 +95,8 @@ func BenchmarkFileHandler(b *testing.B) {
 	}
 }
 
-func BenchmarkFileHandlerWithFields(b *testing.B) {
-	fh := &FileHandler{
+func BenchmarkWriterHandlerWithFields(b *testing.B) {
+	fh := &WriterHandler{
 		Output: io.Discard,
 	}
 
@@ -109,12 +110,12 @@ func BenchmarkFileHandlerWithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.WithFields(Field("a", 1), Field("b", true)).Debugf("abcde1234")
+		logger.WithFields(F("a", 1), F("b", true)).Debugf("abcde1234")
 	}
 }
 
-func BenchmarkJSONFormatterFileHandler(b *testing.B) {
-	fh := &FileHandler{
+func BenchmarkJSONFormatterWriterHandler(b *testing.B) {
+	fh := &WriterHandler{
 		Output: io.Discard,
 	}
 	fh.SetFormatter(&JSONFormatter{
@@ -130,8 +131,8 @@ func BenchmarkJSONFormatterFileHandler(b *testing.B) {
 	}
 }
 
-func BenchmarkJSONFormatterFileHandlerWithFields(b *testing.B) {
-	fh := &FileHandler{
+func BenchmarkJSONFormatterWriterHandlerWithFields(b *testing.B) {
+	fh := &WriterHandler{
 		Output: io.Discard,
 	}
 	fh.SetFormatter(&JSONFormatter{
@@ -143,7 +144,7 @@ func BenchmarkJSONFormatterFileHandlerWithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.WithFields(Field("a", 1), Field("b", true)).Debugf("abcde1234")
+		logger.WithFields(F("a", 1), F("b", true)).Debugf("abcde1234")
 
 	}
 }

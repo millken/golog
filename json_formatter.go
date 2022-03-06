@@ -5,12 +5,14 @@ import (
 	"strconv"
 )
 
+// JSONFormatter is a formatter that outputs JSON-encoded log messages.
 type JSONFormatter struct {
 	// EnableCaller enabled caller
 	EnableCaller     bool
 	DisableTimestamp bool
 }
 
+// Format formats the log entry.
 func (f *JSONFormatter) Format(entry *Entry) error {
 	entry.Data = enc.AppendBeginMarker(entry.Data)
 	if !f.DisableTimestamp {

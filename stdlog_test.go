@@ -14,22 +14,22 @@ func TestStdLog(t *testing.T) {
 	stdLog.Warnf("std warning message")
 	stdLog.Errorf("std error message")
 	stdLog.WithField("err", errors.New("error")).Debugf("std debug message")
-	fields := []field{
-		Field("int8", int8(1)),
-		Field("int16", int16(1)),
-		Field("int32", int32(1)),
-		Field("int64", int64(1)),
-		Field("uint8", uint8(1)),
-		Field("uint16", uint16(1)),
-		Field("uint32", uint32(1)),
-		Field("uint64", uint64(1)),
-		Field("float32", float32(1)),
-		Field("float64", float64(1)),
-		Field("bytes", []byte("bytes")),
-		Field("time", time.Now()),
-		Field("duration", time.Duration(time.Second*365000)),
-		Field("a", 1),
-		Field("b", true),
+	fields := []Field{
+		F("int8", int8(1)),
+		F("int16", int16(1)),
+		F("int32", int32(1)),
+		F("int64", int64(1)),
+		F("uint8", uint8(1)),
+		F("uint16", uint16(1)),
+		F("uint32", uint32(1)),
+		F("uint64", uint64(1)),
+		F("float32", float32(1)),
+		F("float64", float64(1)),
+		F("bytes", []byte("bytes")),
+		F("time", time.Now()),
+		F("duration", time.Duration(time.Second*365000)),
+		F("a", 1),
+		F("b", true),
 	}
 	stdLog.WithFields(fields...).Infof("std info message with %d fields", 2)
 
@@ -75,6 +75,6 @@ func BenchmarkStdlogWithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		stdLog.WithFields(Field("a", 1), Field("b", true)).Infof("abcde1234")
+		stdLog.WithFields(F("a", 1), F("b", true)).Infof("abcde1234")
 	}
 }

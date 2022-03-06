@@ -6,12 +6,13 @@ import (
 	"time"
 )
 
+// Entry represents a log entry.
 type Entry struct {
 	Message   string
 	Data      []byte
 	Timestamp time.Time
 	Level     Level
-	Fields    []field
+	Fields    []Field
 	fieldsLen int
 }
 
@@ -20,14 +21,14 @@ var (
 		New: func() interface{} {
 			return &Entry{
 				Data:   make([]byte, 0, 4096),
-				Fields: make([]field, 0, 512),
+				Fields: make([]Field, 0, 512),
 			}
 		},
 	}
 )
 
 func acquireEntry() *Entry {
-	return entryPool.Get().(*Entry)
+	return entryPool.Get().(*Entry) //nolint:errcheck
 }
 
 func releaseEntry(e *Entry) {
@@ -38,30 +39,38 @@ func releaseEntry(e *Entry) {
 	entryPool.Put(e)
 }
 
+// Bytes returns the entry data as bytes.
 func (e *Entry) Bytes() []byte {
 	return e.Data
 }
 
+// WriteByte appends the byte to the entry data.
 func (e *Entry) WriteByte(c byte) error {
 	e.Data = append(e.Data, c)
+
 	return nil
 }
 
+// Write appends the contents of p to the entry data.
 func (e *Entry) Write(p []byte) (int, error) {
 	e.Data = append(e.Data, p...)
+
 	return len(p), nil
 }
 
+// WriteString appends the string to the entry data.
 func (e *Entry) WriteString(s string) (int, error) {
 	e.Data = append(e.Data, s...)
 	return len(s), nil
 }
 
+// WriteTo writes the entry data to w.
 func (e *Entry) WriteTo(w io.Writer) (int64, error) {
 	n, err := w.Write(e.Data)
 	return int64(n), err
 }
 
+// Reset resets the entry data.
 func (e *Entry) Reset() {
 	e.Data = e.Data[:0]
 }

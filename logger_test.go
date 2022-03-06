@@ -10,18 +10,17 @@ import (
 
 func TestLogger(t *testing.T) {
 	logger := NewLogger()
-	logger.WithFields(Field("a", 1), Field("b", true), Field("c", "hell"), Field("d", time.Now())).Debugf("abdef")
+	logger.WithFields(F("a", 1), F("b", true), F("c", "hell"), F("d", time.Now())).Debugf("abdef")
 }
 
 func TestLoggerWithOptions(t *testing.T) {
 	require := require.New(t)
 	logger := NewLogger()
-	logger.WithOptions(WithOptionFieldSize(32))
-	require.Equal(32, cap(logger.fields))
+	require.Equal(512, cap(logger.fields))
 }
 
 func TestLoggerWithFields(t *testing.T) {
-	stdHandler := &FileHandler{
+	stdHandler := &WriterHandler{
 		Output: os.Stdout,
 	}
 	stdHandler.SetLevel(DebugLevel)
@@ -37,7 +36,7 @@ func TestLoggerWithFields(t *testing.T) {
 	logger := NewLogger()
 	logger.AddHandler(stdHandler)
 
-	l := logger.WithFields(Field("a", 1), Field("b", true))
+	l := logger.WithFields(F("a", 1), F("b", true))
 	l.Debugf("hello %s", "hell")
 	l.Infof("hello %d", 435)
 	// l.WithField("c", "hell").Infof("hello 123")
@@ -62,7 +61,7 @@ func BenchmarkLoggerNoHandlerWithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.WithFields(Field("a", 1), Field("b", true)).Debugf("abcde1234")
+		logger.WithFields(F("a", 1), F("b", true)).Debugf("abcde1234")
 
 	}
 }

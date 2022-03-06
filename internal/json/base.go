@@ -1,5 +1,6 @@
 package json
 
+// Encoder is a JSON encoder.
 type Encoder struct{}
 
 // AppendKey appends a new key to the output JSON.

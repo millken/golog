@@ -6,22 +6,24 @@ import (
 )
 
 var (
+	// StdTimeFormat is the default time format for the console logger.
 	StdTimeFormat = "2006-01-02 15:04:05"
 )
 
+// StdOption is the option for StdLog.
 type StdOption struct {
-	Level                Level
-	Output               io.Writer
 	NoColor              bool
-	TimeFormat           string
-	CallerSkipFrameCount int
 	EnableCaller         bool
 	DisableTimestamp     bool
+	Level                Level
+	Output               io.Writer
+	CallerSkipFrameCount int
+	TimeFormat           string
 	PartsOrder           []string
 	PartsExclude         []string
 }
 
-func prepareStdOptions(opt StdOption) StdOption {
+func prepareStdOptions(opt *StdOption) *StdOption {
 	if opt.Output == nil {
 		opt.Output = os.Stderr
 	}
@@ -40,13 +42,14 @@ func prepareStdOptions(opt StdOption) StdOption {
 	return opt
 }
 
+// NewStdLog creates a new StdLog.
 func NewStdLog(opts ...StdOption) *Logger {
 	var o StdOption
 	if len(opts) > 0 {
 		o = opts[0]
 	}
-	opt := prepareStdOptions(o)
-	stdHandler := &FileHandler{
+	opt := prepareStdOptions(&o)
+	stdHandler := &WriterHandler{
 		Output: opt.Output,
 	}
 	stdHandler.SetLevel(opt.Level)

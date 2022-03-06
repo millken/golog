@@ -63,7 +63,7 @@ func (Encoder) AppendString(dst []byte, s string) []byte {
 // appendStringComplex is used by appendString to take over an in
 // progress JSON string encoding that encountered a character that needs
 // to be encoded.
-func appendStringComplex(dst []byte, s string, i int) []byte {
+func appendStringComplex(dst []byte, s string, i int) []byte { // nolint: gocyclo
 	start := 0
 	for i < len(s) {
 		b := s[i]
