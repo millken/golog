@@ -11,9 +11,9 @@ func TestFileHandler(t *testing.T) {
 		Output: os.Stdout,
 	}
 	fh.SetLevel(DebugLevel)
-	fh.SetFormatter(&TextFormatter{
-		EnableCaller: true,
-	})
+	formatter := NewTextFormatter()
+	formatter.EnableCaller = true
+	fh.SetFormatter(formatter)
 	logger := NewLogger()
 	logger.AddHandler(fh)
 	logger.Debugf("debug message")
@@ -45,7 +45,9 @@ func BenchmarkFileHandler(b *testing.B) {
 	fh := &FileHandler{
 		Output: io.Discard,
 	}
-	fh.SetFormatter(&TextFormatter{})
+	formatter := NewTextFormatter()
+	formatter.EnableCaller = false
+	fh.SetFormatter(formatter)
 	logger := NewLogger()
 	logger.AddHandler(fh)
 	b.ReportAllocs()
@@ -60,10 +62,11 @@ func BenchmarkFileHandlerWithFields(b *testing.B) {
 		Output: io.Discard,
 	}
 
-	fh.SetFormatter(&TextFormatter{
-		DisableTimestamp: true,
-		NoColor:          true,
-	})
+	formatter := NewTextFormatter()
+	formatter.EnableCaller = false
+	formatter.DisableTimestamp = true
+	formatter.NoColor = true
+	fh.SetFormatter(formatter)
 	logger := NewLogger()
 	logger.AddHandler(fh)
 	b.ReportAllocs()

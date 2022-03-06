@@ -14,7 +14,7 @@ type Logger struct {
 func NewLogger() *Logger {
 	log := &Logger{
 		handlers: make([]Handler, 0),
-		fields:   make([]field, 0, 32),
+		fields:   make([]field, 0, 512),
 	}
 	return log
 }

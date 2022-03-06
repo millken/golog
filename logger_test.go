@@ -27,9 +27,10 @@ func TestLoggerWithFields(t *testing.T) {
 	stdHandler.SetLevel(DebugLevel)
 	stdFormatter := &TextFormatter{
 		NoColor:              false,
-		TimeFormat:           stdTimeFormat,
+		TimeFormat:           StdTimeFormat,
 		CallerSkipFrameCount: 6,
 		EnableCaller:         true,
+		PartsOrder:           []string{"time", "level", "caller", "message"},
 	}
 	stdHandler.SetFormatter(stdFormatter)
 	logger := NewLogger()

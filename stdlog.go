@@ -6,47 +6,63 @@ import (
 )
 
 var (
-	stdTimeFormat = "2006-01-02 15:04:05"
+	StdTimeFormat = "2006-01-02 15:04:05"
 )
 
-type stdLogger struct {
-	handler Handler
-	*Logger
+type StdOption struct {
+	Level                Level
+	Output               io.Writer
+	NoColor              bool
+	TimeFormat           string
+	CallerSkipFrameCount int
+	EnableCaller         bool
+	DisableTimestamp     bool
+	PartsOrder           []string
+	PartsExclude         []string
 }
 
-func NewStdLog() *stdLogger {
-	stdHandler := &FileHandler{
-		Output: os.Stderr,
+func prepareStdOptions(opt StdOption) StdOption {
+	if opt.Output == nil {
+		opt.Output = os.Stderr
 	}
-	stdHandler.SetLevel(InfoLevel)
+	if opt.TimeFormat == "" {
+		opt.TimeFormat = consoleDefaultTimeFormat
+	}
+	if opt.Level == NoLevel {
+		opt.Level = DefaultLevel
+	}
+	if opt.CallerSkipFrameCount == 0 {
+		opt.CallerSkipFrameCount = 6
+	}
+	if opt.PartsOrder == nil {
+		opt.PartsOrder = consoleDefaultPartsOrder()
+	}
+	return opt
+}
+
+func NewStdLog(opts ...StdOption) *Logger {
+	var o StdOption
+	if len(opts) > 0 {
+		o = opts[0]
+	}
+	opt := prepareStdOptions(o)
+	stdHandler := &FileHandler{
+		Output: opt.Output,
+	}
+	stdHandler.SetLevel(opt.Level)
+
 	stdFormatter := &TextFormatter{
-		NoColor:              false,
-		TimeFormat:           stdTimeFormat,
-		CallerSkipFrameCount: 6,
-		EnableCaller:         false,
+		NoColor:              opt.NoColor,
+		EnableCaller:         opt.EnableCaller,
+		CallerSkipFrameCount: opt.CallerSkipFrameCount,
+		TimeFormat:           opt.TimeFormat,
+		DisableTimestamp:     opt.DisableTimestamp,
+		PartsOrder:           opt.PartsOrder,
+		PartsExclude:         opt.PartsExclude,
 	}
 	stdHandler.SetFormatter(stdFormatter)
 
-	log := NewLogger()
-	log.AddHandler(stdHandler)
-	return &stdLogger{
-		handler: stdHandler,
-		Logger:  log,
-	}
-}
-
-func (l *stdLogger) SetLevel(level Level) {
-	l.handler.SetLevel(level)
-}
-
-func (l *stdLogger) SetOutput(output io.Writer) {
-	l.handler.(*FileHandler).SetOutput(output)
-}
-
-func (l *stdLogger) EnableCaller(enable bool) {
-	l.handler.(*FileHandler).Formatter().(*TextFormatter).EnableCaller = enable
-}
-
-func (l *stdLogger) EnableColor(enable bool) {
-	l.handler.(*FileHandler).Formatter().(*TextFormatter).NoColor = !enable
+	logger := NewLogger()
+	logger.AddHandler(stdHandler)
+	return logger
 }

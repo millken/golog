@@ -54,10 +54,14 @@ type TextFormatter struct {
 	FormatFieldValue func(*Entry, interface{})
 }
 
-func (f *TextFormatter) Format(entry *Entry) error {
-	if f.PartsOrder == nil {
-		f.PartsOrder = consoleDefaultPartsOrder()
+func NewTextFormatter() *TextFormatter {
+	return &TextFormatter{
+		TimeFormat: consoleDefaultTimeFormat,
+		PartsOrder: consoleDefaultPartsOrder(),
 	}
+}
+
+func (f *TextFormatter) Format(entry *Entry) error {
 
 	for _, p := range f.PartsOrder {
 		f.writePart(entry, p)

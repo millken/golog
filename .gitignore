@@ -17,3 +17,4 @@
 vendor/
 
 _examples/
+.DS_Store

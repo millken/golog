@@ -1,7 +1,6 @@
 package golog
 
 import (
-	"io"
 	"os"
 	"runtime"
 	"sync"
@@ -69,8 +68,10 @@ var (
 type Level int8
 
 const (
+	// NoLevel defines an absent log level.
+	NoLevel Level = iota
 	// DebugLevel defines debug log level.
-	DebugLevel Level = iota
+	DebugLevel
 	// InfoLevel defines info log level.
 	InfoLevel
 	// WarnLevel defines warn log level.
@@ -81,8 +82,6 @@ const (
 	FatalLevel
 	// PanicLevel defines panic log level.
 	PanicLevel
-	// NoLevel defines an absent log level.
-	NoLevel
 	// Disabled disables the logger.
 	Disabled
 
@@ -125,7 +124,7 @@ func caller(skip int) (string, int) {
 
 var (
 	_globalMu sync.RWMutex
-	_globalL  = NewStdLog().Logger
+	_globalL  = NewLogger()
 )
 
 // ReplaceGlobals replaces the global Logger, and returns a
@@ -136,22 +135,6 @@ func ReplaceGlobals(logger *Logger) func() {
 	_globalL = logger
 	_globalMu.Unlock()
 	return func() { ReplaceGlobals(prev) }
-}
-
-func SetLevel(level Level) {
-	l := safeLogger()
-	for _, h := range l.handlers {
-		h.SetLevel(level)
-	}
-}
-
-func SetOutput(w io.Writer) {
-	l := safeLogger()
-	for _, h := range l.handlers {
-		if h, ok := h.(*FileHandler); ok {
-			h.SetOutput(w)
-		}
-	}
 }
 
 func Fatalf(format string, args ...interface{}) {
