@@ -39,8 +39,10 @@ func (l *Logger) output(level Level, msg string, fields ...field) {
 			continue
 		}
 		entry := acquireEntry()
-		copy(entry.Fields[0:len(fields)], fields)
-		entry.fieldsLen = len(fields)
+		if !handler.DisableLogFields() {
+			copy(entry.Fields[0:len(fields)], fields)
+			entry.fieldsLen = len(fields)
+		}
 
 		entry.Message = msg
 		entry.Level = level

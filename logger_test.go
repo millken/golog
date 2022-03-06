@@ -33,6 +33,7 @@ func TestLoggerWithFields(t *testing.T) {
 		PartsOrder:           []string{"time", "level", "caller", "message"},
 	}
 	stdHandler.SetFormatter(stdFormatter)
+	stdHandler.SetDisableLogFields(true)
 	logger := NewLogger()
 	logger.AddHandler(stdHandler)
 

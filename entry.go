@@ -19,8 +19,8 @@ var (
 	entryPool = &sync.Pool{
 		New: func() interface{} {
 			return &Entry{
-				Data:   make([]byte, 0, 500),
-				Fields: make([]field, 0, 32),
+				Data:   make([]byte, 0, 4096),
+				Fields: make([]field, 0, 512),
 			}
 		},
 	}

@@ -240,6 +240,8 @@ func (f *TextFormatter) defaultFormatFieldValue(entry *Entry, value interface{})
 		entry.Data = append(entry.Data, fValue...)
 	case time.Time:
 		entry.Data = fValue.AppendFormat(entry.Data, consoleDefaultTimeFormat)
+	case time.Duration:
+		entry.Data = append(entry.Data, fValue.String()...)
 	case json.Number:
 		entry.Data = append(entry.Data, fValue.String()...)
 	default:
