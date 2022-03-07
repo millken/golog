@@ -14,8 +14,6 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - run: go version
       - run: go test -v -cover -race ./...
-      - run: go get -u golang.org/x/lint/golint
-      - run: golint -set_exit_status $(go list ./... | grep -v /vendor/ | grep -v /explorer/idl/ | grep -v /api/idl/)
 
       - name: Send coverage
         uses: shogo82148/actions-goveralls@v1
