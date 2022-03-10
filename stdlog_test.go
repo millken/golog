@@ -1,10 +1,15 @@
 package golog
 
 import (
+	"bytes"
 	"errors"
 	"io"
+	"os"
+	"os/exec"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestStdLog(t *testing.T) {
@@ -49,6 +54,50 @@ func TestStdLogRace(t *testing.T) {
 	}()
 	time.Sleep(500 * time.Microsecond)
 	logger.Infof("should not race 02")
+}
+
+func TestLogger_Panic(t *testing.T) {
+	require := require.New(t)
+	var buf bytes.Buffer
+	opt := StdOption{
+		Output:           &buf,
+		DisableTimestamp: true,
+		NoColor:          true,
+	}
+	stdLog := NewStdLog(opt)
+
+	var recovered interface{}
+	func() {
+		defer func() {
+			recovered = recover()
+		}()
+		stdLog.Panicf("panic message")
+	}()
+	require.NotNil(recovered)
+	require.Equal("PANIC panic message\n", buf.String())
+	require.Equal("panic message", recovered)
+}
+
+func TestLogger_Fatal(t *testing.T) {
+	var buf bytes.Buffer
+	opt := StdOption{
+		Output:           &buf,
+		DisableTimestamp: true,
+		NoColor:          true,
+	}
+	stdLog := NewStdLog(opt)
+
+	if os.Getenv("BE_FATAL") == "1" {
+		stdLog.Fatalf("%s", "fatal")
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestLogger_Fatal")
+	cmd.Env = append(os.Environ(), "BE_FATAL=1")
+	err := cmd.Run()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		return
+	}
+	t.Fatalf("process ran with err %v, want exit status 1", err)
 }
 
 func BenchmarkStdlog(b *testing.B) {

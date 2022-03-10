@@ -163,6 +163,11 @@ func ReplaceGlobals(logger *Logger) func() {
 	return func() { ReplaceGlobals(prev) }
 }
 
+// Panicf logs a message using Panic level and panics.
+func Panicf(format string, args ...interface{}) {
+	safeLogger().Panicf(format, args...)
+}
+
 // Fatalf logs a message using Fatal level and exits with status 1.
 func Fatalf(format string, args ...interface{}) {
 	safeLogger().Fatalf(format, args...)

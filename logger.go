@@ -112,6 +112,12 @@ func (l *Logger) Fatalf(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
+// Panicf logs a message using Panic level and panics.
+func (l *Logger) Panicf(format string, args ...interface{}) {
+	l.logf(PanicLevel, format, args...)
+	panic(fmt.Sprintf(format, args...))
+}
+
 // Reset resets the logger.
 func (l *Logger) Reset() {
 	l.handlers = l.handlers[:0]
