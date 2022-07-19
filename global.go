@@ -2,8 +2,6 @@ package golog
 
 import (
 	"fmt"
-	"os"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -95,8 +93,6 @@ var (
 		FatalLevel: "FATAL",
 		PanicLevel: "PANIC",
 	}
-
-	_cwd, _ = os.Getwd()
 )
 
 //using pointer can reduce allocs
@@ -136,22 +132,6 @@ func (l Levels) Contains(level Level) bool {
 		}
 	}
 	return false
-}
-
-func getFileCaller(calldepth int) (string, int) {
-	pc := make([]uintptr, 1)
-
-	numFrames := runtime.Callers(calldepth, pc)
-	if numFrames < 1 {
-		return "???", 0
-	}
-
-	frame, _ := runtime.CallersFrames(pc).Next()
-	file := frame.File
-	if strings.HasPrefix(file, _cwd) {
-		file = file[len(_cwd)+1:]
-	}
-	return file, frame.Line
 }
 
 var (

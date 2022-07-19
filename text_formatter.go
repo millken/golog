@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/millken/golog/internal/buffer"
 )
 
 const (
@@ -65,25 +67,55 @@ func NewTextFormatter() *TextFormatter {
 
 // Format renders a single log entry
 func (f *TextFormatter) Format(entry *Entry) error {
+	var stacktrace string
+	stackDepth := stacktraceFirst
+	if f.EnableStack {
+		stackDepth = stacktraceFull
+	}
+	if f.EnableCaller || f.EnableStack {
+		stack := captureStacktrace(entry.callerSkip, stackDepth)
+		defer stack.Free()
+		if stack.Count() > 0 {
+			frame, more := stack.Next()
+			if f.EnableCaller {
+				c := frame.File + ":" + strconv.Itoa(frame.Line)
+				entry.caller = c
+			}
+			if f.EnableStack {
+				buffer := buffer.Get()
+				defer buffer.Free()
+
+				stackfmt := newStackFormatter(buffer)
+
+				// We've already extracted the first frame, so format that
+				// separately and defer to stackfmt for the rest.
+				stackfmt.FormatFrame(frame)
+				if more {
+					stackfmt.FormatStack(stack)
+				}
+				stacktrace = buffer.String()
+			}
+		}
+	}
 	for _, p := range f.PartsOrder {
 		f.writePart(entry, p)
 	}
 	f.writeFields(entry)
 	if f.EnableStack {
 		entry.WriteByte('\n')
-		f.defaultFormatErrorStack(entry)
+		entry.WriteString(stacktrace)
 	}
 	return entry.WriteByte('\n')
 }
 
 // writeFields appends formatted key-fValueue pairs to buf.
 func (f *TextFormatter) writeFields(entry *Entry) {
-	if entry.fieldsLen > 0 {
+	if entry.FieldsLength() > 0 {
 		_ = entry.WriteByte(' ')
 	}
 
 	i := 0
-	for _, field := range entry.Fields[:entry.fieldsLen] {
+	for _, field := range entry.Fields[:entry.FieldsLength()] {
 		name := field.Key
 		fValue := field.Val
 		i++
@@ -99,7 +131,7 @@ func (f *TextFormatter) writeFields(entry *Entry) {
 			f.FormatFieldValue(entry, fValue)
 		}
 
-		if i < entry.fieldsLen { // Skip space for last field
+		if i < entry.FieldsLength() { // Skip space for last field
 			_ = entry.WriteByte(' ')
 		}
 	}
@@ -184,24 +216,9 @@ func consoleDefaultPartsOrder() []string {
 	}
 }
 
-func (f *TextFormatter) defaultFormatErrorStack(entry *Entry) {
-	skip := entry.callerSkip + 1
-	stack := takeStacktrace(skip)
-	_, _ = entry.WriteString(stack)
-}
-
 func (f *TextFormatter) defaultFormatCaller(entry *Entry) {
-	var c string
-
-	skip := entry.callerSkip + 4
-
 	noColor := f.NoColor
-
-	file, line := getFileCaller(skip)
-
-	c = file + ":" + strconv.Itoa(line)
-	c = colorize(c, colorBold, noColor)
-
+	c := colorize(entry.caller, colorBold, noColor)
 	_, _ = entry.WriteString(c)
 }
 

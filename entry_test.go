@@ -16,7 +16,7 @@ func TestEntry(t *testing.T) {
 	require.Equal("", entry.Message)
 	require.Equal([]byte(nil), entry.Data)
 	require.Equal([]Field(nil), entry.Fields)
-	require.Equal(0, entry.fieldsLen)
+	require.Equal(0, entry.FieldsLength())
 	n, err := entry.Write([]byte("hello"))
 	require.Equal(5, n)
 	require.Nil(err)

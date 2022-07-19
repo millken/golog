@@ -15,6 +15,7 @@ type Entry struct {
 	Fields     []Field
 	fieldsLen  int
 	callerSkip int
+	caller     string
 }
 
 var (
@@ -38,6 +39,7 @@ func releaseEntry(e *Entry) {
 	e.Fields = e.Fields[:0]
 	e.fieldsLen = 0
 	e.callerSkip = 0
+	e.caller = e.caller[:0]
 	entryPool.Put(e)
 }
 

@@ -54,7 +54,7 @@ func (f *JSONFormatter) Format(entry *Entry) error {
 			}
 		}
 	}
-	entry.Data = appendFields(entry.Data, entry.Fields[:entry.fieldsLen]...)
+	entry.Data = appendFields(entry.Data, entry.Fields[:entry.FieldsLength()]...)
 	entry.Data = enc.AppendEndMarker(entry.Data)
 	entry.Data = enc.AppendLineBreak(entry.Data)
 	return nil
