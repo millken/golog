@@ -1,15 +1,19 @@
 package golog
 
 import (
-	"path/filepath"
 	"strconv"
+
+	"github.com/millken/golog/internal/buffer"
 )
 
 // JSONFormatter is a formatter that outputs JSON-encoded log messages.
 type JSONFormatter struct {
 	// EnableCaller enabled caller
-	EnableCaller     bool
-	DisableTimestamp bool
+	EnableCaller bool
+	// EnableStack enables stack trace
+	EnableStack          bool
+	CallerSkipFrameCount int
+	DisableTimestamp     bool
 }
 
 // Format formats the log entry.
@@ -21,15 +25,34 @@ func (f *JSONFormatter) Format(entry *Entry) error {
 	entry.Data = appendKeyVal(entry.Data, LevelFieldName, entry.Level.String())
 	entry.Data = appendKeyVal(entry.Data, MessageFieldName, &entry.Message)
 
-	if f.EnableCaller {
-		file, line := caller(CallerSkipFrameCount)
-		c := file + ":" + strconv.Itoa(line)
-		if len(c) > 0 {
-			if rel, err := filepath.Rel(_cwd, c); err == nil {
-				c = rel
+	stackDepth := stacktraceFirst
+	if f.EnableStack {
+		stackDepth = stacktraceFull
+	}
+	if f.EnableCaller || f.EnableStack {
+		stack := captureStacktrace(entry.callerSkip, stackDepth)
+		defer stack.Free()
+		if stack.Count() > 0 {
+			frame, more := stack.Next()
+			if f.EnableCaller {
+				c := frame.File + ":" + strconv.Itoa(frame.Line)
+				entry.Data = appendKeyVal(entry.Data, CallerFieldName, c)
+			}
+			if f.EnableStack {
+				buffer := buffer.Get()
+				defer buffer.Free()
+
+				stackfmt := newStackFormatter(buffer)
+
+				// We've already extracted the first frame, so format that
+				// separately and defer to stackfmt for the rest.
+				stackfmt.FormatFrame(frame)
+				if more {
+					stackfmt.FormatStack(stack)
+				}
+				entry.Data = appendKeyVal(entry.Data, ErrorStackFieldName, buffer.String())
 			}
 		}
-		entry.Data = appendKeyVal(entry.Data, CallerFieldName, c)
 	}
 	entry.Data = appendFields(entry.Data, entry.Fields[:entry.fieldsLen]...)
 	entry.Data = enc.AppendEndMarker(entry.Data)

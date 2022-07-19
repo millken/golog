@@ -8,8 +8,9 @@ import (
 
 // Logger is a simple logger.
 type Logger struct {
-	handlers []Handler
-	fields   []Field
+	callerSkip int
+	handlers   []Handler
+	fields     []Field
 }
 
 // NewLogger creates a new Logger.
@@ -42,6 +43,7 @@ func (l *Logger) output(level Level, msg string, fields ...Field) {
 		entry.Message = msg
 		entry.Level = level
 		entry.Timestamp = time.Now()
+		entry.callerSkip = l.callerSkip + 3
 		entry.Reset()
 
 		formatter := handler.Formatter()
@@ -60,19 +62,22 @@ func (l *Logger) output(level Level, msg string, fields ...Field) {
 
 // AddHandler adds a handler.
 func (l *Logger) AddHandler(handler Handler) {
+	l.callerSkip++
 	l.handlers = append(l.handlers, handler)
 }
 
 // WithField returns a new logger with the field added.
 func (l *Logger) WithField(k string, v interface{}) *Logger {
+	l.callerSkip++
 	return l.WithFields(Field{k, v})
 }
 
 // WithFields returns a new logger with the fields added.
 func (l *Logger) WithFields(fields ...Field) *Logger {
 	return &Logger{
-		handlers: l.handlers,
-		fields:   append(l.fields, fields...),
+		callerSkip: 1,
+		handlers:   l.handlers,
+		fields:     append(l.fields, fields...),
 	}
 }
 

@@ -10,12 +10,11 @@ import (
 )
 
 func TestWriterHandler(t *testing.T) {
-	fh := &WriterHandler{
-		Output: os.Stdout,
-	}
+	fh := NewLoggerHandler(os.Stdout)
 	fh.SetLevel(DebugLevel)
 	formatter := NewTextFormatter()
 	formatter.EnableCaller = true
+	formatter.EnableStack = true
 	fh.SetFormatter(formatter)
 	logger := NewLogger()
 	logger.AddHandler(fh)
@@ -24,15 +23,15 @@ func TestWriterHandler(t *testing.T) {
 	logger.Warnf("warning message")
 	logger.Errorf("error message")
 	logger.WithFields(F("a", 1), F("b", true)).Debugf("debug message with %d fields", 2)
+	logger.WithField("c", "s").WithFields(F("a", 2), F("b", true)).Debugf("debug message with %d fields", 3)
 }
 
 func TestWriterHandlerWithJSONFormatter(t *testing.T) {
-	fh := &WriterHandler{
-		Output: os.Stdout,
-	}
+	fh := NewLoggerHandler(os.Stdout)
 	fh.SetLevel(DebugLevel)
 	fh.SetFormatter(&JSONFormatter{
 		EnableCaller: true,
+		EnableStack:  true,
 	})
 	logger := NewLogger()
 	logger.AddHandler(fh)
@@ -41,6 +40,7 @@ func TestWriterHandlerWithJSONFormatter(t *testing.T) {
 	logger.Warnf("warning message")
 	logger.Errorf("error message")
 	logger.WithFields(F("a", 1), F("b", true)).Debugf("debug message")
+	logger.WithField("c", "s").Debugf("debug message with %d fields", 2)
 
 }
 
@@ -49,9 +49,7 @@ func TestDifferentLevelsGoToDifferentWriters(t *testing.T) {
 	var a, b bytes.Buffer
 
 	log := NewLogger()
-	hand1 := &WriterHandler{
-		Output: &a,
-	}
+	hand1 := NewLoggerHandler(&a)
 	hand1.SetLevels(WarnLevel)
 	hand1.SetFormatter(&TextFormatter{
 		DisableTimestamp: true,
@@ -61,9 +59,7 @@ func TestDifferentLevelsGoToDifferentWriters(t *testing.T) {
 
 	log.AddHandler(hand1)
 
-	hand2 := &WriterHandler{
-		Output: &b,
-	}
+	hand2 := NewLoggerHandler(&b)
 	hand2.SetLevels(InfoLevel)
 	hand2.SetFormatter(&TextFormatter{
 		DisableTimestamp: true,
@@ -79,9 +75,7 @@ func TestDifferentLevelsGoToDifferentWriters(t *testing.T) {
 }
 
 func BenchmarkWriterHandler(b *testing.B) {
-	fh := &WriterHandler{
-		Output: io.Discard,
-	}
+	fh := NewLoggerHandler(io.Discard)
 	formatter := NewTextFormatter()
 	formatter.EnableCaller = false
 	formatter.DisableTimestamp = true
@@ -96,9 +90,7 @@ func BenchmarkWriterHandler(b *testing.B) {
 }
 
 func BenchmarkWriterHandlerWithFields(b *testing.B) {
-	fh := &WriterHandler{
-		Output: io.Discard,
-	}
+	fh := NewLoggerHandler(io.Discard)
 
 	formatter := NewTextFormatter()
 	formatter.EnableCaller = false
@@ -115,9 +107,7 @@ func BenchmarkWriterHandlerWithFields(b *testing.B) {
 }
 
 func BenchmarkJSONFormatterWriterHandler(b *testing.B) {
-	fh := &WriterHandler{
-		Output: io.Discard,
-	}
+	fh := NewLoggerHandler(io.Discard)
 	fh.SetFormatter(&JSONFormatter{
 		DisableTimestamp: true,
 		EnableCaller:     false,
@@ -132,9 +122,7 @@ func BenchmarkJSONFormatterWriterHandler(b *testing.B) {
 }
 
 func BenchmarkJSONFormatterWriterHandlerWithFields(b *testing.B) {
-	fh := &WriterHandler{
-		Output: io.Discard,
-	}
+	fh := NewLoggerHandler(io.Discard)
 	fh.SetFormatter(&JSONFormatter{
 		DisableTimestamp: true,
 		EnableCaller:     false,

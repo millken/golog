@@ -30,9 +30,6 @@ var (
 	// CallerFieldName is the field name used for caller field.
 	CallerFieldName = "caller"
 
-	// CallerSkipFrameCount is the number of stack frames to skip to find the caller.
-	CallerSkipFrameCount = 5
-
 	// ErrorStackFieldName is the field name used for error stacks.
 	ErrorStackFieldName = "stack"
 
@@ -70,10 +67,8 @@ var (
 type Level int8
 
 const (
-	// NoLevel defines an absent log level.
-	NoLevel Level = iota
 	// DebugLevel defines debug log level.
-	DebugLevel
+	DebugLevel Level = iota
 	// InfoLevel defines info log level.
 	InfoLevel
 	// WarnLevel defines warn log level.
@@ -143,22 +138,33 @@ func (l Levels) Contains(level Level) bool {
 	return false
 }
 
-func caller(skip int) (string, int) {
-	_, file, line, _ := runtime.Caller(skip)
-	return file, line
+func getFileCaller(calldepth int) (string, int) {
+	pc := make([]uintptr, 1)
+
+	numFrames := runtime.Callers(calldepth, pc)
+	if numFrames < 1 {
+		return "???", 0
+	}
+
+	frame, _ := runtime.CallersFrames(pc).Next()
+	file := frame.File
+	if strings.HasPrefix(file, _cwd) {
+		file = file[len(_cwd)+1:]
+	}
+	return file, frame.Line
 }
 
 var (
-	_globalMu sync.RWMutex
-	_globalL  = NewLogger()
+	_globalMu     sync.RWMutex
+	_globalLogger = NewLogger()
 )
 
 // ReplaceGlobals replaces the global Logger, and returns a
 // function to restore the original values. It's safe for concurrent use.
 func ReplaceGlobals(logger *Logger) func() {
 	_globalMu.Lock()
-	prev := _globalL
-	_globalL = logger
+	prev := _globalLogger
+	_globalLogger = logger
 	_globalMu.Unlock()
 	return func() { ReplaceGlobals(prev) }
 }
@@ -207,7 +213,8 @@ func WithFields(fields ...Field) *Logger {
 // It's safe for concurrent use.
 func safeLogger() *Logger {
 	_globalMu.RLock()
-	l := _globalL
+	l := _globalLogger
 	_globalMu.RUnlock()
+	l.callerSkip = 2
 	return l
 }

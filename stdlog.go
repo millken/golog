@@ -12,15 +12,14 @@ var (
 
 // StdOption is the option for StdLog.
 type StdOption struct {
-	NoColor              bool
-	EnableCaller         bool
-	DisableTimestamp     bool
-	Level                Level
-	Output               io.Writer
-	CallerSkipFrameCount int
-	TimeFormat           string
-	PartsOrder           []string
-	PartsExclude         []string
+	NoColor          bool
+	EnableCaller     bool
+	DisableTimestamp bool
+	Level            Level
+	Output           io.Writer
+	TimeFormat       string
+	PartsOrder       []string
+	PartsExclude     []string
 }
 
 func prepareStdOptions(opt *StdOption) *StdOption {
@@ -29,12 +28,6 @@ func prepareStdOptions(opt *StdOption) *StdOption {
 	}
 	if opt.TimeFormat == "" {
 		opt.TimeFormat = consoleDefaultTimeFormat
-	}
-	if opt.Level == NoLevel {
-		opt.Level = DefaultLevel
-	}
-	if opt.CallerSkipFrameCount == 0 {
-		opt.CallerSkipFrameCount = 6
 	}
 	if opt.PartsOrder == nil {
 		opt.PartsOrder = consoleDefaultPartsOrder()
@@ -49,19 +42,17 @@ func NewStdLog(opts ...StdOption) *Logger {
 		o = opts[0]
 	}
 	opt := prepareStdOptions(&o)
-	stdHandler := &WriterHandler{
-		Output: opt.Output,
-	}
+	stdHandler := NewLoggerHandler(opt.Output)
+
 	stdHandler.SetLevel(opt.Level)
 
 	stdFormatter := &TextFormatter{
-		NoColor:              opt.NoColor,
-		EnableCaller:         opt.EnableCaller,
-		CallerSkipFrameCount: opt.CallerSkipFrameCount,
-		TimeFormat:           opt.TimeFormat,
-		DisableTimestamp:     opt.DisableTimestamp,
-		PartsOrder:           opt.PartsOrder,
-		PartsExclude:         opt.PartsExclude,
+		NoColor:          opt.NoColor,
+		EnableCaller:     opt.EnableCaller,
+		TimeFormat:       opt.TimeFormat,
+		DisableTimestamp: opt.DisableTimestamp,
+		PartsOrder:       opt.PartsOrder,
+		PartsExclude:     opt.PartsExclude,
 	}
 	stdHandler.SetFormatter(stdFormatter)
 

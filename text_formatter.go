@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
-	"runtime"
 	"strconv"
 	"time"
 )
@@ -34,6 +32,8 @@ type TextFormatter struct {
 	NoColor bool
 	// EnableCaller enabled caller
 	EnableCaller bool
+	// EnableStack enables stack trace
+	EnableStack bool
 	// Disable timestamp logging. useful when output is redirected to logging
 	// system that already adds timestamps.
 	DisableTimestamp     bool
@@ -69,6 +69,10 @@ func (f *TextFormatter) Format(entry *Entry) error {
 		f.writePart(entry, p)
 	}
 	f.writeFields(entry)
+	if f.EnableStack {
+		entry.WriteByte('\n')
+		f.defaultFormatErrorStack(entry)
+	}
 	return entry.WriteByte('\n')
 }
 
@@ -107,6 +111,9 @@ func (f *TextFormatter) writePart(entry *Entry, p string) {
 		return
 	}
 	if !f.EnableCaller && p == CallerFieldName {
+		return
+	}
+	if !f.EnableStack && p == ErrorStackFieldName {
 		return
 	}
 
@@ -172,27 +179,29 @@ func consoleDefaultPartsOrder() []string {
 		TimestampFieldName,
 		LevelFieldName,
 		CallerFieldName,
+		ErrorStackFieldName,
 		MessageFieldName,
 	}
 }
 
+func (f *TextFormatter) defaultFormatErrorStack(entry *Entry) {
+	skip := entry.callerSkip + 1
+	stack := takeStacktrace(skip)
+	_, _ = entry.WriteString(stack)
+}
+
 func (f *TextFormatter) defaultFormatCaller(entry *Entry) {
 	var c string
-	skip := f.CallerSkipFrameCount
-	if skip == 0 {
-		skip = CallerSkipFrameCount + 1
-	}
+
+	skip := entry.callerSkip + 4
+
 	noColor := f.NoColor
-	//2 allocs
-	_, file, line, _ := runtime.Caller(skip)
+
+	file, line := getFileCaller(skip)
 
 	c = file + ":" + strconv.Itoa(line)
-	if len(c) > 0 {
-		if rel, err := filepath.Rel(_cwd, c); err == nil {
-			c = rel
-		}
-		c = colorize(c, colorBold, noColor)
-	}
+	c = colorize(c, colorBold, noColor)
+
 	_, _ = entry.WriteString(c)
 }
 
@@ -259,7 +268,7 @@ func (f *TextFormatter) defaultFormatLevel(entry *Entry) {
 	ll := entry.Level
 	noColor := f.NoColor
 	switch ll {
-	case NoLevel, Disabled:
+	case Disabled:
 		l = ""
 	case DebugLevel:
 		l = colorize(*ll.String(), colorYellow, noColor)

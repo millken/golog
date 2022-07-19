@@ -8,12 +8,13 @@ import (
 
 // Entry represents a log entry.
 type Entry struct {
-	Message   string
-	Data      []byte
-	Timestamp time.Time
-	Level     Level
-	Fields    []Field
-	fieldsLen int
+	Message    string
+	Data       []byte
+	Timestamp  time.Time
+	Level      Level
+	Fields     []Field
+	fieldsLen  int
+	callerSkip int
 }
 
 var (
@@ -36,6 +37,7 @@ func releaseEntry(e *Entry) {
 	e.Data = e.Data[:0]
 	e.Fields = e.Fields[:0]
 	e.fieldsLen = 0
+	e.callerSkip = 0
 	entryPool.Put(e)
 }
 
@@ -68,6 +70,11 @@ func (e *Entry) WriteString(s string) (int, error) {
 func (e *Entry) WriteTo(w io.Writer) (int64, error) {
 	n, err := w.Write(e.Data)
 	return int64(n), err
+}
+
+// FieldsLength returns the number of fields.
+func (e *Entry) FieldsLength() int {
+	return e.fieldsLen
 }
 
 // Reset resets the entry data.

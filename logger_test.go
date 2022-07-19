@@ -20,9 +20,7 @@ func TestLoggerWithOptions(t *testing.T) {
 }
 
 func TestLoggerWithFields(t *testing.T) {
-	stdHandler := &WriterHandler{
-		Output: os.Stdout,
-	}
+	stdHandler := NewLoggerHandler(os.Stdout)
 	stdHandler.SetLevel(DebugLevel)
 	stdFormatter := &TextFormatter{
 		NoColor:              false,

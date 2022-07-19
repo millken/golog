@@ -12,8 +12,9 @@ func TestGlobalLog(t *testing.T) {
 	Infof("std info message")
 	opt := StdOption{
 		Output:           os.Stderr,
-		DisableTimestamp: true,
+		DisableTimestamp: false,
 		NoColor:          true,
+		EnableCaller:     true,
 	}
 	stdLog := NewStdLog(opt)
 	ReplaceGlobals(stdLog)
@@ -34,10 +35,10 @@ func TestParseLevel(t *testing.T) {
 		{"warn", WarnLevel},
 		{"error", ErrorLevel},
 		{"fatal", FatalLevel},
-		{"", NoLevel},
-		{"foo", NoLevel},
+		{"", Disabled},
+		{"foo", Disabled},
 	} {
-		if got, _ := ParseLevel(test.in); got != test.want {
+		if got, err := ParseLevel(test.in); err == nil && got != test.want {
 			t.Errorf("ParseLevel(%q) = %v, want %v", test.in, got, test.want)
 		}
 	}
