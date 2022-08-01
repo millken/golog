@@ -17,7 +17,7 @@ func TestGlobalLog(t *testing.T) {
 	opt := StdOption{
 		Output:           os.Stderr,
 		DisableTimestamp: false,
-		NoColor:          true,
+		NoColor:          false,
 		EnableCaller:     true,
 	}
 	stdLog := NewStdLog(opt)
@@ -25,6 +25,7 @@ func TestGlobalLog(t *testing.T) {
 	Warnf("std warning message")
 	Errorf("std error message")
 	WithField("err", errors.New("error")).Debugf("std debug message")
+	WithField("err", errors.New("error")).WithField("c", false).Warnf("std warn message")
 	WithFields(F("a", 1), F("b", true)).Infof("std info message with %d fields", 2)
 	Debugf("std debug message")
 }
@@ -48,7 +49,7 @@ func TestGlobal_Panic(t *testing.T) {
 		Panicf("panic message")
 	}()
 	require.NotNil(recovered)
-	require.Equal("PANIC panic message\n", buf.String())
+	require.Equal("PNC panic message\n", buf.String())
 	require.Equal("panic message", recovered)
 }
 
@@ -57,7 +58,7 @@ func TestGlobal_Fatal(t *testing.T) {
 	opt := StdOption{
 		Output:           &buf,
 		DisableTimestamp: true,
-		NoColor:          true,
+		NoColor:          false,
 	}
 	stdLog := NewStdLog(opt)
 	ReplaceGlobals(stdLog)

@@ -70,8 +70,8 @@ func TestDifferentLevelsGoToDifferentWriters(t *testing.T) {
 	log.Warnf("send to a")
 	log.Infof("send to b")
 
-	require.Equal(a.String(), "WARN send to a\n")
-	require.Equal(b.String(), "INFO send to b\n")
+	require.Equal(a.String(), "WRN send to a\n")
+	require.Equal(b.String(), "INF send to b\n")
 }
 
 func BenchmarkWriterHandler(b *testing.B) {

@@ -73,7 +73,7 @@ func (f *TextFormatter) Format(entry *Entry) error {
 		stackDepth = stacktraceFull
 	}
 	if f.EnableCaller || f.EnableStack {
-		stack := captureStacktrace(entry.callerSkip, stackDepth)
+		stack := captureStacktrace(entry.callerSkip+f.CallerSkipFrameCount, stackDepth)
 		defer stack.Free()
 		if stack.Count() > 0 {
 			frame, more := stack.Next()
@@ -288,19 +288,19 @@ func (f *TextFormatter) defaultFormatLevel(entry *Entry) {
 	case Disabled:
 		l = ""
 	case DebugLevel:
-		l = colorize(*ll.String(), colorYellow, noColor)
+		l = colorize("DBG", colorCyan, noColor)
 	case InfoLevel:
-		l = colorize(*ll.String(), colorGreen, noColor)
+		l = colorize("INF", colorBlue, noColor)
 	case WarnLevel:
-		l = colorize(*ll.String(), colorRed, noColor)
+		l = colorize("WRN", colorYellow, noColor)
 	case ErrorLevel:
-		l = colorize(colorize(*ll.String(), colorRed, noColor), colorBold, noColor)
+		l = colorize("ERR", colorRed, noColor)
 	case FatalLevel:
-		l = colorize(colorize(*ll.String(), colorRed, noColor), colorBold, noColor)
+		l = colorize(colorize("FTL", colorRed, noColor), colorBold, noColor)
 	case PanicLevel:
-		l = colorize(colorize(*ll.String(), colorRed, noColor), colorBold, noColor)
+		l = colorize(colorize("PNC", colorDarkGray, noColor), colorBold, noColor)
 	default:
-		l = colorize("???", colorBold, noColor)
+		l = colorize("?????", colorBold, noColor)
 	}
 	entry.WriteString(l)
 }

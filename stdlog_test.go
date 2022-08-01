@@ -13,7 +13,15 @@ import (
 )
 
 func TestStdLog(t *testing.T) {
-	stdLog := NewStdLog()
+	opt := StdOption{
+		EnableCaller: true,
+		NoColor:      true,
+	}
+	stdLog := NewStdLog(opt)
+	stdLog.Debug("std debug raw message")
+	stdLog.Info("std info raw message")
+	stdLog.Warn("std warning raw message")
+	stdLog.Error("std error raw message")
 	stdLog.Debugf("std debug message")
 	stdLog.Infof("std info message")
 	stdLog.Warnf("std warning message")
@@ -36,7 +44,7 @@ func TestStdLog(t *testing.T) {
 		F("a", 1),
 		F("b", true),
 	}
-	stdLog.WithFields(fields...).Infof("std info message with %d fields", 2)
+	stdLog.WithFields(fields...).Infof("std info message with %d fields", len(fields))
 
 	stdLog.Debugf("std debug message")
 }
@@ -74,7 +82,7 @@ func TestLogger_Panic(t *testing.T) {
 		stdLog.Panicf("panic message")
 	}()
 	require.NotNil(recovered)
-	require.Equal("PANIC panic message\n", buf.String())
+	require.Equal("PNC panic message\n", buf.String())
 	require.Equal("panic message", recovered)
 }
 

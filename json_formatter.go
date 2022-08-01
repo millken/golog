@@ -16,6 +16,11 @@ type JSONFormatter struct {
 	DisableTimestamp     bool
 }
 
+// NewJSONFormatter returns a new JSONFormatter.
+func NewJSONFormatter() *JSONFormatter {
+	return &JSONFormatter{}
+}
+
 // Format formats the log entry.
 func (f *JSONFormatter) Format(entry *Entry) error {
 	entry.Data = enc.AppendBeginMarker(entry.Data)
@@ -30,7 +35,7 @@ func (f *JSONFormatter) Format(entry *Entry) error {
 		stackDepth = stacktraceFull
 	}
 	if f.EnableCaller || f.EnableStack {
-		stack := captureStacktrace(entry.callerSkip, stackDepth)
+		stack := captureStacktrace(entry.callerSkip+f.CallerSkipFrameCount, stackDepth)
 		defer stack.Free()
 		if stack.Count() > 0 {
 			frame, more := stack.Next()

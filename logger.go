@@ -8,7 +8,7 @@ import (
 
 // Logger is a simple logger.
 type Logger struct {
-	callerSkip int
+	CallerSkip int
 	handlers   []Handler
 	fields     []Field
 }
@@ -43,7 +43,7 @@ func (l *Logger) output(level Level, msg string, fields ...Field) {
 		entry.Message = msg
 		entry.Level = level
 		entry.Timestamp = time.Now()
-		entry.callerSkip = l.callerSkip + 3
+		entry.callerSkip = l.CallerSkip + 3
 		entry.Reset()
 
 		formatter := handler.Formatter()
@@ -62,20 +62,23 @@ func (l *Logger) output(level Level, msg string, fields ...Field) {
 
 // AddHandler adds a handler.
 func (l *Logger) AddHandler(handler Handler) {
-	l.callerSkip++
+	l.CallerSkip++
 	l.handlers = append(l.handlers, handler)
 }
 
 // WithField returns a new logger with the field added.
 func (l *Logger) WithField(k string, v interface{}) *Logger {
-	l.callerSkip++
-	return l.WithFields(Field{k, v})
+	return &Logger{
+		CallerSkip: l.CallerSkip,
+		handlers:   l.handlers,
+		fields:     append(l.fields, Field{Key: k, Val: v}),
+	}
 }
 
 // WithFields returns a new logger with the fields added.
 func (l *Logger) WithFields(fields ...Field) *Logger {
 	return &Logger{
-		callerSkip: 1,
+		CallerSkip: l.CallerSkip,
 		handlers:   l.handlers,
 		fields:     append(l.fields, fields...),
 	}
@@ -123,8 +126,41 @@ func (l *Logger) Panicf(format string, args ...interface{}) {
 	panic(fmt.Sprintf(format, args...))
 }
 
+// Debug logs a message at debug level.
+func (l *Logger) Debug(msg string) {
+	l.logf(DebugLevel, msg)
+}
+
+// Info logs a message at info level.
+func (l *Logger) Info(msg string) {
+	l.logf(InfoLevel, msg)
+}
+
+// Warn logs a message at warn level.
+func (l *Logger) Warn(msg string) {
+	l.logf(WarnLevel, msg)
+}
+
+// Error logs a message at error level.
+func (l *Logger) Error(msg string) {
+	l.logf(ErrorLevel, msg)
+}
+
+// Fatal logs a message using Fatal level and exits with status 1.
+func (l *Logger) Fatal(msg string) {
+	l.logf(FatalLevel, msg)
+	os.Exit(1)
+}
+
+// Panic logs a message using Panic level and panics.
+func (l *Logger) Panic(msg string) {
+	l.logf(PanicLevel, msg)
+	panic(msg)
+}
+
 // Reset resets the logger.
 func (l *Logger) Reset() {
+	l.CallerSkip = 0
 	l.handlers = l.handlers[:0]
 	l.fields = l.fields[:0]
 }

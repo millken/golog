@@ -179,14 +179,46 @@ func Debugf(format string, args ...interface{}) {
 	safeLogger().Debugf(format, args...)
 }
 
+// Panic logs a message using Panic level and panics.
+func Panic(msg string) {
+	safeLogger().Panic(msg)
+}
+
+// Fatal logs a message using Fatal level and exits with status 1.
+func Fatal(msg string) {
+	safeLogger().Fatal(msg)
+}
+
+// Error logs a message using Error level.
+func Error(msg string) {
+	safeLogger().Error(msg)
+}
+
+// Warn logs a message using Warn level.
+func Warn(msg string) {
+	safeLogger().Warn(msg)
+}
+
+// Info logs a message using Info level.
+func Info(msg string) {
+	safeLogger().Infof(msg)
+}
+
+// Debug logs a message using Debug level.
+func Debug(msg string) {
+	safeLogger().Debugf(msg)
+}
+
 // WithField returns a logger configured with the key-value pair.
 func WithField(k string, v interface{}) *Logger {
-	return safeLogger().WithFields(Field{k, v})
+	return WithFields(Field{Key: k, Val: v})
 }
 
 // WithFields returns a logger configured with the key-value pairs.
 func WithFields(fields ...Field) *Logger {
-	return safeLogger().WithFields(fields...)
+	l := safeLogger()
+	l.CallerSkip = l.CallerSkip - 1
+	return l.WithFields(fields...)
 }
 
 // safeLogger returns the global Logger, which can be reconfigured with ReplaceGlobals.
@@ -195,6 +227,6 @@ func safeLogger() *Logger {
 	_globalMu.RLock()
 	l := _globalLogger
 	_globalMu.RUnlock()
-	l.callerSkip = 2
+	l.CallerSkip = 2
 	return l
 }
