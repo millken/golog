@@ -2,8 +2,11 @@ package golog
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -136,8 +139,18 @@ func (l Levels) Contains(level Level) bool {
 
 var (
 	_globalMu     sync.RWMutex
-	_globalLogger = NewLogger()
+	_globalLogger = New(InfoLevel, os.Stdout, NewTextFormatter())
 )
+
+// New returns a new Logger instance.
+func New(level Level, output io.Writer, formatter Formatter) *Logger {
+	handler := NewLoggerHandler(output)
+	handler.SetFormatter(formatter)
+	handler.SetLevel(level)
+	logger := NewLogger()
+	logger.AddHandler(handler)
+	return logger
+}
 
 // ReplaceGlobals replaces the global Logger, and returns a
 // function to restore the original values. It's safe for concurrent use.
@@ -217,7 +230,7 @@ func WithField(k string, v interface{}) *Logger {
 // WithFields returns a logger configured with the key-value pairs.
 func WithFields(fields ...Field) *Logger {
 	l := safeLogger()
-	l.CallerSkip = l.CallerSkip - 1
+	atomic.AddInt32(&l.callerSkip, -1)
 	return l.WithFields(fields...)
 }
 
@@ -227,6 +240,6 @@ func safeLogger() *Logger {
 	_globalMu.RLock()
 	l := _globalLogger
 	_globalMu.RUnlock()
-	l.CallerSkip = 2
+	atomic.StoreInt32(&l.callerSkip, 2)
 	return l
 }

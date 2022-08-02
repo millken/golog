@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -93,6 +94,31 @@ func TestParseLevel(t *testing.T) {
 			t.Errorf("ParseLevel(%q) = %v, want %v", test.in, got, test.want)
 		}
 	}
+}
+
+func TestGlobalLogRaces(t *testing.T) {
+	var buf bytes.Buffer
+	opt := StdOption{
+		Output:           &buf,
+		DisableTimestamp: true,
+		NoColor:          false,
+	}
+	stdLog := NewStdLog(opt)
+	ReplaceGlobals(stdLog)
+	f := func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		for i := 0; i < 10000; i++ {
+			Info("info")
+		}
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(4)
+	go f(&wg)
+	go f(&wg)
+	go f(&wg)
+	go f(&wg)
+	wg.Wait()
 }
 
 func BenchmarkGlobalLogger(b *testing.B) {

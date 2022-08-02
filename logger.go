@@ -3,12 +3,13 @@ package golog
 import (
 	"fmt"
 	"os"
+	"sync/atomic"
 	"time"
 )
 
 // Logger is a simple logger.
 type Logger struct {
-	CallerSkip int
+	callerSkip int32
 	handlers   []Handler
 	fields     []Field
 }
@@ -43,7 +44,7 @@ func (l *Logger) output(level Level, msg string, fields ...Field) {
 		entry.Message = msg
 		entry.Level = level
 		entry.Timestamp = time.Now()
-		entry.callerSkip = l.CallerSkip + 3
+		entry.callerSkip = int(atomic.LoadInt32(&l.callerSkip)) + 3
 		entry.Reset()
 
 		formatter := handler.Formatter()
@@ -62,26 +63,28 @@ func (l *Logger) output(level Level, msg string, fields ...Field) {
 
 // AddHandler adds a handler.
 func (l *Logger) AddHandler(handler Handler) {
-	l.CallerSkip++
+	atomic.AddInt32(&l.callerSkip, 1)
 	l.handlers = append(l.handlers, handler)
 }
 
 // WithField returns a new logger with the field added.
 func (l *Logger) WithField(k string, v interface{}) *Logger {
-	return &Logger{
-		CallerSkip: l.CallerSkip,
-		handlers:   l.handlers,
-		fields:     append(l.fields, Field{Key: k, Val: v}),
+	log := &Logger{
+		handlers: l.handlers,
+		fields:   append(l.fields, Field{Key: k, Val: v}),
 	}
+	atomic.StoreInt32(&log.callerSkip, atomic.LoadInt32(&l.callerSkip))
+	return log
 }
 
 // WithFields returns a new logger with the fields added.
 func (l *Logger) WithFields(fields ...Field) *Logger {
-	return &Logger{
-		CallerSkip: l.CallerSkip,
-		handlers:   l.handlers,
-		fields:     append(l.fields, fields...),
+	log := &Logger{
+		handlers: l.handlers,
+		fields:   append(l.fields, fields...),
 	}
+	atomic.StoreInt32(&log.callerSkip, atomic.LoadInt32(&l.callerSkip))
+	return log
 }
 
 func (l *Logger) logf(level Level, format string, args ...interface{}) {
@@ -160,7 +163,7 @@ func (l *Logger) Panic(msg string) {
 
 // Reset resets the logger.
 func (l *Logger) Reset() {
-	l.CallerSkip = 0
+	atomic.StoreInt32(&l.callerSkip, 0)
 	l.handlers = l.handlers[:0]
 	l.fields = l.fields[:0]
 }

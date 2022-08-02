@@ -1,6 +1,9 @@
 package golog
 
-import "io"
+import (
+	"io"
+	"sync"
+)
 
 // Handler is the interface that must be implemented
 type Handler interface {
@@ -64,12 +67,15 @@ func (h *baseHandler) Levels() Levels {
 }
 
 type loggerHandler struct {
+	mu sync.Mutex
 	baseHandler
 	writer io.Writer
 }
 
 // Handle writes the log entry to the output.
 func (h *loggerHandler) Handle(entry *Entry) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	_, err := h.writer.Write(entry.Data)
 	return err
 }
