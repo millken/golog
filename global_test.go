@@ -8,38 +8,58 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/millken/golog/internal/config"
+	"github.com/millken/golog/internal/log"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGlobalLog(t *testing.T) {
-	Debugf("debug message")
-	Infof("info message")
+	Debug("debug message")
+	Info("info message")
 
-	Warnf("warning message")
-	Errorf("error message")
+	Warn("warning message")
+	Error("error message")
+	Debugf("debug message %s", "debug")
+	Infof("info message %s", "info")
+
+	Warnf("warning message %s", "warning")
+	Errorf("error message %s", "error")
 	WithField("err", errors.New("error")).Debugf("debug message")
 	WithField("err", errors.New("error")).WithField("c", false).Warnf("warn message")
 	WithFields(F("a", 1), F("b", true)).Infof("info message with %d fields", 2)
 	Debugf("debug message")
 
 	l := WithFields(F("a", 1), F("b", 3))
-	l.Warn("warn message")
+	l.Error("error message")
 	l.WithField("c", false).Warn("warn message")
 }
 
 func TestGlobal_Panic(t *testing.T) {
-	require := require.New(t)
 	var buf bytes.Buffer
-
+	require := require.New(t)
+	cfg := config.Config{
+		Level:    log.INFO,
+		Encoding: "console",
+		ConsoleEncoderConfig: config.ConsoleEncoderConfig{
+			DisableTimestamp: true,
+			DisableColor:     true,
+		},
+		Writer: config.WriterConfig{
+			Type:         "custom",
+			CustomWriter: &buf,
+		},
+	}
+	log, err := NewLoggerByConfig("test", cfg)
+	require.NoError(err)
 	var recovered interface{}
 	func() {
 		defer func() {
 			recovered = recover()
 		}()
-		Panicf("panic message")
+		log.Panicf("panic message")
 	}()
 	require.NotNil(recovered)
-	require.Equal("PNC panic message\n", buf.String())
+	require.Equal("PNIC panic message\n", buf.String())
 	require.Equal("panic message", recovered)
 }
 
@@ -59,12 +79,25 @@ func TestGlobal_Fatal(t *testing.T) {
 
 func TestGlobalLogRaces(t *testing.T) {
 	require := require.New(t)
-	err := LoadConfig("internal/config/testdata/bench.yml")
+	cfg := config.Config{
+		Level:    log.INFO,
+		Encoding: "console",
+		ConsoleEncoderConfig: config.ConsoleEncoderConfig{
+			DisableTimestamp: true,
+		},
+		Writer: config.WriterConfig{
+			Type: "file",
+			FileConfig: config.FileConfig{
+				Path: "",
+			},
+		},
+	}
+	log, err := NewLoggerByConfig("test", cfg)
 	require.NoError(err)
 	f := func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		for i := 0; i < 10000; i++ {
-			Info("info")
+			log.Info("info")
 		}
 	}
 

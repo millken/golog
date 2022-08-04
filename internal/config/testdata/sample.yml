@@ -1,6 +1,9 @@
 default:
   level: info
   encoding: console
+  consoleEncodingConfig:
+    disableTimestamp: false
+    disableColor: true
   callerLevels: [debug, info, warn, error, fatal, panic]
   stacktraceLevels: [warn, error, fatal, panic]
   handler:

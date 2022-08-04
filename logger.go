@@ -13,12 +13,12 @@ import (
 )
 
 var (
-	_ log.Logger = (*Log)(nil)
+	_ log.Logger = (*Logger)(nil)
 )
 
-// Log is an implementation of Logger interface.
+// Logger is an implementation of Logger interface.
 // It encapsulates default or custom logger to provide module and level based logging.
-type Log struct {
+type Logger struct {
 	module        string
 	fields        []log.Field
 	once          sync.Once
@@ -29,57 +29,82 @@ type Log struct {
 	level         log.Level
 }
 
-// New creates and returns a Logger implementation based on given module name.
-func New(module string) *Log {
+func newLogger() *Logger {
 	callerMap := make(map[log.Level]bool, len(log.Levels))
 	stacktraceMap := make(map[log.Level]bool, len(log.Levels))
 	for _, v := range log.Levels {
 		callerMap[v] = false
 		stacktraceMap[v] = false
 	}
-	l := &Log{
-		module:        module,
+	return &Logger{
 		callerMap:     callerMap,
 		stacktraceMap: stacktraceMap,
 	}
+}
+
+// New creates and returns a Logger implementation based on given module name.
+func New(module string) *Logger {
+	l := newLogger()
+	l.module = module
 	l.init()
 	return l
 }
 
-func (l *Log) init() {
+// NewLoggerByConfig creates and returns a Logger implementation based on given config.
+func NewLoggerByConfig(module string, cfg config.Config) (*Logger, error) {
+	l := newLogger()
+	l.module = module
+	err := l.initConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+
+func (l *Logger) init() {
 	var err error
 	l.once.Do(func() {
 		mc := config.GetModuleConfig(l.module)
-		switch mc.Writer.Type {
-		case "file":
-			l.writer, err = writer.NewFile(mc.Writer.FileConfig)
-		default:
-			l.writer, err = writer.NewFile(config.FileConfig{Path: "stdout"})
-		}
-		if err != nil {
+		if err = l.initConfig(mc); err != nil {
 			panic(err)
-		}
-		switch mc.Encoding {
-		case "json":
-			l.encoder = encoding.NewJSONEncoder(mc.JSONEncoderConfig)
-		default:
-			l.encoder = encoding.NewConsoleEncoder(mc.ConsoleEncoderConfig)
-		}
-		l.level = mc.Level
-		if l.level < log.PANIC { // if level is not set, set it to INFO
-			l.level = log.INFO
-		}
-		for _, v := range mc.CallerLevels {
-			l.callerMap[v] = true
-		}
-		for _, v := range mc.StacktraceLevels {
-			l.stacktraceMap[v] = true
 		}
 	})
 }
 
+func (l *Logger) initConfig(cfg config.Config) error {
+	var err error
+	switch cfg.Writer.Type {
+	case "file":
+		l.writer, err = writer.NewFile(cfg.Writer.FileConfig)
+	case "custom":
+		l.writer = cfg.Writer.CustomWriter
+	default:
+		l.writer, err = writer.NewFile(config.FileConfig{Path: "stdout"})
+	}
+	if err != nil {
+		return err
+	}
+	switch cfg.Encoding {
+	case "json":
+		l.encoder = encoding.NewJSONEncoder(cfg.JSONEncoderConfig)
+	default:
+		l.encoder = encoding.NewConsoleEncoder(cfg.ConsoleEncoderConfig)
+	}
+	l.level = log.DefaultLevel // if level is not set, set it to INFO
+	if cfg.Level > 0 {
+		l.level = cfg.Level
+	}
+	for _, v := range cfg.CallerLevels {
+		l.callerMap[v] = true
+	}
+	for _, v := range cfg.StacktraceLevels {
+		l.stacktraceMap[v] = true
+	}
+	return nil
+}
+
 // Fatalf calls underlying logger.Fatal.
-func (l *Log) Fatalf(format string, args ...interface{}) {
+func (l *Logger) Fatalf(format string, args ...interface{}) {
 	if l.level < log.FATAL {
 		return
 	}
@@ -89,7 +114,7 @@ func (l *Log) Fatalf(format string, args ...interface{}) {
 }
 
 // Panicf calls underlying logger.Panic.
-func (l *Log) Panicf(format string, args ...interface{}) {
+func (l *Logger) Panicf(format string, args ...interface{}) {
 	if l.level < log.PANIC {
 		return
 	}
@@ -99,7 +124,7 @@ func (l *Log) Panicf(format string, args ...interface{}) {
 }
 
 // Debugf calls error log function if DEBUG level enabled.
-func (l *Log) Debugf(format string, args ...interface{}) {
+func (l *Logger) Debugf(format string, args ...interface{}) {
 	if l.level < log.DEBUG {
 		return
 	}
@@ -108,7 +133,7 @@ func (l *Log) Debugf(format string, args ...interface{}) {
 }
 
 // Infof calls error log function if INFO level enabled.
-func (l *Log) Infof(format string, args ...interface{}) {
+func (l *Logger) Infof(format string, args ...interface{}) {
 	if l.level < log.INFO {
 		return
 	}
@@ -117,7 +142,7 @@ func (l *Log) Infof(format string, args ...interface{}) {
 }
 
 // Warnf calls error log function if WARNING level enabled.
-func (l *Log) Warnf(format string, args ...interface{}) {
+func (l *Logger) Warnf(format string, args ...interface{}) {
 	if l.level < log.WARNING {
 		return
 	}
@@ -126,7 +151,7 @@ func (l *Log) Warnf(format string, args ...interface{}) {
 }
 
 // Errorf calls error log function if ERROR level enabled.
-func (l *Log) Errorf(format string, args ...interface{}) {
+func (l *Logger) Errorf(format string, args ...interface{}) {
 	if l.level < log.ERROR {
 		return
 	}
@@ -135,7 +160,7 @@ func (l *Log) Errorf(format string, args ...interface{}) {
 }
 
 // Fatal calls underlying logger.Fatal.
-func (l *Log) Fatal(msg string) {
+func (l *Logger) Fatal(msg string) {
 	if l.level < log.FATAL {
 		return
 	}
@@ -145,7 +170,7 @@ func (l *Log) Fatal(msg string) {
 }
 
 // Panic calls underlying logger.Panic.
-func (l *Log) Panic(msg string) {
+func (l *Logger) Panic(msg string) {
 	if l.level < log.PANIC {
 		return
 	}
@@ -155,7 +180,7 @@ func (l *Log) Panic(msg string) {
 }
 
 // Debug calls error log function if DEBUG level enabled.
-func (l *Log) Debug(msg string) {
+func (l *Logger) Debug(msg string) {
 	if l.level < log.DEBUG {
 		return
 	}
@@ -164,7 +189,7 @@ func (l *Log) Debug(msg string) {
 }
 
 // Info calls error log function if INFO level enabled.
-func (l *Log) Info(msg string) {
+func (l *Logger) Info(msg string) {
 	if l.level < log.INFO {
 		return
 	}
@@ -173,7 +198,7 @@ func (l *Log) Info(msg string) {
 }
 
 // Warn calls error log function if WARNING level enabled.
-func (l *Log) Warn(msg string) {
+func (l *Logger) Warn(msg string) {
 	if l.level < log.WARNING {
 		return
 	}
@@ -182,7 +207,7 @@ func (l *Log) Warn(msg string) {
 }
 
 // Error calls error log function if ERROR level enabled.
-func (l *Log) Error(msg string) {
+func (l *Logger) Error(msg string) {
 	if l.level < log.ERROR {
 		return
 	}
@@ -191,20 +216,20 @@ func (l *Log) Error(msg string) {
 }
 
 // WithField returns a logger configured with the key-value pair.
-func (l *Log) WithField(k string, v interface{}) log.Logger {
+func (l *Logger) WithField(k string, v interface{}) log.Logger {
 	clone := l.Clone()
 	clone.fields = append(l.fields, log.Field{Key: k, Val: v})
 	return clone
 }
 
 // WithFields returns a logger configured with the key-value pairs.
-func (l *Log) WithFields(fields ...log.Field) log.Logger {
+func (l *Logger) WithFields(fields ...log.Field) log.Logger {
 	clone := l.Clone()
 	clone.fields = append(l.fields, fields...)
 	return clone
 }
 
-func (l *Log) logf(level log.Level, format string, args ...interface{}) {
+func (l *Logger) logf(level log.Level, format string, args ...interface{}) {
 	var msg string
 	if len(args) > 0 {
 		msg = fmt.Sprintf(format, args...)
@@ -214,7 +239,7 @@ func (l *Log) logf(level log.Level, format string, args ...interface{}) {
 	l.output(level, msg, l.fields...)
 }
 
-func (l *Log) output(level log.Level, msg string, fields ...log.Field) {
+func (l *Logger) output(level log.Level, msg string, fields ...log.Field) {
 	e := log.AcquireEntry()
 	e.Module = l.module
 
@@ -235,20 +260,20 @@ func (l *Log) output(level log.Level, msg string, fields ...log.Field) {
 		panic(err)
 	}
 	if _, err := l.writer.Write(b); err != nil {
-		fmt.Fprintf(os.Stderr, "golog: failed to handle entry: %v", err)
+		fmt.Fprintf(os.Stderr, "failed to write log: %v", err)
 	}
 	e.Reset()
 	log.ReleaseEntry(e)
 }
 
-func (l *Log) isCallerEnabled(level log.Level) bool {
+func (l *Logger) isCallerEnabled(level log.Level) bool {
 	if enabled, ok := l.callerMap[level]; ok {
 		return enabled
 	}
 	return false
 }
 
-func (l *Log) isStacktraceEnabled(level log.Level) bool {
+func (l *Logger) isStacktraceEnabled(level log.Level) bool {
 	if enabled, ok := l.stacktraceMap[level]; ok {
 		return enabled
 	}
@@ -257,8 +282,8 @@ func (l *Log) isStacktraceEnabled(level log.Level) bool {
 
 // Clone returns a copy of this "l" Logger.
 // This copy is returned as pointer as well.
-func (l *Log) Clone() *Log {
-	return &Log{
+func (l *Logger) Clone() *Logger {
+	return &Logger{
 		level:         l.level,
 		module:        l.module,
 		writer:        l.writer,

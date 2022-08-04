@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -49,6 +50,8 @@ type ConsoleEncoderConfig struct {
 	TimeFormat string `json:"timeFormat" yaml:"timeFormat"`
 	// DisableTimestamp disables the timestamp in output.
 	DisableTimestamp bool `json:"disableTimestamp" yaml:"disableTimestamp"`
+	// DisableColor disables the color in output.
+	DisableColor bool `json:"disableColor" yaml:"disableColor"`
 }
 
 type JSONEncoderConfig struct {
@@ -59,8 +62,9 @@ type JSONEncoderConfig struct {
 }
 
 type WriterConfig struct {
-	Type       string     `json:"type" yaml:"type"`
-	FileConfig FileConfig `json:"fileConfig" yaml:"fileConfig"`
+	Type         string     `json:"type" yaml:"type"`
+	CustomWriter io.Writer  `json:"-" yaml:"-"`
+	FileConfig   FileConfig `json:"fileConfig" yaml:"fileConfig"`
 }
 
 type FileConfig struct {
@@ -100,18 +104,7 @@ func Load(path string) error {
 	return nil
 }
 
-// GetLevel - getting log level for given module.
-func GetLevel(module string) log.Level {
-	rwmutex.RLock()
-	defer rwmutex.RUnlock()
-	cfg, exists := configs.Modules[module]
-	if !exists {
-		cfg = configs.Default
-	}
-
-	return cfg.Level
-}
-
+// GetModuleConfig - getting config for given module.
 func GetModuleConfig(module string) Config {
 	rwmutex.RLock()
 	defer rwmutex.RUnlock()
@@ -121,20 +114,4 @@ func GetModuleConfig(module string) Config {
 	}
 
 	return cfg
-}
-
-// IsEnabledFor - Check if given log level is enabled for given module.
-func IsEnabledFor(module string, level log.Level) bool {
-	return level <= GetLevel(module)
-}
-
-// IsCallerEnabled returns if caller info enabled for given module and level.
-func IsCallerEnabled(module string, level log.Level) bool {
-	cfg := GetModuleConfig(module)
-	for _, l := range cfg.CallerLevels {
-		if l == level {
-			return true
-		}
-	}
-	return false
 }

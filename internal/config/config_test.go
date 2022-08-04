@@ -32,4 +32,8 @@ func TestConfig(t *testing.T) {
 	require.Equal(1, len(configs.Modules))
 	require.Equal(log.DEBUG, configs.Modules["mudule/1"].Level)
 	require.Equal("json", configs.Modules["mudule/1"].Encoding)
+
+	cfg := GetModuleConfig("mudule/1")
+	require.Equal(log.DEBUG, cfg.Level)
+	require.Equal("json", cfg.Encoding)
 }

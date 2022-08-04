@@ -8,7 +8,7 @@ import (
 type Flag uint8
 
 const (
-	FlagColor Flag = 1 << iota
+	FlagNoColor Flag = 1 << iota
 	FlagTime
 	FlagCaller
 	FlagStacktrace

@@ -115,7 +115,7 @@ func TakeStacktrace(skip int) string {
 	buffer := buffer.Get()
 	defer buffer.Free()
 
-	stackfmt := newStackFormatter(buffer)
+	stackfmt := NewStackFormatter(buffer)
 	stackfmt.FormatStack(stack)
 	return buffer.String()
 }
@@ -126,8 +126,8 @@ type stackFormatter struct {
 	nonEmpty bool // whehther we've written at least one frame already
 }
 
-// newStackFormatter builds a new stackFormatter.
-func newStackFormatter(b *buffer.Buffer) stackFormatter {
+// NewStackFormatter builds a new stackFormatter.
+func NewStackFormatter(b *buffer.Buffer) stackFormatter {
 	return stackFormatter{b: b}
 }
 

@@ -5,9 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/millken/golog/internal/buffer"
 	"github.com/millken/golog/internal/config"
 	"github.com/millken/golog/internal/log"
 	"github.com/millken/golog/internal/stacktrace"
@@ -61,24 +65,69 @@ func (o *ConsoleEncoder) Encode(e *log.Entry) ([]byte, error) {
 	if e == nil {
 		return nil, errors.New("nil entry")
 	}
-	//var stacktraces string
-	stackDepth := stacktrace.StacktraceFirst
+	var stacktraces string
+	stackDepth := stacktrace.StacktraceFull
 
+	if o.cfg.DisableColor {
+		e.SetFlag(log.FlagNoColor)
+	}
 	if e.HasFlag(log.FlagCaller) {
-		stack := stacktrace.Capture(defaultSkip, stackDepth)
+		stackSkip := defaultSkip
+
+		stackSkip = 3
+		if e.Module == "_global" {
+			if e.FieldsLength() > 0 {
+				stackSkip--
+			}
+			stackSkip++
+		}
+
+		stack := stacktrace.Capture(stackSkip, stackDepth)
 		defer stack.Free()
 		if stack.Count() > 0 {
-			frame, _ := stack.Next()
+			frameFound := false
+			var frame runtime.Frame
+			var more bool
+			for frame, more = stack.Next(); more; frame, more = stack.Next() {
+				_, fnName := filepath.Split(frame.Function)
+				if frameFound {
+					break
+				}
+				if strings.HasPrefix(fnName, "golog.(*Logger)") ||
+					strings.HasPrefix(fnName, "golog.Warn") ||
+					strings.HasPrefix(fnName, "golog.Info") ||
+					strings.HasPrefix(fnName, "golog.Debug") ||
+					strings.HasPrefix(fnName, "golog.Error") ||
+					strings.HasPrefix(fnName, "golog.Fatal") ||
+					strings.HasPrefix(fnName, "golog.Panic") {
+					frameFound = true
+					continue
+				}
+			}
 			if e.HasFlag(log.FlagCaller) {
 				c := frame.File + ":" + strconv.Itoa(frame.Line)
 				e.SetCaller(c)
+			}
+			if e.HasFlag(log.FlagStacktrace) {
+				buffer := buffer.Get()
+				defer buffer.Free()
+
+				stackfmt := stacktrace.NewStackFormatter(buffer)
+
+				// We've already extracted the first frame, so format that
+				// separately and defer to stackfmt for the rest.
+				stackfmt.FormatFrame(frame)
+				if more {
+					stackfmt.FormatStack(stack)
+				}
+				stacktraces = buffer.String()
 			}
 		}
 	}
 
 	for _, p := range o.cfg.PartsOrder {
 		if (p == log.CallerFieldName && !e.HasFlag(log.FlagCaller)) ||
-			(p == log.ErrorStackFieldName && e.HasFlag(log.FlagStacktrace) ||
+			(p == log.ErrorStackFieldName && !e.HasFlag(log.FlagStacktrace) ||
 				(p == log.TimestampFieldName && o.cfg.DisableTimestamp)) {
 			continue
 		}
@@ -88,6 +137,10 @@ func (o *ConsoleEncoder) Encode(e *log.Entry) ([]byte, error) {
 		}
 	}
 	writeFields(e)
+	if e.HasFlag(log.FlagStacktrace) {
+		e.WriteByte(DefaultLineEnding)
+		e.WriteString(stacktraces)
+	}
 	e.WriteByte(DefaultLineEnding)
 	return e.Bytes(), nil
 }
@@ -119,7 +172,7 @@ func writeFields(e *log.Entry) {
 
 func defaultFormatLevel(e *log.Entry) {
 	var l string
-	noColor := !e.HasFlag(log.FlagColor)
+	noColor := e.HasFlag(log.FlagNoColor)
 	switch e.Level {
 	case log.DEBUG:
 		l = colorize("DBUG", colorCyan, noColor)
@@ -151,13 +204,13 @@ func defaultFormatMessage(e *log.Entry) {
 }
 
 func defaultFormatCaller(e *log.Entry) {
-	noColor := !e.HasFlag(log.FlagColor)
+	noColor := e.HasFlag(log.FlagNoColor)
 	c := colorize(e.GetCaller(), colorBold, noColor)
 	_, _ = e.WriteString(c)
 }
 
 func defaultFormatFieldName(e *log.Entry, name string) {
-	noColor := !e.HasFlag(log.FlagColor)
+	noColor := e.HasFlag(log.FlagNoColor)
 	_, _ = e.WriteString(colorize(name+"=", colorCyan, noColor))
 }
 
@@ -243,51 +296,51 @@ func consoleDefaultPartsOrder() []string {
 	}
 }
 
-// // getCallerInfo going through runtime caller frames to determine the caller of logger function by filtering
-// // internal logging library functions.
-// func getCallerInfo(level log.Level) string {
+// getCallerInfo going through runtime caller frames to determine the caller of logger function by filtering
+// internal logging library functions.
+func getCallerInfo() string {
 
-// 	const (
-// 		// search MAXCALLERS caller frames for the real caller,
-// 		// MAXCALLERS defines maximum number of caller frames needed to be recorded to find the actual caller frame
-// 		MAXCALLERS = 6
-// 		// skip SKIPCALLERS frames when determining the real caller
-// 		// SKIPCALLERS is the number of stack frames to skip before recording caller frames,
-// 		// this is mainly used to filter logger library functions in caller frames
-// 		SKIPCALLERS      = 5
-// 		NOTFOUND         = "n/a"
-// 		DEFAULTLOGPREFIX = "log.(*Log)"
-// 	)
+	const (
+		// search MAXCALLERS caller frames for the real caller,
+		// MAXCALLERS defines maximum number of caller frames needed to be recorded to find the actual caller frame
+		MAXCALLERS = 6
+		// skip SKIPCALLERS frames when determining the real caller
+		// SKIPCALLERS is the number of stack frames to skip before recording caller frames,
+		// this is mainly used to filter logger library functions in caller frames
+		SKIPCALLERS      = 5
+		NOTFOUND         = "n/a"
+		DEFAULTLOGPREFIX = "golog.(*Logger)"
+	)
 
-// 	fpcs := make([]uintptr, MAXCALLERS)
+	fpcs := make([]uintptr, MAXCALLERS)
 
-// 	n := runtime.Callers(SKIPCALLERS, fpcs)
-// 	if n == 0 {
-// 		return fmt.Sprintf(callerInfoFormatter, NOTFOUND)
-// 	}
+	n := runtime.Callers(SKIPCALLERS, fpcs)
+	if n == 0 {
+		return fmt.Sprintf("- %s", NOTFOUND)
+	}
 
-// 	frames := runtime.CallersFrames(fpcs[:n])
-// 	loggerFrameFound := false
+	frames := runtime.CallersFrames(fpcs[:n])
+	loggerFrameFound := false
 
-// 	for f, more := frames.Next(); more; f, more = frames.Next() {
-// 		_, fnName := filepath.Split(f.Function)
+	for f, more := frames.Next(); more; f, more = frames.Next() {
+		_, fnName := filepath.Split(f.Function)
 
-// 		if f.Func == nil || f.Function == "" {
-// 			fnName = NOTFOUND // not a function or unknown
-// 		}
+		if f.Func == nil || f.Function == "" {
+			fnName = NOTFOUND // not a function or unknown
+		}
 
-// 		if loggerFrameFound {
-// 			return fmt.Sprintf(callerInfoFormatter, fnName)
-// 		}
+		if loggerFrameFound {
+			return fmt.Sprintf("- %s", fnName)
+		}
 
-// 		if strings.HasPrefix(fnName, DEFAULTLOGPREFIX) {
-// 			loggerFrameFound = true
+		if strings.HasPrefix(fnName, DEFAULTLOGPREFIX) {
+			loggerFrameFound = true
 
-// 			continue
-// 		}
+			continue
+		}
 
-// 		return fmt.Sprintf(callerInfoFormatter, fnName)
-// 	}
+		return fmt.Sprintf("- %s", fnName)
+	}
 
-// 	return fmt.Sprintf(callerInfoFormatter, NOTFOUND)
-// }
+	return fmt.Sprintf("- %s", NOTFOUND)
+}

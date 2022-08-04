@@ -94,7 +94,7 @@ func Debug(msg string) {
 
 func loggerProvider() log.Logger {
 	loggerProviderOnce.Do(func() {
-		loggerProviderInstance = New("")
+		loggerProviderInstance = New("_global")
 	})
 
 	return loggerProviderInstance
