@@ -13,6 +13,10 @@ import (
 	"github.com/millken/golog/internal/stacktrace"
 )
 
+var (
+	_ log.Encoder = (*ConsoleEncoder)(nil)
+)
+
 const DefaultLineEnding = '\n'
 
 const (
@@ -37,22 +41,23 @@ var (
 	defaultSkip int = 5
 )
 
-type console struct {
-	cfg config.ConsoleConfig
+// ConsoleEncoder encodes entries to the console.
+type ConsoleEncoder struct {
+	cfg config.ConsoleEncoderConfig
 }
 
 // NewConsoleEncoder returns a new console encoder.
-func NewConsole(cfg config.ConsoleConfig) *console {
+func NewConsoleEncoder(cfg config.ConsoleEncoderConfig) *ConsoleEncoder {
 	if len(cfg.PartsOrder) == 0 {
 		cfg.PartsOrder = consoleDefaultPartsOrder()
 	}
-	return &console{
+	return &ConsoleEncoder{
 		cfg: cfg,
 	}
 }
 
-// Enocde encodes the entry and writes it to the writer.
-func (c *console) Encode(e *log.Entry) ([]byte, error) {
+// Encode encodes the entry and writes it to the writer.
+func (o *ConsoleEncoder) Encode(e *log.Entry) ([]byte, error) {
 	if e == nil {
 		return nil, errors.New("nil entry")
 	}
@@ -71,9 +76,14 @@ func (c *console) Encode(e *log.Entry) ([]byte, error) {
 		}
 	}
 
-	for _, p := range c.cfg.PartsOrder {
+	for _, p := range o.cfg.PartsOrder {
+		if (p == log.CallerFieldName && !e.HasFlag(log.FlagCaller)) ||
+			(p == log.ErrorStackFieldName && e.HasFlag(log.FlagStacktrace) ||
+				(p == log.TimestampFieldName && o.cfg.DisableTimestamp)) {
+			continue
+		}
 		writePart(e, p)
-		if p != c.cfg.PartsOrder[len(c.cfg.PartsOrder)-1] { // Skip space for last part
+		if p != o.cfg.PartsOrder[len(o.cfg.PartsOrder)-1] { // Skip space for last part
 			e.WriteByte(' ')
 		}
 	}
@@ -103,9 +113,8 @@ func writeFields(e *log.Entry) {
 	for _, v := range e.Fields[:e.FieldsLength()] {
 		e.WriteByte(' ')
 		defaultFormatFieldName(e, v.Key)
-		defaultFormatFieldValue(e, v)
+		defaultFormatFieldValue(e, v.Val)
 	}
-	e.WriteByte(DefaultLineEnding)
 }
 
 func defaultFormatLevel(e *log.Entry) {
@@ -113,19 +122,19 @@ func defaultFormatLevel(e *log.Entry) {
 	noColor := !e.HasFlag(log.FlagColor)
 	switch e.Level {
 	case log.DEBUG:
-		l = colorize("DBG", colorCyan, noColor)
+		l = colorize("DBUG", colorCyan, noColor)
 	case log.INFO:
-		l = colorize("INF", colorBlue, noColor)
+		l = colorize("INFO", colorBlue, noColor)
 	case log.WARNING:
-		l = colorize("WRN", colorYellow, noColor)
+		l = colorize("WARN", colorYellow, noColor)
 	case log.ERROR:
-		l = colorize("ERR", colorRed, noColor)
+		l = colorize("ERRO", colorRed, noColor)
 	case log.FATAL:
-		l = colorize(colorize("FTL", colorRed, noColor), colorBold, noColor)
+		l = colorize(colorize("FATA", colorRed, noColor), colorBold, noColor)
 	case log.PANIC:
-		l = colorize(colorize("PNC", colorDarkGray, noColor), colorBold, noColor)
+		l = colorize(colorize("PNIC", colorDarkGray, noColor), colorBold, noColor)
 	default:
-		l = colorize("???", colorBold, noColor)
+		l = colorize("????", colorBold, noColor)
 	}
 	e.WriteString(l)
 }

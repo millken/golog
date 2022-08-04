@@ -1,5 +1,7 @@
 package log
 
+import "time"
+
 const (
 	// TimestampFieldName is the field name used for the timestamp field.
 	TimestampFieldName = "time"
@@ -18,6 +20,11 @@ const (
 
 	// ErrorStackFieldName is the field name used for error stacks.
 	ErrorStackFieldName = "stack"
+
+	// TimeFieldFormat defines the time format of the Time field type. If set to
+	// TimeFormatUnix, TimeFormatUnixMs or TimeFormatUnixMicro, the time is formatted as an UNIX
+	// timestamp as integer.
+	TimeFieldFormat = time.RFC3339
 )
 
 // Field is a key/value pair.

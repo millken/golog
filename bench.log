@@ -9,13 +9,13 @@ BenchmarkStdlog-4       50106388               120.0 ns/op             0 B/op   
 PASS
 ok      github.com/millken/golog        23.775s
 
-$ go test -cpu=1,2,4 -benchmem -benchtime=5s -run=^$ -bench ^BenchmarkLog$  -v    
+$ go test -cpu=1,2,4 -benchmem -benchtime=5s -run=^$ -bench ^BenchmarkLog$  -v 
 goos: darwin
 goarch: arm64
 pkg: github.com/millken/golog
 BenchmarkLog
-BenchmarkLog            63419851                94.02 ns/op            0 B/op          0 allocs/op
-BenchmarkLog-2          63828825                93.78 ns/op            0 B/op          0 allocs/op
-BenchmarkLog-4          64695664                95.29 ns/op            0 B/op          0 allocs/op
+BenchmarkLog            113146831               52.99 ns/op            0 B/op          0 allocs/op
+BenchmarkLog-2          100000000               53.11 ns/op            0 B/op          0 allocs/op
+BenchmarkLog-4          100000000               53.76 ns/op            0 B/op          0 allocs/op
 PASS
-ok      github.com/millken/golog        23.313s
+ok      github.com/millken/golog        21.084s

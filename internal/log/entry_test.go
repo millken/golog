@@ -1,4 +1,4 @@
-package golog
+package log
 
 import (
 	"bytes"
@@ -10,9 +10,9 @@ import (
 func TestEntry(t *testing.T) {
 	require := require.New(t)
 	entry := &Entry{
-		Level: DebugLevel,
+		Level: DEBUG,
 	}
-	require.Equal(DebugLevel, entry.Level)
+	require.Equal(DEBUG, entry.Level)
 	require.Equal("", entry.Message)
 	require.Equal([]byte(nil), entry.Data)
 	require.Equal([]Field(nil), entry.Fields)

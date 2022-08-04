@@ -30,21 +30,6 @@ type Entry struct {
 	flag       Flag
 }
 
-func acquireEntry() *Entry {
-	return entryPool.Get().(*Entry) //nolint:errcheck
-}
-
-func releaseEntry(e *Entry) {
-	e.Message = e.Message[:0]
-	e.Data = e.Data[:0]
-	e.Fields = e.Fields[:0]
-	e.fieldsLen = 0
-	e.callerSkip = 0
-	e.flag = 0
-	e.caller = e.caller[:0]
-	entryPool.Put(e)
-}
-
 // Bytes returns the entry data as bytes.
 func (e *Entry) Bytes() []byte {
 	return e.Data
@@ -122,10 +107,12 @@ var (
 	}
 )
 
+// AcquireEntry returns a new entry.
 func AcquireEntry() *Entry {
 	return entryPool.Get().(*Entry) //nolint:errcheck
 }
 
+// ReleaseEntry releases the entry.
 func ReleaseEntry(e *Entry) {
 	e.Message = e.Message[:0]
 	e.Data = e.Data[:0]
@@ -133,5 +120,6 @@ func ReleaseEntry(e *Entry) {
 	e.fieldsLen = 0
 	e.callerSkip = 0
 	e.caller = e.caller[:0]
+	e.flag = 0
 	entryPool.Put(e)
 }

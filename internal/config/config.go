@@ -32,8 +32,9 @@ type Config struct {
 	// Level is the default log level.
 	Level log.Level `json:"level" yaml:"level"`
 	// Encoding is the log encoding.  console or json.
-	Encoding              string        `json:"encoding" yaml:"encoding"`
-	ConsoleEncodingConfig ConsoleConfig `json:"consoleEncodingConfig" yaml:"consoleEncodingConfig"`
+	Encoding             string               `json:"encoding" yaml:"encoding"`
+	ConsoleEncoderConfig ConsoleEncoderConfig `json:"consoleEncodingConfig" yaml:"consoleEncodingConfig"`
+	JSONEncoderConfig    JSONEncoderConfig    `json:"jsonEncoderConfig" yaml:"jsonEncoderConfig"`
 	//CallerLevels is the default levels for show caller info.
 	CallerLevels []log.Level `json:"callerLevels" yaml:"callerLevels"`
 	// StacktraceLevels is the default levels for show stacktrace.
@@ -41,11 +42,20 @@ type Config struct {
 	Writer           WriterConfig `json:"handler" yaml:"handler"`
 }
 
-type ConsoleConfig struct {
+type ConsoleEncoderConfig struct {
 	// PartsOrder is the order of the parts of the log entry.
 	PartsOrder []string `json:"partsOrder" yaml:"partsOrder"`
 	// TimeFormat specifies the format for timestamp in output.
-	TimeFormat string
+	TimeFormat string `json:"timeFormat" yaml:"timeFormat"`
+	// DisableTimestamp disables the timestamp in output.
+	DisableTimestamp bool `json:"disableTimestamp" yaml:"disableTimestamp"`
+}
+
+type JSONEncoderConfig struct {
+	// TimeFormat specifies the format for timestamp in output.
+	TimeFormat string `json:"timeFormat" yaml:"timeFormat"`
+	// DisableTimestamp disables the timestamp in output.
+	DisableTimestamp bool `json:"disableTimestamp" yaml:"disableTimestamp"`
 }
 
 type WriterConfig struct {

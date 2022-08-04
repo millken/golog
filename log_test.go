@@ -15,6 +15,12 @@ func TestLog(t *testing.T) {
 	Error("error")
 }
 
+func TestDebugLog(t *testing.T) {
+	require := require.New(t)
+	require.NoError(LoadConfig("./internal/config/testdata/bench.yml"))
+	Info("info")
+}
+
 func BenchmarkLog(b *testing.B) {
 	require := require.New(b)
 	require.NoError(LoadConfig("./internal/config/testdata/bench.yml"))

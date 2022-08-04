@@ -30,7 +30,7 @@ type Log struct {
 }
 
 // New creates and returns a Logger implementation based on given module name.
-func NewLog(module string) *Log {
+func New(module string) *Log {
 	callerMap := make(map[log.Level]bool, len(log.Levels))
 	stacktraceMap := make(map[log.Level]bool, len(log.Levels))
 	for _, v := range log.Levels {
@@ -61,10 +61,14 @@ func (l *Log) init() {
 		}
 		switch mc.Encoding {
 		case "json":
+			l.encoder = encoding.NewJSONEncoder(mc.JSONEncoderConfig)
 		default:
-			l.encoder = encoding.NewConsole(mc.ConsoleEncodingConfig)
+			l.encoder = encoding.NewConsoleEncoder(mc.ConsoleEncoderConfig)
 		}
 		l.level = mc.Level
+		if l.level < log.PANIC { // if level is not set, set it to INFO
+			l.level = log.INFO
+		}
 		for _, v := range mc.CallerLevels {
 			l.callerMap[v] = true
 		}
@@ -188,12 +192,16 @@ func (l *Log) Error(msg string) {
 
 // WithField returns a logger configured with the key-value pair.
 func (l *Log) WithField(k string, v interface{}) log.Logger {
-	return &Log{fields: append(l.fields, log.Field{Key: k, Val: v}), module: l.module}
+	clone := l.Clone()
+	clone.fields = append(l.fields, log.Field{Key: k, Val: v})
+	return clone
 }
 
 // WithFields returns a logger configured with the key-value pairs.
 func (l *Log) WithFields(fields ...log.Field) log.Logger {
-	return &Log{fields: append(l.fields, fields...), module: l.module}
+	clone := l.Clone()
+	clone.fields = append(l.fields, fields...)
+	return clone
 }
 
 func (l *Log) logf(level log.Level, format string, args ...interface{}) {
@@ -210,14 +218,17 @@ func (l *Log) output(level log.Level, msg string, fields ...log.Field) {
 	e := log.AcquireEntry()
 	e.Module = l.module
 
-	copy(e.Fields[0:len(fields)], fields)
+	e.Fields = fields
 	e.SetFieldsLen(len(fields))
 
 	e.Message = msg
 	e.Level = level
 
-	if config.IsCallerEnabled(e.Module, e.Level) {
+	if l.isCallerEnabled(e.Level) {
 		e.SetFlag(log.FlagCaller)
+	}
+	if l.isStacktraceEnabled(e.Level) {
+		e.SetFlag(log.FlagStacktrace)
 	}
 	b, err := l.encoder.Encode(e)
 	if err != nil {
@@ -230,51 +241,31 @@ func (l *Log) output(level log.Level, msg string, fields ...log.Field) {
 	log.ReleaseEntry(e)
 }
 
-// LoadConfig - Load configuration from file
-func LoadConfig(path string) error {
-	return config.Load(path)
+func (l *Log) isCallerEnabled(level log.Level) bool {
+	if enabled, ok := l.callerMap[level]; ok {
+		return enabled
+	}
+	return false
 }
 
-//nolint:gochecknoglobals
-var (
-	loggerProviderInstance log.Logger
-	loggerProviderOnce     sync.Once
-)
-
-// Panic logs a message using Panic level and panics.
-func Panic(msg string) {
-	loggerProvider().Panic(msg)
+func (l *Log) isStacktraceEnabled(level log.Level) bool {
+	if enabled, ok := l.stacktraceMap[level]; ok {
+		return enabled
+	}
+	return false
 }
 
-// Fatal logs a message using Fatal level and exits with status 1.
-func Fatal(msg string) {
-	loggerProvider().Fatal(msg)
-}
-
-// Error logs a message using Error level.
-func Error(msg string) {
-	loggerProvider().Error(msg)
-}
-
-// Warn logs a message using Warn level.
-func Warn(msg string) {
-	loggerProvider().Warn(msg)
-}
-
-// Info logs a message using Info level.
-func Info(msg string) {
-	loggerProvider().Infof(msg)
-}
-
-// Debug logs a message using Debug level.
-func Debug(msg string) {
-	loggerProvider().Debugf(msg)
-}
-
-func loggerProvider() log.Logger {
-	loggerProviderOnce.Do(func() {
-		loggerProviderInstance = NewLog("")
-	})
-
-	return loggerProviderInstance
+// Clone returns a copy of this "l" Logger.
+// This copy is returned as pointer as well.
+func (l *Log) Clone() *Log {
+	return &Log{
+		level:         l.level,
+		module:        l.module,
+		writer:        l.writer,
+		fields:        l.fields,
+		encoder:       l.encoder,
+		callerMap:     l.callerMap,
+		stacktraceMap: l.stacktraceMap,
+		once:          sync.Once{},
+	}
 }

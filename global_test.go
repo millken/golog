@@ -3,7 +3,6 @@ package golog
 import (
 	"bytes"
 	"errors"
-	"io"
 	"os"
 	"os/exec"
 	"sync"
@@ -13,35 +12,25 @@ import (
 )
 
 func TestGlobalLog(t *testing.T) {
-	Debugf("std debug message")
-	Infof("std info message")
-	opt := StdOption{
-		Output:           os.Stderr,
-		DisableTimestamp: false,
-		NoColor:          false,
-		EnableCaller:     true,
-	}
-	stdLog := NewStdLog(opt)
-	ReplaceGlobals(stdLog)
-	Warnf("std warning message")
-	Errorf("std error message")
-	WithField("err", errors.New("error")).Debugf("std debug message")
-	WithField("err", errors.New("error")).WithField("c", false).Warnf("std warn message")
-	WithFields(F("a", 1), F("b", true)).Infof("std info message with %d fields", 2)
-	Debugf("std debug message")
+	Debugf("debug message")
+	Infof("info message")
+
+	Warnf("warning message")
+	Errorf("error message")
+	WithField("err", errors.New("error")).Debugf("debug message")
+	WithField("err", errors.New("error")).WithField("c", false).Warnf("warn message")
+	WithFields(F("a", 1), F("b", true)).Infof("info message with %d fields", 2)
+	Debugf("debug message")
+
+	l := WithFields(F("a", 1), F("b", 3))
+	l.Warn("warn message")
+	l.WithField("c", false).Warn("warn message")
 }
 
 func TestGlobal_Panic(t *testing.T) {
 	require := require.New(t)
 	var buf bytes.Buffer
-	opt := StdOption{
-		Output:           &buf,
-		DisableTimestamp: true,
-		NoColor:          true,
-	}
-	stdLog := NewStdLog(opt)
 
-	ReplaceGlobals(stdLog)
 	var recovered interface{}
 	func() {
 		defer func() {
@@ -55,15 +44,6 @@ func TestGlobal_Panic(t *testing.T) {
 }
 
 func TestGlobal_Fatal(t *testing.T) {
-	var buf bytes.Buffer
-	opt := StdOption{
-		Output:           &buf,
-		DisableTimestamp: true,
-		NoColor:          false,
-	}
-	stdLog := NewStdLog(opt)
-	ReplaceGlobals(stdLog)
-
 	if os.Getenv("BE_FATAL") == "1" {
 		Fatalf("%s", "fatal")
 		return
@@ -77,34 +57,10 @@ func TestGlobal_Fatal(t *testing.T) {
 	t.Fatalf("process ran with err %v, want exit status 1", err)
 }
 
-func TestParseLevel(t *testing.T) {
-	for _, test := range []struct {
-		in   string
-		want Level
-	}{
-		{"debug", DebugLevel},
-		{"info", InfoLevel},
-		{"warn", WarnLevel},
-		{"error", ErrorLevel},
-		{"fatal", FatalLevel},
-		{"", Disabled},
-		{"foo", Disabled},
-	} {
-		if got, err := ParseLevel(test.in); err == nil && got != test.want {
-			t.Errorf("ParseLevel(%q) = %v, want %v", test.in, got, test.want)
-		}
-	}
-}
-
 func TestGlobalLogRaces(t *testing.T) {
-	var buf bytes.Buffer
-	opt := StdOption{
-		Output:           &buf,
-		DisableTimestamp: true,
-		NoColor:          false,
-	}
-	stdLog := NewStdLog(opt)
-	ReplaceGlobals(stdLog)
+	require := require.New(t)
+	err := LoadConfig("internal/config/testdata/bench.yml")
+	require.NoError(err)
 	f := func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		for i := 0; i < 10000; i++ {
@@ -122,13 +78,9 @@ func TestGlobalLogRaces(t *testing.T) {
 }
 
 func BenchmarkGlobalLogger(b *testing.B) {
-	opt := StdOption{
-		Output:           io.Discard,
-		DisableTimestamp: true,
-		NoColor:          true,
-	}
-	stdLog := NewStdLog(opt)
-	ReplaceGlobals(stdLog)
+	require := require.New(b)
+	err := LoadConfig("internal/config/testdata/bench.yml")
+	require.NoError(err)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

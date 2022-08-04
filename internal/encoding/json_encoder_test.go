@@ -5,16 +5,13 @@ import (
 
 	"github.com/millken/golog/internal/config"
 	"github.com/millken/golog/internal/log"
-	"github.com/millken/golog/internal/meta"
 	"github.com/stretchr/testify/require"
 )
 
-func TestConsole(t *testing.T) {
+func TestJSONEncoder(t *testing.T) {
 
 	module := "test-module"
-	level := log.INFO
-	meta.ShowCallerInfo(module, level)
-	cs := NewConsole(config.ConsoleConfig{})
+	cs := NewJSONEncoder(config.JSONEncoderConfig{})
 	_, err := cs.Encode(nil)
 	require.Error(t, err)
 	e := &log.Entry{
@@ -27,7 +24,7 @@ func TestConsole(t *testing.T) {
 	b, err := cs.Encode(e)
 	require.NoError(t, err)
 	require.Contains(t, string(b), "test")
-	require.Contains(t, string(b), "INF")
-	require.Contains(t, string(b), "console_test.go")
+	require.Contains(t, string(b), "info")
+	require.Contains(t, string(b), "json_encoder_test.go")
 
 }
