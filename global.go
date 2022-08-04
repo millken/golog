@@ -192,35 +192,35 @@ func Debugf(format string, args ...interface{}) {
 	safeLogger().Debugf(format, args...)
 }
 
-// Panic logs a message using Panic level and panics.
-func Panic(msg string) {
-	safeLogger().Panic(msg)
-}
+// // Panic logs a message using Panic level and panics.
+// func Panic(msg string) {
+// 	safeLogger().Panic(msg)
+// }
 
-// Fatal logs a message using Fatal level and exits with status 1.
-func Fatal(msg string) {
-	safeLogger().Fatal(msg)
-}
+// // Fatal logs a message using Fatal level and exits with status 1.
+// func Fatal(msg string) {
+// 	safeLogger().Fatal(msg)
+// }
 
-// Error logs a message using Error level.
-func Error(msg string) {
-	safeLogger().Error(msg)
-}
+// // Error logs a message using Error level.
+// func Error(msg string) {
+// 	safeLogger().Error(msg)
+// }
 
-// Warn logs a message using Warn level.
-func Warn(msg string) {
-	safeLogger().Warn(msg)
-}
+// // Warn logs a message using Warn level.
+// func Warn(msg string) {
+// 	safeLogger().Warn(msg)
+// }
 
-// Info logs a message using Info level.
-func Info(msg string) {
-	safeLogger().Infof(msg)
-}
+// // Info logs a message using Info level.
+// func Info(msg string) {
+// 	safeLogger().Infof(msg)
+// }
 
-// Debug logs a message using Debug level.
-func Debug(msg string) {
-	safeLogger().Debugf(msg)
-}
+// // Debug logs a message using Debug level.
+// func Debug(msg string) {
+// 	safeLogger().Debugf(msg)
+// }
 
 // WithField returns a logger configured with the key-value pair.
 func WithField(k string, v interface{}) *Logger {

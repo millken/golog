@@ -1,0 +1,13 @@
+default:
+  level: info
+  encoding: console
+  callerLevels: [debug, info, warn, error, fatal, panic]
+  stacktraceLevels: [warn, error, fatal, panic]
+  handler:
+    type: file
+    fileConfig:
+      path: stdout
+modules:
+  mudule/1:
+    level: debug
+    encoding: json

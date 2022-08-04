@@ -12,7 +12,6 @@ import (
 var (
 	rwmutex     = &sync.RWMutex{}
 	levels      = newModuledLevels()
-	handlers    = newModuledHandlers()
 	callerInfos = newCallerInfo()
 )
 
@@ -36,28 +35,6 @@ func GetLevel(module string) log.Level {
 	defer rwmutex.RUnlock()
 
 	return levels.GetLevel(module)
-}
-
-// SetDefaultHandler - setting default log handler for all modules.
-func SetDefaultHandler(hander log.Handler) {
-	rwmutex.Lock()
-	defer rwmutex.Unlock()
-	handlers.SetDefaultHandler(hander)
-}
-
-// SetHandler - setting log handler for given module.
-func SetHandler(module string, hander log.Handler) {
-	rwmutex.Lock()
-	defer rwmutex.Unlock()
-	handlers.SetHandler(module, hander)
-}
-
-// GetHandler - getting log handler for given module.
-func GetHandler(module string) log.Handler {
-	rwmutex.RLock()
-	defer rwmutex.RUnlock()
-
-	return handlers.GetHandler(module)
 }
 
 // IsEnabledFor - Check if given log level is enabled for given module.

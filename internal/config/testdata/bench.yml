@@ -1,0 +1,7 @@
+default:
+  level: info
+  encoding: console
+  handler:
+    type: file
+    fileConfig:
+      path: ""

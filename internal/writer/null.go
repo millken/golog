@@ -1,4 +1,4 @@
-package handler
+package writer
 
 import "github.com/millken/golog/internal/log"
 

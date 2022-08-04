@@ -1,4 +1,4 @@
-package encoder
+package encoding
 
 import (
 	"encoding/json"
@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/millken/golog/internal/buffer"
+	"github.com/millken/golog/internal/config"
 	"github.com/millken/golog/internal/log"
-	"github.com/millken/golog/internal/meta"
 	"github.com/millken/golog/internal/stacktrace"
 )
 
@@ -38,41 +38,35 @@ var (
 	_pool = buffer.NewPoolSize(4096)
 )
 
-type Text struct {
-	// NoColor disables the colorized output.
-	NoColor bool
-	// EnableCaller enabled caller
-	EnableCaller bool
-	// EnableStack enables stack trace
-	EnableStack bool
-	// Disable timestamp logging. useful when output is redirected to logging
-	// system that already adds timestamps.
-	DisableTimestamp bool
+type ConsoleConfig struct {
+	// PartsOrder is the order of the parts of the log entry.
+	PartsOrder []string `json:"partsOrder" yaml:"partsOrder"`
 	// TimeFormat specifies the format for timestamp in output.
 	TimeFormat string
-	// PartsOrder defines the order of parts in output.
-	PartsOrder []string
 }
 
-func NewText() *Text {
-	return &Text{
-		PartsOrder: consoleDefaultPartsOrder(),
+type console struct {
+	cfg config.ConsoleConfig
+}
+
+func NewConsole(cfg config.ConsoleConfig) *console {
+	if len(cfg.PartsOrder) == 0 {
+		cfg.PartsOrder = consoleDefaultPartsOrder()
+	}
+	return &console{
+		cfg: cfg,
 	}
 }
 
-func (t *Text) Encode(e *log.Entry) ([]byte, error) {
+func (c *console) Encode(e *log.Entry) ([]byte, error) {
 	if e == nil {
 		return nil, errors.New("nil entry")
 	}
 	//var stacktraces string
 	stackDepth := stacktrace.StacktraceFirst
 
-	if meta.IsCallerInfoEnabled(e.Module, e.Level) {
-		e.SetFlag(log.FlagCaller)
-	}
-
 	if e.HasFlag(log.FlagCaller) {
-		stack := stacktrace.Capture(1, stackDepth)
+		stack := stacktrace.Capture(5, stackDepth)
 		defer stack.Free()
 		if stack.Count() > 0 {
 			frame, _ := stack.Next()
@@ -83,13 +77,14 @@ func (t *Text) Encode(e *log.Entry) ([]byte, error) {
 		}
 	}
 
-	for _, p := range t.PartsOrder {
+	for _, p := range c.cfg.PartsOrder {
 		writePart(e, p)
-		if p != t.PartsOrder[len(t.PartsOrder)-1] { // Skip space for last part
+		if p != c.cfg.PartsOrder[len(c.cfg.PartsOrder)-1] { // Skip space for last part
 			e.WriteByte(' ')
 		}
 	}
 	writeFields(e)
+	e.WriteByte(DefaultLineEnding)
 	return e.Bytes(), nil
 }
 
