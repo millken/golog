@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/millken/golog/internal/buffer"
 	"github.com/millken/golog/internal/config"
 	"github.com/millken/golog/internal/log"
 	"github.com/millken/golog/internal/stacktrace"
@@ -35,20 +34,14 @@ const (
 )
 
 var (
-	_pool = buffer.NewPoolSize(4096)
+	defaultSkip int = 5
 )
-
-type ConsoleConfig struct {
-	// PartsOrder is the order of the parts of the log entry.
-	PartsOrder []string `json:"partsOrder" yaml:"partsOrder"`
-	// TimeFormat specifies the format for timestamp in output.
-	TimeFormat string
-}
 
 type console struct {
 	cfg config.ConsoleConfig
 }
 
+// NewConsoleEncoder returns a new console encoder.
 func NewConsole(cfg config.ConsoleConfig) *console {
 	if len(cfg.PartsOrder) == 0 {
 		cfg.PartsOrder = consoleDefaultPartsOrder()
@@ -58,6 +51,7 @@ func NewConsole(cfg config.ConsoleConfig) *console {
 	}
 }
 
+// Enocde encodes the entry and writes it to the writer.
 func (c *console) Encode(e *log.Entry) ([]byte, error) {
 	if e == nil {
 		return nil, errors.New("nil entry")
@@ -66,7 +60,7 @@ func (c *console) Encode(e *log.Entry) ([]byte, error) {
 	stackDepth := stacktrace.StacktraceFirst
 
 	if e.HasFlag(log.FlagCaller) {
-		stack := stacktrace.Capture(5, stackDepth)
+		stack := stacktrace.Capture(defaultSkip, stackDepth)
 		defer stack.Free()
 		if stack.Count() > 0 {
 			frame, _ := stack.Next()
@@ -140,7 +134,7 @@ func defaultFormatTimestamp(e *log.Entry, timeFormat string) {
 	if timeFormat == "" {
 		timeFormat = consoleDefaultTimeFormat
 	}
-	e.Data = e.Timestamp.AppendFormat(e.Data, timeFormat)
+	e.Data = time.Now().AppendFormat(e.Data, timeFormat)
 }
 
 func defaultFormatMessage(e *log.Entry) {

@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/millken/golog/internal/config"
 	"github.com/millken/golog/internal/encoding"
@@ -20,21 +19,64 @@ var (
 // Log is an implementation of Logger interface.
 // It encapsulates default or custom logger to provide module and level based logging.
 type Log struct {
-	module  string
-	fields  []log.Field
-	once    sync.Once
-	writer  io.Writer
-	encoder log.Encoder
+	module        string
+	fields        []log.Field
+	once          sync.Once
+	writer        io.Writer
+	encoder       log.Encoder
+	callerMap     map[log.Level]bool
+	stacktraceMap map[log.Level]bool
+	level         log.Level
 }
 
 // New creates and returns a Logger implementation based on given module name.
 func NewLog(module string) *Log {
-	return &Log{module: module}
+	callerMap := make(map[log.Level]bool, len(log.Levels))
+	stacktraceMap := make(map[log.Level]bool, len(log.Levels))
+	for _, v := range log.Levels {
+		callerMap[v] = false
+		stacktraceMap[v] = false
+	}
+	l := &Log{
+		module:        module,
+		callerMap:     callerMap,
+		stacktraceMap: stacktraceMap,
+	}
+	l.init()
+	return l
+}
+
+func (l *Log) init() {
+	var err error
+	l.once.Do(func() {
+		mc := config.GetModuleConfig(l.module)
+		switch mc.Writer.Type {
+		case "file":
+			l.writer, err = writer.NewFile(mc.Writer.FileConfig)
+		default:
+			l.writer, err = writer.NewFile(config.FileConfig{Path: "stdout"})
+		}
+		if err != nil {
+			panic(err)
+		}
+		switch mc.Encoding {
+		case "json":
+		default:
+			l.encoder = encoding.NewConsole(mc.ConsoleEncodingConfig)
+		}
+		l.level = mc.Level
+		for _, v := range mc.CallerLevels {
+			l.callerMap[v] = true
+		}
+		for _, v := range mc.StacktraceLevels {
+			l.stacktraceMap[v] = true
+		}
+	})
 }
 
 // Fatalf calls underlying logger.Fatal.
 func (l *Log) Fatalf(format string, args ...interface{}) {
-	if !config.IsEnabledFor(l.module, log.FATAL) {
+	if l.level < log.FATAL {
 		return
 	}
 
@@ -44,7 +86,7 @@ func (l *Log) Fatalf(format string, args ...interface{}) {
 
 // Panicf calls underlying logger.Panic.
 func (l *Log) Panicf(format string, args ...interface{}) {
-	if !config.IsEnabledFor(l.module, log.PANIC) {
+	if l.level < log.PANIC {
 		return
 	}
 
@@ -54,7 +96,7 @@ func (l *Log) Panicf(format string, args ...interface{}) {
 
 // Debugf calls error log function if DEBUG level enabled.
 func (l *Log) Debugf(format string, args ...interface{}) {
-	if !config.IsEnabledFor(l.module, log.DEBUG) {
+	if l.level < log.DEBUG {
 		return
 	}
 
@@ -63,7 +105,7 @@ func (l *Log) Debugf(format string, args ...interface{}) {
 
 // Infof calls error log function if INFO level enabled.
 func (l *Log) Infof(format string, args ...interface{}) {
-	if !config.IsEnabledFor(l.module, log.INFO) {
+	if l.level < log.INFO {
 		return
 	}
 
@@ -72,7 +114,7 @@ func (l *Log) Infof(format string, args ...interface{}) {
 
 // Warnf calls error log function if WARNING level enabled.
 func (l *Log) Warnf(format string, args ...interface{}) {
-	if !config.IsEnabledFor(l.module, log.WARNING) {
+	if l.level < log.WARNING {
 		return
 	}
 
@@ -81,7 +123,7 @@ func (l *Log) Warnf(format string, args ...interface{}) {
 
 // Errorf calls error log function if ERROR level enabled.
 func (l *Log) Errorf(format string, args ...interface{}) {
-	if !config.IsEnabledFor(l.module, log.ERROR) {
+	if l.level < log.ERROR {
 		return
 	}
 
@@ -90,7 +132,7 @@ func (l *Log) Errorf(format string, args ...interface{}) {
 
 // Fatal calls underlying logger.Fatal.
 func (l *Log) Fatal(msg string) {
-	if !config.IsEnabledFor(l.module, log.FATAL) {
+	if l.level < log.FATAL {
 		return
 	}
 
@@ -100,7 +142,7 @@ func (l *Log) Fatal(msg string) {
 
 // Panic calls underlying logger.Panic.
 func (l *Log) Panic(msg string) {
-	if !config.IsEnabledFor(l.module, log.PANIC) {
+	if l.level < log.PANIC {
 		return
 	}
 
@@ -110,7 +152,7 @@ func (l *Log) Panic(msg string) {
 
 // Debug calls error log function if DEBUG level enabled.
 func (l *Log) Debug(msg string) {
-	if !config.IsEnabledFor(l.module, log.DEBUG) {
+	if l.level < log.DEBUG {
 		return
 	}
 
@@ -119,7 +161,7 @@ func (l *Log) Debug(msg string) {
 
 // Info calls error log function if INFO level enabled.
 func (l *Log) Info(msg string) {
-	if !config.IsEnabledFor(l.module, log.INFO) {
+	if l.level < log.INFO {
 		return
 	}
 
@@ -128,7 +170,7 @@ func (l *Log) Info(msg string) {
 
 // Warn calls error log function if WARNING level enabled.
 func (l *Log) Warn(msg string) {
-	if !config.IsEnabledFor(l.module, log.WARNING) {
+	if l.level < log.WARNING {
 		return
 	}
 
@@ -137,7 +179,7 @@ func (l *Log) Warn(msg string) {
 
 // Error calls error log function if ERROR level enabled.
 func (l *Log) Error(msg string) {
-	if !config.IsEnabledFor(l.module, log.ERROR) {
+	if l.level < log.ERROR {
 		return
 	}
 
@@ -154,28 +196,6 @@ func (l *Log) WithFields(fields ...log.Field) log.Logger {
 	return &Log{fields: append(l.fields, fields...), module: l.module}
 }
 
-func (l *Log) getHandlerAndEncoder() (io.Writer, log.Encoder, error) {
-	var err error
-	l.once.Do(func() {
-		moduleConfig := config.GetModuleConfig(l.module)
-		switch moduleConfig.Writer.Type {
-		case "file":
-			l.writer, err = writer.NewFile(moduleConfig.Writer.FileConfig)
-		default:
-			l.writer, err = writer.NewFile(config.FileConfig{Path: "stdout"})
-		}
-		if err == nil {
-			switch moduleConfig.Encoding {
-			case "json":
-				//l.encoder = log.NewJSONEncoder(moduleConfig.Encoder.JSONConfig)
-			default:
-				l.encoder = encoding.NewConsole(moduleConfig.ConsoleEncodingConfig)
-			}
-		}
-	})
-	return l.writer, l.encoder, err
-}
-
 func (l *Log) logf(level log.Level, format string, args ...interface{}) {
 	var msg string
 	if len(args) > 0 {
@@ -189,25 +209,21 @@ func (l *Log) logf(level log.Level, format string, args ...interface{}) {
 func (l *Log) output(level log.Level, msg string, fields ...log.Field) {
 	e := log.AcquireEntry()
 	e.Module = l.module
-	writer, encoder, err := l.getHandlerAndEncoder()
-	if err != nil {
-		panic(err)
-	}
+
 	copy(e.Fields[0:len(fields)], fields)
 	e.SetFieldsLen(len(fields))
 
 	e.Message = msg
 	e.Level = level
-	e.Timestamp = time.Now()
 
 	if config.IsCallerEnabled(e.Module, e.Level) {
 		e.SetFlag(log.FlagCaller)
 	}
-	b, err := encoder.Encode(e)
+	b, err := l.encoder.Encode(e)
 	if err != nil {
 		panic(err)
 	}
-	if _, err := writer.Write(b); err != nil {
+	if _, err := l.writer.Write(b); err != nil {
 		fmt.Fprintf(os.Stderr, "golog: failed to handle entry: %v", err)
 	}
 	e.Reset()

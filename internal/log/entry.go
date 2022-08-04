@@ -3,7 +3,6 @@ package log
 import (
 	"io"
 	"sync"
-	"time"
 )
 
 type Flag uint8
@@ -23,7 +22,6 @@ type Entry struct {
 	Module     string
 	Message    string
 	Data       []byte
-	Timestamp  time.Time
 	Level      Level
 	Fields     []Field
 	fieldsLen  int

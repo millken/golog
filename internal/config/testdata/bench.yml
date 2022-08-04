@@ -1,6 +1,8 @@
 default:
   level: info
   encoding: console
+  consoleEncodingConfig:
+    partsOrder: [level, message]
   handler:
     type: file
     fileConfig:

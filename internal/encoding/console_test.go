@@ -2,7 +2,6 @@ package encoding
 
 import (
 	"testing"
-	"time"
 
 	"github.com/millken/golog/internal/config"
 	"github.com/millken/golog/internal/log"
@@ -19,11 +18,12 @@ func TestConsole(t *testing.T) {
 	_, err := cs.Encode(nil)
 	require.Error(t, err)
 	e := &log.Entry{
-		Timestamp: time.Now(),
-		Module:    module,
-		Level:     log.INFO,
-		Message:   "test",
+		Module:  module,
+		Level:   log.INFO,
+		Message: "test",
 	}
+	e.SetFlag(log.FlagCaller)
+	defaultSkip = 1
 	b, err := cs.Encode(e)
 	require.NoError(t, err)
 	require.Contains(t, string(b), "test")

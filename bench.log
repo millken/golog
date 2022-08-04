@@ -1,0 +1,21 @@
+$ go test -cpu=1,2,4 -benchmem -benchtime=5s -run=^$ -bench ^BenchmarkStdlog$  -v
+goos: darwin
+goarch: arm64
+pkg: github.com/millken/golog
+BenchmarkStdlog
+BenchmarkStdlog         49897610               122.6 ns/op             0 B/op          0 allocs/op
+BenchmarkStdlog-2       49577796               120.1 ns/op             0 B/op          0 allocs/op
+BenchmarkStdlog-4       50106388               120.0 ns/op             0 B/op          0 allocs/op
+PASS
+ok      github.com/millken/golog        23.775s
+
+$ go test -cpu=1,2,4 -benchmem -benchtime=5s -run=^$ -bench ^BenchmarkLog$  -v    
+goos: darwin
+goarch: arm64
+pkg: github.com/millken/golog
+BenchmarkLog
+BenchmarkLog            63419851                94.02 ns/op            0 B/op          0 allocs/op
+BenchmarkLog-2          63828825                93.78 ns/op            0 B/op          0 allocs/op
+BenchmarkLog-4          64695664                95.29 ns/op            0 B/op          0 allocs/op
+PASS
+ok      github.com/millken/golog        23.313s
