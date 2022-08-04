@@ -1,0 +1,58 @@
+default:
+  level: info
+  encoding: console
+  callerLevels: [debug, info, warn, error, fatal, panic]
+  stacktraceLevels: [warn, error, fatal, panic]
+  outputPath: stdout
+  initialFields:
+    service: golog
+  encoderConfig:
+    messageKey: msg
+    levelKey: level
+    timeKey: time
+    nameKey: logger
+    callerKey: caller
+    stacktraceKey: stacktrace
+    lineEnding: ""
+    levelEncoder: ""
+    timeEncoder: ""
+    durationEncoder: ""
+    callerEncoder: ""
+    nameEncoder: ""
+    encodeLevel: ""
+    encodeTime: ""
+    encodeDuration: ""
+    encodeCaller: ""
+    encodeName: ""
+    consoleSeparator: ""
+modules:
+  - name: module1
+    level: debug
+    encoding: json
+    disableCaller: true
+    disableStacktrace: true
+    outputPaths:
+      - stdout
+    errorOutputPaths:
+      - stderr
+    initialFields:
+      service: golog
+    encoderConfig:
+      messageKey: msg
+      levelKey: level
+      timeKey: time
+      nameKey: logger
+      callerKey: caller
+      stacktraceKey: stacktrace
+      lineEnding: ""
+      levelEncoder: ""
+      timeEncoder: ""
+      durationEncoder: ""
+      callerEncoder: ""
+      nameEncoder: ""
+      encodeLevel: ""
+      encodeTime: ""
+      encodeDuration: ""
+      encodeCaller: ""
+      encodeName: ""
+      consoleSeparator: ""
