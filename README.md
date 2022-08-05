@@ -42,28 +42,4 @@ func main() {
 ## Performance 
 > Note: disabled time and colors
 
-```
-goos: darwin
-goarch: arm64
-pkg: github.com/millken/golog
-BenchmarkGlobalLogger
-BenchmarkGlobalLogger-8                                  9920839               116.0 ns/op             0 B/op          0 allocs/op
-BenchmarkLoggerNoHandler
-BenchmarkLoggerNoHandler-8                              371435955                3.210 ns/op           0 B/op          0 allocs/op
-BenchmarkLoggerNoHandlerWithFields
-BenchmarkLoggerNoHandlerWithFields-8                    100000000               11.89 ns/op            0 B/op          0 allocs/op
-BenchmarkStdlog
-BenchmarkStdlog-8                                       11016960               109.1 ns/op             0 B/op          0 allocs/op
-BenchmarkStdlogWithFields
-BenchmarkStdlogWithFields-8                              6322047               192.4 ns/op             0 B/op          0 allocs/op
-BenchmarkWriterHandler
-BenchmarkWriterHandler-8                                 8436931               142.1 ns/op             0 B/op          0 allocs/op
-BenchmarkWriterHandlerWithFields
-BenchmarkWriterHandlerWithFields-8                       6333751               189.5 ns/op             0 B/op          0 allocs/op
-BenchmarkJSONFormatterWriterHandler
-BenchmarkJSONFormatterWriterHandler-8                    8484501               141.4 ns/op             0 B/op          0 allocs/op
-BenchmarkJSONFormatterWriterHandlerWithFields
-BenchmarkJSONFormatterWriterHandlerWithFields-8          5928202               202.2 ns/op             0 B/op          0 allocs/op
-PASS
-ok      github.com/millken/golog        12.724s
-```
+very very fast

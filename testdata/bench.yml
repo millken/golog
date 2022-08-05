@@ -1,0 +1,10 @@
+default:
+  level: info
+  encoding: console
+  consoleEncodingConfig:
+    partsOrder: [level, message]
+    disableTimestamp: true
+  handler:
+    type: file
+    fileConfig:
+      path: ""

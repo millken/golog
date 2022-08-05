@@ -1,65 +1,76 @@
 package golog
 
 import (
-	"os"
 	"testing"
-	"time"
 
+	"github.com/millken/golog/config"
+	"github.com/millken/golog/log"
 	"github.com/stretchr/testify/require"
 )
 
-func TestLogger(t *testing.T) {
-	logger := NewLogger()
-	logger.WithFields(F("a", 1), F("b", true), F("c", "hell"), F("d", time.Now())).Debugf("abdef")
-}
-
-func TestLoggerWithOptions(t *testing.T) {
+func TestLog(t *testing.T) {
 	require := require.New(t)
-	logger := NewLogger()
-	require.Equal(512, cap(logger.fields))
+	require.NoError(LoadConfig("./testdata/sample.yml"))
+	Debug("debug")
+	Info("info")
+	Warn("warn")
+	Error("error")
+	WithField("a", 1).Debug("debug")
+	WithField("a", 1).Info("info")
+	WithField("a", 1).Warn("warn")
+	WithField("a", 1).Error("error")
+	WithFields(F("a", 1), F("b", 2)).Debug("debug")
+	WithFields(F("a", 1), F("b", 2)).Info("info")
+	WithFields(F("a", 1), F("b", 2)).Warn("warn")
+	WithFields(F("a", 1), F("b", 2)).Error("error")
+	l := WithFields(F("a", 1), F("b", 2))
+	l.Debug("debug")
+	l.Info("info")
+	l.Warn("warn")
+	l.Error("error")
+	ll := l.WithField("c", 3)
+	ll.Debug("debug")
+	ll.Info("info")
+	ll.Warn("warn")
+	ll.Error("error")
+	l3 := New("test")
+	l3.Infof("debug %s", "debug12")
+	l3.Warnf("warn %s", "warn12")
+	l3.Errorf("error %s", "error")
+	l3.WithField("a", 1).Infof("info %s", "test")
+	l3.WithField("a", 1).Warnf("warn %s", "test")
+	l3.WithField("a", 1).Errorf("error %s", "test")
+	l4 := l3.WithFields(F("a", 1), F("b", 2))
+	l4.Infof("info %s", "test")
+	l4.WithField("c", 3).Warnf("warn %s", "test")
 }
 
-func TestLoggerWithFields(t *testing.T) {
-	stdHandler := NewLoggerHandler(os.Stdout)
-	stdHandler.SetLevel(DebugLevel)
-	stdFormatter := &TextFormatter{
-		NoColor:              false,
-		TimeFormat:           StdTimeFormat,
-		CallerSkipFrameCount: 6,
-		EnableCaller:         true,
-		PartsOrder:           []string{"time", "level", "caller", "message"},
+func TestDebugLog(t *testing.T) {
+	require := require.New(t)
+	require.NoError(LoadConfig("./testdata/bench.yml"))
+	Info("info")
+}
+
+func BenchmarkLog(b *testing.B) {
+	require := require.New(b)
+	cfg := config.Config{
+		Level:    log.INFO,
+		Encoding: "console",
+		ConsoleEncoderConfig: config.ConsoleEncoderConfig{
+			DisableTimestamp: true,
+		},
+		Writer: config.WriterConfig{
+			Type: "file",
+			FileConfig: config.FileConfig{
+				Path: "",
+			},
+		},
 	}
-	stdHandler.SetFormatter(stdFormatter)
-	stdHandler.SetDisableLogFields(true)
-	logger := NewLogger()
-	logger.AddHandler(stdHandler)
-
-	l := logger.WithFields(F("a", 1), F("b", true))
-	l.Debugf("hello %s", "hell")
-	l.Infof("hello %d", 435)
-	// l.WithField("c", "hell").Infof("hello 123")
-	logger.Errorf("abcde1234")
-}
-
-// /*
-// go test -benchmem -bench=. golog/*.go -memprofile profile_mem.out
-// go tool pprof golog.test profile_mem.out
-// */
-func BenchmarkLoggerNoHandler(b *testing.B) {
-	logger := NewLogger()
+	log, err := NewLoggerByConfig("test", cfg)
+	require.NoError(err)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Debugf("abcde1234")
-	}
-}
-
-func BenchmarkLoggerNoHandlerWithFields(b *testing.B) {
-	logger := NewLogger()
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		logger.WithFields(F("a", 1), F("b", true)).Debugf("abcde1234")
-
+		log.Info("info")
 	}
 }

@@ -1,0 +1,86 @@
+default:
+  level: info
+  encoding: console
+  callerLevels: [debug, info, warn, error, fatal, panic]
+  stacktraceLevels: [warn, error, fatal, panic]
+  handler:
+    type: file
+    fileConfig:
+      path: /var/log/golog.log
+    rotatefileConfig:
+      maxAge: 7
+      maxBackups: 5
+      maxFileSize: 10
+      compress: true
+      localTime: true
+      rotate: true
+      rotateTime: 24h
+      rotateSize: 100
+      rotateMaxAge: 7
+      rotateMaxBackups: 5
+      rotateCompress: true
+      rotateLocalTime: true
+      rotateFormat: 2006-01-02
+      rotateDate: 2006-01-02
+      rotateDaily: true
+      rotateHourly: true
+      rotateMinutely: true
+      rotateSecondly: true
+      rotateKeep: 5
+      rotateKeepHours: 5
+      rotateKeepDays: 5
+      rotateKeepWeeks: 5
+      rotateKeepMonths: 5
+  outputPath: stdout
+  initialFields:
+    service: golog
+  encoderConfig:
+    messageKey: msg
+    levelKey: level
+    timeKey: time
+    nameKey: logger
+    callerKey: caller
+    stacktraceKey: stacktrace
+    lineEnding: ""
+    levelEncoder: ""
+    timeEncoder: ""
+    durationEncoder: ""
+    callerEncoder: ""
+    nameEncoder: ""
+    encodeLevel: ""
+    encodeTime: ""
+    encodeDuration: ""
+    encodeCaller: ""
+    encodeName: ""
+    consoleSeparator: ""
+modules:
+  asdfsadf/asg:
+    level: debug
+    encoding: json
+    disableCaller: true
+    disableStacktrace: true
+    outputPaths:
+      - stdout
+    errorOutputPaths:
+      - stderr
+    initialFields:
+      service: golog
+    encoderConfig:
+      messageKey: msg
+      levelKey: level
+      timeKey: time
+      nameKey: logger
+      callerKey: caller
+      stacktraceKey: stacktrace
+      lineEnding: ""
+      levelEncoder: ""
+      timeEncoder: ""
+      durationEncoder: ""
+      callerEncoder: ""
+      nameEncoder: ""
+      encodeLevel: ""
+      encodeTime: ""
+      encodeDuration: ""
+      encodeCaller: ""
+      encodeName: ""
+      consoleSeparator: ""

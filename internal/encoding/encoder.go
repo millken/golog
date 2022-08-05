@@ -1,20 +1,78 @@
-package golog
+//go:build !binary_log
+// +build !binary_log
+
+package encoding
 
 import (
 	"net"
 	"time"
 	"unsafe"
+
+	"github.com/millken/golog/internal/json"
+	"github.com/millken/golog/log"
 )
 
-// Field is a key/value pair.
-type Field struct {
-	Key string
-	Val interface{}
-}
+var (
+	_ encoder = (*json.Encoder)(nil)
 
-// F is a helper to create fields.
-func F(key string, val interface{}) Field {
-	return Field{key, val}
+	defaultCallerSkip int = 4
+
+	enc = json.Encoder{}
+
+	// ErrorMarshalFunc allows customization of global error marshaling
+	ErrorMarshalFunc = func(err error) interface{} {
+		return err
+	}
+)
+
+type encoder interface {
+	AppendArrayDelim(dst []byte) []byte
+	AppendArrayEnd(dst []byte) []byte
+	AppendArrayStart(dst []byte) []byte
+	AppendBeginMarker(dst []byte) []byte
+	AppendBool(dst []byte, val bool) []byte
+	AppendBools(dst []byte, vals []bool) []byte
+	AppendBytes(dst, s []byte) []byte
+	AppendDuration(dst []byte, d time.Duration, unit time.Duration, useInt bool) []byte
+	AppendDurations(dst []byte, vals []time.Duration, unit time.Duration, useInt bool) []byte
+	AppendEndMarker(dst []byte) []byte
+	AppendFloat32(dst []byte, val float32) []byte
+	AppendFloat64(dst []byte, val float64) []byte
+	AppendFloats32(dst []byte, vals []float32) []byte
+	AppendFloats64(dst []byte, vals []float64) []byte
+	AppendHex(dst, s []byte) []byte
+	AppendIPAddr(dst []byte, ip net.IP) []byte
+	AppendIPPrefix(dst []byte, pfx net.IPNet) []byte
+	AppendInt(dst []byte, val int) []byte
+	AppendInt16(dst []byte, val int16) []byte
+	AppendInt32(dst []byte, val int32) []byte
+	AppendInt64(dst []byte, val int64) []byte
+	AppendInt8(dst []byte, val int8) []byte
+	AppendInterface(dst []byte, i interface{}) []byte
+	AppendInts(dst []byte, vals []int) []byte
+	AppendInts16(dst []byte, vals []int16) []byte
+	AppendInts32(dst []byte, vals []int32) []byte
+	AppendInts64(dst []byte, vals []int64) []byte
+	AppendInts8(dst []byte, vals []int8) []byte
+	AppendKey(dst []byte, key string) []byte
+	AppendLineBreak(dst []byte) []byte
+	AppendMACAddr(dst []byte, ha net.HardwareAddr) []byte
+	AppendNil(dst []byte) []byte
+	AppendObjectData(dst []byte, o []byte) []byte
+	AppendString(dst []byte, s string) []byte
+	AppendStrings(dst []byte, vals []string) []byte
+	AppendTime(dst []byte, t time.Time, format string) []byte
+	AppendTimes(dst []byte, vals []time.Time, format string) []byte
+	AppendUint(dst []byte, val uint) []byte
+	AppendUint16(dst []byte, val uint16) []byte
+	AppendUint32(dst []byte, val uint32) []byte
+	AppendUint64(dst []byte, val uint64) []byte
+	AppendUint8(dst []byte, val uint8) []byte
+	AppendUints(dst []byte, vals []uint) []byte
+	AppendUints16(dst []byte, vals []uint16) []byte
+	AppendUints32(dst []byte, vals []uint32) []byte
+	AppendUints64(dst []byte, vals []uint64) []byte
+	AppendUints8(dst []byte, vals []uint8) []byte
 }
 
 func isNilValue(i interface{}) bool {
@@ -88,9 +146,9 @@ func appendVal(dst []byte, value interface{}) []byte {
 	case float64:
 		dst = enc.AppendFloat64(dst, val)
 	case time.Time:
-		dst = enc.AppendTime(dst, val, TimeFieldFormat)
+		dst = enc.AppendTime(dst, val, log.TimeFieldFormat)
 	case time.Duration:
-		dst = enc.AppendDuration(dst, val, DurationFieldUnit, DurationFieldInteger)
+		dst = enc.AppendDuration(dst, val, time.Millisecond, false)
 	case *string:
 		if val != nil {
 			dst = enc.AppendString(dst, *val)
@@ -177,13 +235,13 @@ func appendVal(dst []byte, value interface{}) []byte {
 		}
 	case *time.Time:
 		if val != nil {
-			dst = enc.AppendTime(dst, *val, TimeFieldFormat)
+			dst = enc.AppendTime(dst, *val, log.TimeFieldFormat)
 		} else {
 			dst = enc.AppendNil(dst)
 		}
 	case *time.Duration:
 		if val != nil {
-			dst = enc.AppendDuration(dst, *val, DurationFieldUnit, DurationFieldInteger)
+			dst = enc.AppendDuration(dst, *val, time.Millisecond, false)
 		} else {
 			dst = enc.AppendNil(dst)
 		}
@@ -216,9 +274,9 @@ func appendVal(dst []byte, value interface{}) []byte {
 	case []float64:
 		dst = enc.AppendFloats64(dst, val)
 	case []time.Time:
-		dst = enc.AppendTimes(dst, val, TimeFieldFormat)
+		dst = enc.AppendTimes(dst, val, log.TimeFieldFormat)
 	case []time.Duration:
-		dst = enc.AppendDurations(dst, val, DurationFieldUnit, DurationFieldInteger)
+		dst = enc.AppendDurations(dst, val, time.Millisecond, false)
 	case nil:
 		dst = enc.AppendNil(dst)
 	case net.IP:
@@ -240,7 +298,7 @@ func appendKeyVal(dst []byte, key string, value interface{}) []byte {
 	return dst
 }
 
-func appendFields(dst []byte, fields ...Field) []byte {
+func appendFields(dst []byte, fields ...log.Field) []byte {
 	for _, field := range fields {
 		dst = appendKeyVal(dst, field.Key, field.Val)
 	}
