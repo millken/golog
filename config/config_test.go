@@ -4,13 +4,13 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/millken/golog/internal/log"
+	"github.com/millken/golog/log"
 	"github.com/stretchr/testify/require"
 )
 
 func TestConfig(t *testing.T) {
 	require := require.New(t)
-	err := Load("testdata/yaml_001.yml")
+	err := Load("../testdata/yaml_001.yml")
 	require.NoError(err)
 	require.Equal(log.INFO, configs.Default.Level)
 	require.Equal("console", configs.Default.Encoding)

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/millken/golog/internal/config"
+	"github.com/millken/golog/config"
 	"github.com/stretchr/testify/require"
 )
 

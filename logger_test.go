@@ -3,14 +3,14 @@ package golog
 import (
 	"testing"
 
-	"github.com/millken/golog/internal/config"
-	"github.com/millken/golog/internal/log"
+	"github.com/millken/golog/config"
+	"github.com/millken/golog/log"
 	"github.com/stretchr/testify/require"
 )
 
 func TestLog(t *testing.T) {
 	require := require.New(t)
-	require.NoError(LoadConfig("./internal/config/testdata/sample.yml"))
+	require.NoError(LoadConfig("./testdata/sample.yml"))
 	Debug("debug")
 	Info("info")
 	Warn("warn")
@@ -40,11 +40,14 @@ func TestLog(t *testing.T) {
 	l3.WithField("a", 1).Infof("info %s", "test")
 	l3.WithField("a", 1).Warnf("warn %s", "test")
 	l3.WithField("a", 1).Errorf("error %s", "test")
+	l4 := l3.WithFields(F("a", 1), F("b", 2))
+	l4.Infof("info %s", "test")
+	l4.WithField("c", 3).Warnf("warn %s", "test")
 }
 
 func TestDebugLog(t *testing.T) {
 	require := require.New(t)
-	require.NoError(LoadConfig("./internal/config/testdata/bench.yml"))
+	require.NoError(LoadConfig("./testdata/bench.yml"))
 	Info("info")
 }
 

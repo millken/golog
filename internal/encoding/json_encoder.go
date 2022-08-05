@@ -5,9 +5,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/millken/golog/internal/config"
-	"github.com/millken/golog/internal/log"
-	"github.com/millken/golog/internal/stacktrace"
+	"github.com/millken/golog/config"
+	"github.com/millken/golog/internal/buffer"
+	"github.com/millken/golog/internal/stack"
+	"github.com/millken/golog/log"
 )
 
 var (
@@ -38,18 +39,21 @@ func (o *JSONEncoder) Encode(e *log.Entry) ([]byte, error) {
 	e.Data = appendKeyVal(e.Data, log.LevelFieldName, e.Level.String())
 	e.Data = appendKeyVal(e.Data, log.MessageFieldName, &e.Message)
 
-	//var stacktraces string
-	stackDepth := stacktrace.StacktraceFirst
+	stackSkip := defaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
+	frames := stack.Tracer(stackSkip)
 
-	if e.HasFlag(log.FlagCaller) {
-		stack := stacktrace.Capture(defaultSkip, stackDepth)
-		defer stack.Free()
-		if stack.Count() > 0 {
-			frame, _ := stack.Next()
-			if e.HasFlag(log.FlagCaller) {
-				c := frame.File + ":" + strconv.Itoa(frame.Line)
-				e.Data = appendKeyVal(e.Data, log.CallerFieldName, c)
-			}
+	if len(frames) > 0 {
+		if e.HasFlag(log.FlagCaller) {
+			frame := frames[0]
+			c := frame.File + ":" + strconv.Itoa(frame.Line)
+			e.Data = appendKeyVal(e.Data, log.CallerFieldName, c)
+		}
+		if e.HasFlag(log.FlagStacktrace) {
+			buffer := buffer.Get()
+			defer buffer.Free()
+			stackfmt := stack.NewStackFormatter(buffer)
+			stackfmt.FormatFrames(frames)
+			e.Data = appendKeyVal(e.Data, log.ErrorStackFieldName, buffer.String())
 		}
 	}
 

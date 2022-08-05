@@ -3,8 +3,8 @@ package golog
 import (
 	"sync"
 
-	"github.com/millken/golog/internal/config"
-	"github.com/millken/golog/internal/log"
+	"github.com/millken/golog/config"
+	"github.com/millken/golog/log"
 )
 
 //nolint:gochecknoglobals
@@ -13,6 +13,7 @@ var (
 	loggerProviderOnce     sync.Once
 )
 
+// F is a shortcut to create log.Field.
 func F(k string, v interface{}) log.Field {
 	return log.Field{Key: k, Val: v}
 }
@@ -94,7 +95,7 @@ func Debug(msg string) {
 
 func loggerProvider() log.Logger {
 	loggerProviderOnce.Do(func() {
-		loggerProviderInstance = New("_global")
+		loggerProviderInstance = New("").CallerSkip(1)
 	})
 
 	return loggerProviderInstance

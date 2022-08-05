@@ -8,8 +8,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/millken/golog/internal/config"
-	"github.com/millken/golog/internal/log"
+	"github.com/millken/golog/config"
+	"github.com/millken/golog/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -112,7 +112,7 @@ func TestGlobalLogRaces(t *testing.T) {
 
 func BenchmarkGlobalLogger(b *testing.B) {
 	require := require.New(b)
-	err := LoadConfig("internal/config/testdata/bench.yml")
+	err := LoadConfig("testdata/bench.yml")
 	require.NoError(err)
 	b.ReportAllocs()
 	b.ResetTimer()

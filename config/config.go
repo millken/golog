@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/millken/golog/internal/log"
+	"github.com/millken/golog/log"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
@@ -52,6 +52,8 @@ type ConsoleEncoderConfig struct {
 	DisableTimestamp bool `json:"disableTimestamp" yaml:"disableTimestamp"`
 	// DisableColor disables the color in output.
 	DisableColor bool `json:"disableColor" yaml:"disableColor"`
+	// CallerSkipFrame is the number of stack frames to skip when reporting the calling function.
+	CallerSkipFrame int `json:"callerSkipFrame" yaml:"callerSkipFrame"`
 }
 
 type JSONEncoderConfig struct {
@@ -59,6 +61,8 @@ type JSONEncoderConfig struct {
 	TimeFormat string `json:"timeFormat" yaml:"timeFormat"`
 	// DisableTimestamp disables the timestamp in output.
 	DisableTimestamp bool `json:"disableTimestamp" yaml:"disableTimestamp"`
+	// CallerSkipFrame is the number of stack frames to skip when reporting the calling function.
+	CallerSkipFrame int `json:"callerSkipFrame" yaml:"callerSkipFrame"`
 }
 
 type WriterConfig struct {

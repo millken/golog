@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/millken/golog/internal/config"
+	"github.com/millken/golog/config"
 )
 
 var (

@@ -71,6 +71,16 @@ func (e *Entry) SetFieldsLen(n int) {
 	e.fieldsLen = n
 }
 
+// CallerSkip returns the caller skip.
+func (e *Entry) CallerSkip() int {
+	return e.callerSkip
+}
+
+// SetCallerSkip sets the caller skip.
+func (e *Entry) SetCallerSkip(n int) {
+	e.callerSkip = n
+}
+
 // SetCaller sets the caller.
 func (e *Entry) SetCaller(caller string) {
 	e.caller = caller

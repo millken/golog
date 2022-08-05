@@ -9,11 +9,13 @@ import (
 	"unsafe"
 
 	"github.com/millken/golog/internal/json"
-	"github.com/millken/golog/internal/log"
+	"github.com/millken/golog/log"
 )
 
 var (
 	_ encoder = (*json.Encoder)(nil)
+
+	defaultCallerSkip int = 4
 
 	enc = json.Encoder{}
 

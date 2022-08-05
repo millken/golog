@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/millken/golog/config"
 	"github.com/millken/golog/internal/buffer"
-	"github.com/millken/golog/internal/config"
-	"github.com/millken/golog/internal/log"
-	"github.com/millken/golog/internal/stacktrace"
+	"github.com/millken/golog/internal/stack"
+	"github.com/millken/golog/log"
 )
 
 var (
@@ -41,10 +41,6 @@ const (
 	consoleDefaultTimeFormat = time.RFC3339
 )
 
-var (
-	defaultSkip int = 5
-)
-
 // ConsoleEncoder encodes entries to the console.
 type ConsoleEncoder struct {
 	cfg config.ConsoleEncoderConfig
@@ -66,60 +62,24 @@ func (o *ConsoleEncoder) Encode(e *log.Entry) ([]byte, error) {
 		return nil, errors.New("nil entry")
 	}
 	var stacktraces string
-	stackDepth := stacktrace.StacktraceFull
 
 	if o.cfg.DisableColor {
 		e.SetFlag(log.FlagNoColor)
 	}
-	if e.HasFlag(log.FlagCaller) {
-		stackSkip := defaultSkip
+	if e.HasFlag(log.FlagCaller) || e.HasFlag(log.FlagStacktrace) {
+		stackSkip := defaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
+		frames := stack.Tracer(stackSkip)
 
-		stackSkip = 3
-		if e.Module == "_global" {
-			if e.FieldsLength() > 0 {
-				stackSkip--
-			}
-			stackSkip++
-		}
-
-		stack := stacktrace.Capture(stackSkip, stackDepth)
-		defer stack.Free()
-		if stack.Count() > 0 {
-			frameFound := false
-			var frame runtime.Frame
-			var more bool
-			for frame, more = stack.Next(); more; frame, more = stack.Next() {
-				_, fnName := filepath.Split(frame.Function)
-				if frameFound {
-					break
-				}
-				if strings.HasPrefix(fnName, "golog.(*Logger)") ||
-					strings.HasPrefix(fnName, "golog.Warn") ||
-					strings.HasPrefix(fnName, "golog.Info") ||
-					strings.HasPrefix(fnName, "golog.Debug") ||
-					strings.HasPrefix(fnName, "golog.Error") ||
-					strings.HasPrefix(fnName, "golog.Fatal") ||
-					strings.HasPrefix(fnName, "golog.Panic") {
-					frameFound = true
-					continue
-				}
-			}
+		if len(frames) > 0 {
 			if e.HasFlag(log.FlagCaller) {
-				c := frame.File + ":" + strconv.Itoa(frame.Line)
-				e.SetCaller(c)
+				frame := frames[0]
+				e.SetCaller(frame.File + ":" + strconv.Itoa(frame.Line))
 			}
 			if e.HasFlag(log.FlagStacktrace) {
 				buffer := buffer.Get()
 				defer buffer.Free()
-
-				stackfmt := stacktrace.NewStackFormatter(buffer)
-
-				// We've already extracted the first frame, so format that
-				// separately and defer to stackfmt for the rest.
-				stackfmt.FormatFrame(frame)
-				if more {
-					stackfmt.FormatStack(stack)
-				}
+				stackfmt := stack.NewStackFormatter(buffer)
+				stackfmt.FormatFrames(frames)
 				stacktraces = buffer.String()
 			}
 		}

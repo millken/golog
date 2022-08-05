@@ -6,10 +6,10 @@ import (
 	"os"
 	"sync"
 
-	"github.com/millken/golog/internal/config"
+	"github.com/millken/golog/config"
 	"github.com/millken/golog/internal/encoding"
-	"github.com/millken/golog/internal/log"
 	"github.com/millken/golog/internal/writer"
+	"github.com/millken/golog/log"
 )
 
 var (
@@ -25,6 +25,7 @@ type Logger struct {
 	writer        io.Writer
 	encoder       log.Encoder
 	callerMap     map[log.Level]bool
+	callerSkip    int
 	stacktraceMap map[log.Level]bool
 	level         log.Level
 }
@@ -101,6 +102,12 @@ func (l *Logger) initConfig(cfg config.Config) error {
 		l.stacktraceMap[v] = true
 	}
 	return nil
+}
+
+//CallerSkip is used to set the number of caller frames to skip.
+func (l *Logger) CallerSkip(skip int) *Logger {
+	l.callerSkip += skip
+	return l
 }
 
 // Fatalf calls underlying logger.Fatal.
@@ -248,6 +255,7 @@ func (l *Logger) output(level log.Level, msg string, fields ...log.Field) {
 
 	e.Message = msg
 	e.Level = level
+	e.SetCallerSkip(l.callerSkip)
 
 	if l.isCallerEnabled(e.Level) {
 		e.SetFlag(log.FlagCaller)
