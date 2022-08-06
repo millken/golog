@@ -1,4 +1,4 @@
-package encoding
+package golog
 
 import (
 	"encoding/json"
@@ -11,14 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/millken/golog/config"
 	"github.com/millken/golog/internal/buffer"
 	"github.com/millken/golog/internal/stack"
-	"github.com/millken/golog/log"
 )
 
 var (
-	_ log.Encoder = (*ConsoleEncoder)(nil)
+	_ Encoder = (*ConsoleEncoder)(nil)
 )
 
 const DefaultLineEnding = '\n'
@@ -43,11 +41,11 @@ const (
 
 // ConsoleEncoder encodes entries to the console.
 type ConsoleEncoder struct {
-	cfg config.ConsoleEncoderConfig
+	cfg ConsoleEncoderConfig
 }
 
 // NewConsoleEncoder returns a new console encoder.
-func NewConsoleEncoder(cfg config.ConsoleEncoderConfig) *ConsoleEncoder {
+func NewConsoleEncoder(cfg ConsoleEncoderConfig) *ConsoleEncoder {
 	if len(cfg.PartsOrder) == 0 {
 		cfg.PartsOrder = consoleDefaultPartsOrder()
 	}
@@ -57,25 +55,25 @@ func NewConsoleEncoder(cfg config.ConsoleEncoderConfig) *ConsoleEncoder {
 }
 
 // Encode encodes the entry and writes it to the writer.
-func (o *ConsoleEncoder) Encode(e *log.Entry) ([]byte, error) {
+func (o *ConsoleEncoder) Encode(e *Entry) ([]byte, error) {
 	if e == nil {
 		return nil, errors.New("nil entry")
 	}
 	var stacktraces string
 
 	if o.cfg.DisableColor {
-		e.SetFlag(log.FlagNoColor)
+		e.SetFlag(FlagNoColor)
 	}
-	if e.HasFlag(log.FlagCaller) || e.HasFlag(log.FlagStacktrace) {
+	if e.HasFlag(FlagCaller) || e.HasFlag(FlagStacktrace) {
 		stackSkip := defaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
 		frames := stack.Tracer(stackSkip)
 
 		if len(frames) > 0 {
-			if e.HasFlag(log.FlagCaller) {
+			if e.HasFlag(FlagCaller) {
 				frame := frames[0]
 				e.SetCaller(frame.File + ":" + strconv.Itoa(frame.Line))
 			}
-			if e.HasFlag(log.FlagStacktrace) {
+			if e.HasFlag(FlagStacktrace) {
 				buffer := buffer.Get()
 				defer buffer.Free()
 				stackfmt := stack.NewStackFormatter(buffer)
@@ -86,9 +84,9 @@ func (o *ConsoleEncoder) Encode(e *log.Entry) ([]byte, error) {
 	}
 
 	for _, p := range o.cfg.PartsOrder {
-		if (p == log.CallerFieldName && !e.HasFlag(log.FlagCaller)) ||
-			(p == log.ErrorStackFieldName && !e.HasFlag(log.FlagStacktrace) ||
-				(p == log.TimestampFieldName && o.cfg.DisableTimestamp)) {
+		if (p == CallerFieldName && !e.HasFlag(FlagCaller)) ||
+			(p == ErrorStackFieldName && !e.HasFlag(FlagStacktrace) ||
+				(p == TimestampFieldName && o.cfg.DisableTimestamp)) {
 			continue
 		}
 		writePart(e, p)
@@ -97,7 +95,7 @@ func (o *ConsoleEncoder) Encode(e *log.Entry) ([]byte, error) {
 		}
 	}
 	writeFields(e)
-	if e.HasFlag(log.FlagStacktrace) {
+	if e.HasFlag(FlagStacktrace) {
 		e.WriteByte(DefaultLineEnding)
 		e.WriteString(stacktraces)
 	}
@@ -106,20 +104,20 @@ func (o *ConsoleEncoder) Encode(e *log.Entry) ([]byte, error) {
 }
 
 // writePart appends a formatted part to buf.
-func writePart(e *log.Entry, p string) {
+func writePart(e *Entry, p string) {
 	switch p {
-	case log.LevelFieldName:
+	case LevelFieldName:
 		defaultFormatLevel(e)
-	case log.TimestampFieldName:
+	case TimestampFieldName:
 		defaultFormatTimestamp(e, "")
-	case log.MessageFieldName:
+	case MessageFieldName:
 		defaultFormatMessage(e)
-	case log.CallerFieldName:
+	case CallerFieldName:
 		defaultFormatCaller(e)
 	}
 }
 
-func writeFields(e *log.Entry) {
+func writeFields(e *Entry) {
 	if len(e.Fields) == 0 {
 		return
 	}
@@ -130,21 +128,21 @@ func writeFields(e *log.Entry) {
 	}
 }
 
-func defaultFormatLevel(e *log.Entry) {
+func defaultFormatLevel(e *Entry) {
 	var l string
-	noColor := e.HasFlag(log.FlagNoColor)
+	noColor := e.HasFlag(FlagNoColor)
 	switch e.Level {
-	case log.DEBUG:
+	case DEBUG:
 		l = colorize("DBUG", colorCyan, noColor)
-	case log.INFO:
+	case INFO:
 		l = colorize("INFO", colorBlue, noColor)
-	case log.WARNING:
+	case WARNING:
 		l = colorize("WARN", colorYellow, noColor)
-	case log.ERROR:
+	case ERROR:
 		l = colorize("ERRO", colorRed, noColor)
-	case log.FATAL:
+	case FATAL:
 		l = colorize(colorize("FATA", colorRed, noColor), colorBold, noColor)
-	case log.PANIC:
+	case PANIC:
 		l = colorize(colorize("PNIC", colorDarkGray, noColor), colorBold, noColor)
 	default:
 		l = colorize("????", colorBold, noColor)
@@ -152,29 +150,29 @@ func defaultFormatLevel(e *log.Entry) {
 	e.WriteString(l)
 }
 
-func defaultFormatTimestamp(e *log.Entry, timeFormat string) {
+func defaultFormatTimestamp(e *Entry, timeFormat string) {
 	if timeFormat == "" {
 		timeFormat = consoleDefaultTimeFormat
 	}
 	e.Data = time.Now().AppendFormat(e.Data, timeFormat)
 }
 
-func defaultFormatMessage(e *log.Entry) {
+func defaultFormatMessage(e *Entry) {
 	_, _ = e.WriteString(e.Message)
 }
 
-func defaultFormatCaller(e *log.Entry) {
-	noColor := e.HasFlag(log.FlagNoColor)
+func defaultFormatCaller(e *Entry) {
+	noColor := e.HasFlag(FlagNoColor)
 	c := colorize(e.GetCaller(), colorBold, noColor)
 	_, _ = e.WriteString(c)
 }
 
-func defaultFormatFieldName(e *log.Entry, name string) {
-	noColor := e.HasFlag(log.FlagNoColor)
+func defaultFormatFieldName(e *Entry, name string) {
+	noColor := e.HasFlag(FlagNoColor)
 	_, _ = e.WriteString(colorize(name+"=", colorCyan, noColor))
 }
 
-func defaultFormatFieldValue(e *log.Entry, value interface{}) {
+func defaultFormatFieldValue(e *Entry, value interface{}) {
 	switch fValue := value.(type) {
 	case string:
 		if needsQuote(fValue) {
@@ -248,11 +246,11 @@ func colorize(s string, c int, disabled bool) string {
 
 func consoleDefaultPartsOrder() []string {
 	return []string{
-		log.TimestampFieldName,
-		log.LevelFieldName,
-		log.CallerFieldName,
-		log.ErrorStackFieldName,
-		log.MessageFieldName,
+		TimestampFieldName,
+		LevelFieldName,
+		CallerFieldName,
+		ErrorStackFieldName,
+		MessageFieldName,
 	}
 }
 

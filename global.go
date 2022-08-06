@@ -2,20 +2,17 @@ package golog
 
 import (
 	"sync"
-
-	"github.com/millken/golog/config"
-	"github.com/millken/golog/log"
 )
 
 //nolint:gochecknoglobals
 var (
-	loggerProviderInstance log.Logger
+	loggerProviderInstance Logger
 	loggerProviderOnce     sync.Once
 )
 
-// F is a shortcut to create log.Field.
-func F(k string, v interface{}) log.Field {
-	return log.Field{Key: k, Val: v}
+// F is a shortcut to create Field.
+func F(k string, v interface{}) Field {
+	return Field{Key: k, Val: v}
 }
 
 // Panicf logs a message using Panic level and panics.
@@ -49,18 +46,18 @@ func Debugf(format string, args ...interface{}) {
 }
 
 // WithField returns a logger configured with the key-value pair.
-func WithField(k string, v interface{}) log.Logger {
-	return WithFields(log.Field{Key: k, Val: v})
+func WithField(k string, v interface{}) Logger {
+	return WithFields(Fields{k: v})
 }
 
 // WithFields returns a logger configured with the key-value pairs.
-func WithFields(fields ...log.Field) log.Logger {
-	return loggerProvider().WithFields(fields...)
+func WithFields(fields Fields) Logger {
+	return loggerProvider().WithFields(fields)
 }
 
 // LoadConfig - Load configuration from file
 func LoadConfig(path string) error {
-	return config.Load(path)
+	return Load(path)
 }
 
 // Panic logs a message using Panic level and panics.
@@ -93,7 +90,7 @@ func Debug(msg string) {
 	loggerProvider().Debugf(msg)
 }
 
-func loggerProvider() log.Logger {
+func loggerProvider() Logger {
 	loggerProviderOnce.Do(func() {
 		loggerProviderInstance = New("").CallerSkip(1)
 	})

@@ -1,4 +1,4 @@
-package config
+package golog
 
 import (
 	"encoding/json"
@@ -7,13 +7,12 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/millken/golog/log"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	defaultLogLevel   = log.INFO
+	defaultLogLevel   = INFO
 	defaultModuleName = ""
 )
 
@@ -31,15 +30,15 @@ type Configs struct {
 // Config is a configuration for a logger.
 type Config struct {
 	// Level is the default log level.
-	Level log.Level `json:"level" yaml:"level"`
+	Level Level `json:"level" yaml:"level"`
 	// Encoding is the log encoding.  console or json.
 	Encoding             string               `json:"encoding" yaml:"encoding"`
 	ConsoleEncoderConfig ConsoleEncoderConfig `json:"consoleEncodingConfig" yaml:"consoleEncodingConfig"`
 	JSONEncoderConfig    JSONEncoderConfig    `json:"jsonEncoderConfig" yaml:"jsonEncoderConfig"`
 	//CallerLevels is the default levels for show caller info.
-	CallerLevels []log.Level `json:"callerLevels" yaml:"callerLevels"`
+	CallerLevels []Level `json:"callerLevels" yaml:"callerLevels"`
 	// StacktraceLevels is the default levels for show stacktrace.
-	StacktraceLevels []log.Level  `json:"stacktraceLevels" yaml:"stacktraceLevels"`
+	StacktraceLevels []Level      `json:"stacktraceLevels" yaml:"stacktraceLevels"`
 	Writer           WriterConfig `json:"handler" yaml:"handler"`
 }
 

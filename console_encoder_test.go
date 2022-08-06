@@ -1,25 +1,23 @@
-package encoding
+package golog
 
 import (
 	"testing"
 
-	"github.com/millken/golog/config"
-	"github.com/millken/golog/log"
 	"github.com/stretchr/testify/require"
 )
 
 func TestConsole(t *testing.T) {
 
 	module := "test-module"
-	cs := NewConsoleEncoder(config.ConsoleEncoderConfig{})
+	cs := NewConsoleEncoder(ConsoleEncoderConfig{})
 	_, err := cs.Encode(nil)
 	require.Error(t, err)
-	e := &log.Entry{
+	e := &Entry{
 		Module:  module,
-		Level:   log.INFO,
+		Level:   INFO,
 		Message: "test",
 	}
-	e.SetFlag(log.FlagCaller)
+	e.SetFlag(FlagCaller)
 	defaultCallerSkip = 1
 	b, err := cs.Encode(e)
 	require.NoError(t, err)

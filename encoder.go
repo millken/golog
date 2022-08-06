@@ -1,7 +1,7 @@
 //go:build !binary_log
 // +build !binary_log
 
-package encoding
+package golog
 
 import (
 	"net"
@@ -9,7 +9,6 @@ import (
 	"unsafe"
 
 	"github.com/millken/golog/internal/json"
-	"github.com/millken/golog/log"
 )
 
 var (
@@ -146,7 +145,7 @@ func appendVal(dst []byte, value interface{}) []byte {
 	case float64:
 		dst = enc.AppendFloat64(dst, val)
 	case time.Time:
-		dst = enc.AppendTime(dst, val, log.TimeFieldFormat)
+		dst = enc.AppendTime(dst, val, TimeFieldFormat)
 	case time.Duration:
 		dst = enc.AppendDuration(dst, val, time.Millisecond, false)
 	case *string:
@@ -235,7 +234,7 @@ func appendVal(dst []byte, value interface{}) []byte {
 		}
 	case *time.Time:
 		if val != nil {
-			dst = enc.AppendTime(dst, *val, log.TimeFieldFormat)
+			dst = enc.AppendTime(dst, *val, TimeFieldFormat)
 		} else {
 			dst = enc.AppendNil(dst)
 		}
@@ -274,7 +273,7 @@ func appendVal(dst []byte, value interface{}) []byte {
 	case []float64:
 		dst = enc.AppendFloats64(dst, val)
 	case []time.Time:
-		dst = enc.AppendTimes(dst, val, log.TimeFieldFormat)
+		dst = enc.AppendTimes(dst, val, TimeFieldFormat)
 	case []time.Duration:
 		dst = enc.AppendDurations(dst, val, time.Millisecond, false)
 	case nil:
@@ -298,7 +297,7 @@ func appendKeyVal(dst []byte, key string, value interface{}) []byte {
 	return dst
 }
 
-func appendFields(dst []byte, fields ...log.Field) []byte {
+func appendFields(dst []byte, fields ...Field) []byte {
 	for _, field := range fields {
 		dst = appendKeyVal(dst, field.Key, field.Val)
 	}

@@ -1,10 +1,8 @@
-package writer
+package golog
 
 import (
 	"io"
 	"os"
-
-	"github.com/millken/golog/config"
 )
 
 var (
@@ -12,11 +10,11 @@ var (
 )
 
 type File struct {
-	cfg    config.FileConfig
+	cfg    FileConfig
 	writer io.Writer
 }
 
-func NewFile(cfg config.FileConfig) (*File, error) {
+func NewFile(cfg FileConfig) (*File, error) {
 	var writer io.Writer
 	switch cfg.Path {
 	case "stdout":

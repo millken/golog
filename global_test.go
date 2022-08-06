@@ -8,8 +8,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/millken/golog/config"
-	"github.com/millken/golog/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,10 +24,10 @@ func TestGlobalLog(t *testing.T) {
 	Errorf("error message %s", "error")
 	WithField("err", errors.New("error")).Debugf("debug message")
 	WithField("err", errors.New("error")).WithField("c", false).Warnf("warn message")
-	WithFields(F("a", 1), F("b", true)).Infof("info message with %d fields", 2)
+	WithFields(Fields{"a": 1, "b": true}).Infof("info message with %d fields", 2)
 	Debugf("debug message")
 
-	l := WithFields(F("a", 1), F("b", 3))
+	l := WithFields(Fields{"a": 1, "b": 3})
 	l.Error("error message")
 	l.WithField("c", false).Warn("warn message")
 }
@@ -37,14 +35,14 @@ func TestGlobalLog(t *testing.T) {
 func TestGlobal_Panic(t *testing.T) {
 	var buf bytes.Buffer
 	require := require.New(t)
-	cfg := config.Config{
-		Level:    log.INFO,
+	cfg := Config{
+		Level:    INFO,
 		Encoding: "console",
-		ConsoleEncoderConfig: config.ConsoleEncoderConfig{
+		ConsoleEncoderConfig: ConsoleEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},
-		Writer: config.WriterConfig{
+		Writer: WriterConfig{
 			Type:         "custom",
 			CustomWriter: &buf,
 		},
@@ -79,15 +77,15 @@ func TestGlobal_Fatal(t *testing.T) {
 
 func TestGlobalLogRaces(t *testing.T) {
 	require := require.New(t)
-	cfg := config.Config{
-		Level:    log.INFO,
+	cfg := Config{
+		Level:    INFO,
 		Encoding: "console",
-		ConsoleEncoderConfig: config.ConsoleEncoderConfig{
+		ConsoleEncoderConfig: ConsoleEncoderConfig{
 			DisableTimestamp: true,
 		},
-		Writer: config.WriterConfig{
+		Writer: WriterConfig{
 			Type: "file",
-			FileConfig: config.FileConfig{
+			FileConfig: FileConfig{
 				Path: "",
 			},
 		},
@@ -110,7 +108,7 @@ func TestGlobalLogRaces(t *testing.T) {
 	wg.Wait()
 }
 
-func BenchmarkGlobalLogger(b *testing.B) {
+func BenchmarkGlobal(b *testing.B) {
 	require := require.New(b)
 	err := LoadConfig("testdata/bench.yml")
 	require.NoError(err)
@@ -118,5 +116,16 @@ func BenchmarkGlobalLogger(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		Infof("abcde1234")
+	}
+}
+
+func BenchmarkGlobal_WithField(b *testing.B) {
+	require := require.New(b)
+	err := LoadConfig("testdata/bench.yml")
+	require.NoError(err)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		WithField("a", 1).Infof("abcde1234")
 	}
 }

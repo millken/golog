@@ -1,4 +1,4 @@
-package log
+package golog
 
 import (
 	"io"
@@ -117,13 +117,13 @@ var (
 	}
 )
 
-// AcquireEntry returns a new entry.
-func AcquireEntry() *Entry {
+// acquireEntry returns a new entry.
+func acquireEntry() *Entry {
 	return entryPool.Get().(*Entry) //nolint:errcheck
 }
 
-// ReleaseEntry releases the entry.
-func ReleaseEntry(e *Entry) {
+// releaseEntry releases the entry.
+func releaseEntry(e *Entry) {
 	e.Message = e.Message[:0]
 	e.Data = e.Data[:0]
 	e.Fields = e.Fields[:0]
