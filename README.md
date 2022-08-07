@@ -4,7 +4,7 @@
 [![GoDev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/millken/golog)
 [![GitHub release](https://img.shields.io/github/release/millken/golog.svg)](https://github.com/millken/golog/releases)
 # golog
-Fast logger for Golang
+Fast structure logger for Golang
 
 ## Feature
   - Zero Allocation
@@ -31,13 +31,16 @@ import (
 )
 
 func main() {
-    golog.Infof("hello world")
+    golog.Infof("hello %s", "world")
+	  golog.Info("hello world with fields", "a", 1, "b", true, "c", "string")
 }
 
-// Output: 2021-05-29 15:48:06 INFO hello world
+// Output: 
+2022-08-07T21:48:21+08:00 WARN hello world
+2022-08-07T21:48:21+08:00 INFO hello world with fields a=1 b=true c=string
 ```
 
-> Note: By default log writes to `os.Stderr`, The default log level for is *info*
+> Note: By default log writes to `os.Stdout`, The default log level for is *info*
 
 ## Performance 
 > Note: disabled time and colors

@@ -11,6 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGlobalUsage(t *testing.T) {
+	Infof("hello %s", "world")
+	Info("hello world with fields", "a", 1, "b", true, "c", "string")
+}
+
 func TestGlobalLog(t *testing.T) {
 	Debug("debug message")
 	Info("info message")
