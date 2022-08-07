@@ -37,6 +37,12 @@ func TestGlobalLog(t *testing.T) {
 	l.WithValues("c", false).Warn("warn message")
 }
 
+func TestDebugGlobal(t *testing.T) {
+	l := WithValues("a", 1, "b", 3)
+	l.Error("error message")
+	l.Warn("warn message", "c", false)
+}
+
 func TestGlobal_Panic(t *testing.T) {
 	var buf bytes.Buffer
 	require := require.New(t)

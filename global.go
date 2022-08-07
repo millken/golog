@@ -47,7 +47,7 @@ func Debugf(format string, args ...interface{}) {
 
 // WithValues returns a logger configured with the key-value pairs.
 func WithValues(keysAndVals ...interface{}) Logger {
-	return loggerProvider().WithValues(keysAndVals)
+	return loggerProvider().WithValues(keysAndVals...)
 }
 
 // Panic logs a message using Panic level and panics.

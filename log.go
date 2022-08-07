@@ -255,9 +255,15 @@ func (l *Log) Error(msg string, keysAndVals ...interface{}) {
 
 // WithValues returns a logger configured with the key-value pairs.
 func (l *Log) WithValues(keysAndVals ...interface{}) Logger {
-	clone := l.Clone()
+	clone := l.clone()
 	for i := 0; i < len(keysAndVals); {
-		if field, ok := keysAndVals[i].(Field); ok {
+		if fields, ok := keysAndVals[i].(Fields); ok {
+			for k, v := range fields {
+				clone.fields = append(clone.fields, field(k, v))
+			}
+			i++
+			continue
+		} else if field, ok := keysAndVals[i].(Field); ok {
 			clone.fields = append(clone.fields, field)
 			i++
 			continue
@@ -351,10 +357,16 @@ func (l *Log) isStacktraceEnabled(level Level) bool {
 	return false
 }
 
-// Clone returns a copy of this "l" Logger.
-// This copy is returned as pointer as well.
-func (l *Log) Clone() *Log {
-	copy := *l
-	copy.callerSkip = 0
-	return &copy
+// clone returns a copy of this "l" Logger.
+func (l *Log) clone() *Log {
+	return &Log{
+		level:         l.level,
+		module:        l.module,
+		writer:        l.writer,
+		fields:        l.fields,
+		encoder:       l.encoder,
+		callerMap:     l.callerMap,
+		stacktraceMap: l.stacktraceMap,
+		once:          sync.Once{},
+	}
 }
