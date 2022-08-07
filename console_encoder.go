@@ -4,10 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
-	"runtime"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/goccy/go-json"
@@ -20,6 +17,7 @@ var (
 	_ Encoder = (*ConsoleEncoder)(nil)
 )
 
+// DefaultLineEnding is the default line ending used by the console encoder.
 const DefaultLineEnding = '\n'
 
 const (
@@ -253,53 +251,4 @@ func consoleDefaultPartsOrder() []string {
 		ErrorStackFieldName,
 		MessageFieldName,
 	}
-}
-
-// getCallerInfo going through runtime caller frames to determine the caller of logger function by filtering
-// internal logging library functions.
-func getCallerInfo() string {
-
-	const (
-		// search MAXCALLERS caller frames for the real caller,
-		// MAXCALLERS defines maximum number of caller frames needed to be recorded to find the actual caller frame
-		MAXCALLERS = 6
-		// skip SKIPCALLERS frames when determining the real caller
-		// SKIPCALLERS is the number of stack frames to skip before recording caller frames,
-		// this is mainly used to filter logger library functions in caller frames
-		SKIPCALLERS      = 5
-		NOTFOUND         = "n/a"
-		DEFAULTLOGPREFIX = "golog.(*Logger)"
-	)
-
-	fpcs := make([]uintptr, MAXCALLERS)
-
-	n := runtime.Callers(SKIPCALLERS, fpcs)
-	if n == 0 {
-		return fmt.Sprintf("- %s", NOTFOUND)
-	}
-
-	frames := runtime.CallersFrames(fpcs[:n])
-	loggerFrameFound := false
-
-	for f, more := frames.Next(); more; f, more = frames.Next() {
-		_, fnName := filepath.Split(f.Function)
-
-		if f.Func == nil || f.Function == "" {
-			fnName = NOTFOUND // not a function or unknown
-		}
-
-		if loggerFrameFound {
-			return fmt.Sprintf("- %s", fnName)
-		}
-
-		if strings.HasPrefix(fnName, DEFAULTLOGPREFIX) {
-			loggerFrameFound = true
-
-			continue
-		}
-
-		return fmt.Sprintf("- %s", fnName)
-	}
-
-	return fmt.Sprintf("- %s", NOTFOUND)
 }

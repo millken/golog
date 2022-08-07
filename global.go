@@ -10,8 +10,8 @@ var (
 	loggerProviderOnce     sync.Once
 )
 
-// F is a shortcut to create Field.
-func F(k string, v interface{}) Field {
+// Any is a shortcut to create Field.
+func Any(k string, v interface{}) Field {
 	return Field{Key: k, Val: v}
 }
 
@@ -53,11 +53,6 @@ func WithField(k string, v interface{}) Logger {
 // WithFields returns a logger configured with the key-value pairs.
 func WithFields(fields Fields) Logger {
 	return loggerProvider().WithFields(fields)
-}
-
-// LoadConfig - Load configuration from file
-func LoadConfig(path string) error {
-	return Load(path)
 }
 
 // Panic logs a message using Panic level and panics.

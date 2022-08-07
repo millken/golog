@@ -16,7 +16,7 @@ func resetConfigs() {
 func TestConfig(t *testing.T) {
 	defer resetConfigs()
 	require := require.New(t)
-	err := Load("./testdata/yaml_001.yml")
+	err := LoadConfig("./testdata/yaml_001.yml")
 	require.NoError(err)
 	require.Equal(INFO, configs.Default.Level)
 	require.Equal("console", configs.Default.Encoding)

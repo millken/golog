@@ -111,7 +111,7 @@ var (
 		New: func() interface{} {
 			return &Entry{
 				Data:   make([]byte, 0, 4096),
-				Fields: []Field{},
+				Fields: make([]Field, 0, 500),
 			}
 		},
 	}

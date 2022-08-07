@@ -1,11 +1,12 @@
 package json
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"net"
 	"strconv"
+
+	"github.com/goccy/go-json"
 )
 
 // AppendNil inserts a 'Nil' object into the dst byte array.

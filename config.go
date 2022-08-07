@@ -42,6 +42,7 @@ type Config struct {
 	Writer           WriterConfig `json:"handler" yaml:"handler"`
 }
 
+// ConsoleEncoderConfig is the configuration for the console encoder.
 type ConsoleEncoderConfig struct {
 	// PartsOrder is the order of the parts of the log entry.
 	PartsOrder []string `json:"partsOrder" yaml:"partsOrder"`
@@ -55,6 +56,7 @@ type ConsoleEncoderConfig struct {
 	CallerSkipFrame int `json:"callerSkipFrame" yaml:"callerSkipFrame"`
 }
 
+// JSONEncoderConfig is the configuration for the JSONEncoder.
 type JSONEncoderConfig struct {
 	// TimeFormat specifies the format for timestamp in output.
 	TimeFormat string `json:"timeFormat" yaml:"timeFormat"`
@@ -64,12 +66,14 @@ type JSONEncoderConfig struct {
 	CallerSkipFrame int `json:"callerSkipFrame" yaml:"callerSkipFrame"`
 }
 
+// WriterConfig is a configuration for a writer.
 type WriterConfig struct {
 	Type         string     `json:"type" yaml:"type"`
 	CustomWriter io.Writer  `json:"-" yaml:"-"`
 	FileConfig   FileConfig `json:"fileConfig" yaml:"fileConfig"`
 }
 
+// FileConfig is a configuration for a file writer.
 type FileConfig struct {
 	Path string `json:"path" yaml:"path"`
 }
@@ -80,8 +84,8 @@ func newConfigs() *Configs {
 	}
 }
 
-// Load - load config from file.
-func Load(path string) error {
+// LoadConfig - load config from file.
+func LoadConfig(path string) error {
 	var out Configs
 	data, err := os.ReadFile(path)
 	if err != nil {

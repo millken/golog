@@ -153,11 +153,14 @@ func BenchmarkLogConsole_WithField(b *testing.B) {
 	log, err := NewLoggerByConfig("test", cfg)
 	require.NoError(err)
 
-	fields := makeFields()
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		log.Info("info", fields...)
+		log.Info("The quick brown fox jumps over the lazy dog",
+			Field{"rate", "15"},
+			Field{"low", 16},
+			Field{"high", 123.2},
+		)
 	}
 }
 

@@ -240,15 +240,19 @@ func (l *Log) logf(level Level, format string, args ...interface{}) {
 	} else {
 		msg = format
 	}
-	l.output(level, msg, l.fields...)
+	l.output(level, msg, l.fields)
 }
 
 func (l *Log) log(level Level, msg string, fields []Field) {
-	l.output(level, msg, append(fields, l.fields...)...)
+	if len(l.fields) > 0 {
+		fields = append(l.fields, fields...)
+	}
+	l.output(level, msg, fields)
 }
 
-func (l *Log) output(level Level, msg string, fields ...Field) {
+func (l *Log) output(level Level, msg string, fields []Field) {
 	e := acquireEntry()
+	defer releaseEntry(e)
 	e.Module = l.module
 
 	e.Fields = fields
@@ -272,7 +276,6 @@ func (l *Log) output(level Level, msg string, fields ...Field) {
 		fmt.Fprintf(os.Stderr, "failed to write log: %v", err)
 	}
 	e.Reset()
-	releaseEntry(e)
 }
 
 func (l *Log) isCallerEnabled(level Level) bool {
