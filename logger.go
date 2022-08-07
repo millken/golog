@@ -11,6 +11,8 @@ const (
 	// LevelFieldName is the field name used for the level field.
 	LevelFieldName = "level"
 
+	// ModuleFieldName is the field name used for the module field.
+	ModuleFieldName = "module"
 	// MessageFieldName is the field name used for the message field.
 	MessageFieldName = "message"
 

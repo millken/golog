@@ -82,7 +82,7 @@ func Debug(msg string, keysAndVals ...interface{}) {
 
 func loggerProvider() Logger {
 	loggerProviderOnce.Do(func() {
-		loggerProviderInstance = New("").CallerSkip(1)
+		loggerProviderInstance = New(defaultModule).CallerSkip(1)
 	})
 
 	return loggerProviderInstance

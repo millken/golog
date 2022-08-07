@@ -36,6 +36,9 @@ func (o *JSONEncoder) Encode(e *Entry) ([]byte, error) {
 		e.Data = appendKeyVal(e.Data, TimestampFieldName, time.Now())
 	}
 	e.Data = appendKeyVal(e.Data, LevelFieldName, e.Level.String())
+	if o.cfg.ShowModuleName {
+		e.Data = appendKeyVal(e.Data, ModuleFieldName, e.Module)
+	}
 	e.Data = appendKeyVal(e.Data, MessageFieldName, &e.Message)
 
 	var frames []runtime.Frame

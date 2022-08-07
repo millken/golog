@@ -4,6 +4,7 @@ default:
   consoleEncodingConfig:
     disableTimestamp: false
     disableColor: true
+    showModuleName: true
   callerLevels: [debug, info, warn, error, fatal, panic]
   stacktraceLevels: [debug, info,warn, error, fatal, panic]
   handler:

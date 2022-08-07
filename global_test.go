@@ -12,6 +12,9 @@ import (
 )
 
 func TestGlobalUsage(t *testing.T) {
+	defer resetConfigs()
+	require := require.New(t)
+	require.NoError(LoadConfig("./testdata/debug.yml"))
 	Infof("hello %s", "world")
 	Info("hello world with fields", "a", 1, "b", true, "c", "string")
 }

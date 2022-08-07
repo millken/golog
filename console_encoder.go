@@ -63,6 +63,9 @@ func (o *ConsoleEncoder) Encode(e *Entry) ([]byte, error) {
 	if o.cfg.DisableColor {
 		e.SetFlag(FlagNoColor)
 	}
+	if o.cfg.ShowModuleName {
+		e.SetFlag(FlagName)
+	}
 	if e.HasFlag(FlagCaller) || e.HasFlag(FlagStacktrace) {
 		stackSkip := defaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
 		frames := stack.Tracer(stackSkip)
@@ -107,6 +110,8 @@ func writePart(e *Entry, p string) {
 	switch p {
 	case LevelFieldName:
 		defaultFormatLevel(e)
+	case ModuleFieldName:
+		defaultModuleName(e)
 	case TimestampFieldName:
 		defaultFormatTimestamp(e, "")
 	case MessageFieldName:
@@ -147,6 +152,12 @@ func defaultFormatLevel(e *Entry) {
 		l = colorize("????", colorBold, noColor)
 	}
 	e.WriteString(l)
+}
+
+func defaultModuleName(e *Entry) {
+	if e.HasFlag(FlagName) {
+		_, _ = e.WriteString(e.Module)
+	}
 }
 
 func defaultFormatTimestamp(e *Entry, timeFormat string) {
@@ -247,6 +258,7 @@ func consoleDefaultPartsOrder() []string {
 	return []string{
 		TimestampFieldName,
 		LevelFieldName,
+		ModuleFieldName,
 		CallerFieldName,
 		ErrorStackFieldName,
 		MessageFieldName,

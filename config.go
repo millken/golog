@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	defaultLogLevel   = INFO
-	defaultModuleName = ""
+	defaultLogLevel = INFO
+	defaultModule   = "-"
 )
 
 var (
@@ -54,6 +54,8 @@ type ConsoleEncoderConfig struct {
 	DisableColor bool `json:"disableColor" yaml:"disableColor"`
 	// CallerSkipFrame is the number of stack frames to skip when reporting the calling function.
 	CallerSkipFrame int `json:"callerSkipFrame" yaml:"callerSkipFrame"`
+	// ShowModuleName shows the name of the logger.
+	ShowModuleName bool `json:"showModuleName" yaml:"showModuleName"`
 }
 
 // JSONEncoderConfig is the configuration for the JSONEncoder.
@@ -64,6 +66,8 @@ type JSONEncoderConfig struct {
 	DisableTimestamp bool `json:"disableTimestamp" yaml:"disableTimestamp"`
 	// CallerSkipFrame is the number of stack frames to skip when reporting the calling function.
 	CallerSkipFrame int `json:"callerSkipFrame" yaml:"callerSkipFrame"`
+	// ShowModuleName shows the name of the logger.
+	ShowModuleName bool `json:"showModuleName" yaml:"showModuleName"`
 }
 
 // WriterConfig is a configuration for a writer.
