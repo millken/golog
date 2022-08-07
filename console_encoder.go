@@ -1,7 +1,6 @@
 package golog
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"github.com/millken/golog/internal/buffer"
 	"github.com/millken/golog/internal/stack"

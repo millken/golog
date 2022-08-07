@@ -48,12 +48,12 @@ type Logger interface {
 	Warnf(msg string, args ...interface{})
 	Infof(msg string, args ...interface{})
 	Debugf(msg string, args ...interface{})
-	Panic(msg string)
-	Fatal(msg string)
-	Error(msg string)
-	Warn(msg string)
-	Info(msg string)
-	Debug(msg string)
+	Panic(msg string, field ...Field)
+	Fatal(msg string, field ...Field)
+	Error(msg string, field ...Field)
+	Warn(msg string, field ...Field)
+	Info(msg string, field ...Field)
+	Debug(msg string, field ...Field)
 }
 
 // Encoder is a interface for encoding log entry.

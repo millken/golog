@@ -4,6 +4,7 @@ default:
   consoleEncodingConfig:
     partsOrder: [level, message]
     disableTimestamp: true
+    disableColor: true
   handler:
     type: file
     fileConfig:

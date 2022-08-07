@@ -162,72 +162,65 @@ func (l *Log) Errorf(format string, args ...interface{}) {
 }
 
 // Fatal calls underlying logger.Fatal.
-func (l *Log) Fatal(msg string) {
+func (l *Log) Fatal(msg string, fields ...Field) {
 	if l.level < FATAL {
 		return
 	}
 
-	l.logf(FATAL, msg)
+	l.log(FATAL, msg, fields)
 	os.Exit(1)
 }
 
 // Panic calls underlying logger.Panic.
-func (l *Log) Panic(msg string) {
+func (l *Log) Panic(msg string, fields ...Field) {
 	if l.level < PANIC {
 		return
 	}
 
-	l.logf(PANIC, msg)
+	l.log(PANIC, msg, fields)
 	panic(msg)
 }
 
 // Debug calls error log function if DEBUG level enabled.
-func (l *Log) Debug(msg string) {
+func (l *Log) Debug(msg string, fields ...Field) {
 	if l.level < DEBUG {
 		return
 	}
 
-	l.logf(DEBUG, msg)
+	l.log(DEBUG, msg, fields)
 }
 
 // Info calls error log function if INFO level enabled.
-func (l *Log) Info(msg string) {
+func (l *Log) Info(msg string, field ...Field) {
 	if l.level < INFO {
 		return
 	}
 
-	l.logf(INFO, msg)
+	l.log(INFO, msg, field)
 }
 
 // Warn calls error log function if WARNING level enabled.
-func (l *Log) Warn(msg string) {
+func (l *Log) Warn(msg string, field ...Field) {
 	if l.level < WARNING {
 		return
 	}
 
-	l.logf(WARNING, msg)
+	l.log(WARNING, msg, field)
 }
 
 // Error calls error log function if ERROR level enabled.
-func (l *Log) Error(msg string) {
+func (l *Log) Error(msg string, field ...Field) {
 	if l.level < ERROR {
 		return
 	}
 
-	l.logf(ERROR, msg)
+	l.log(ERROR, msg, field)
 }
 
 // WithField returns a logger configured with the key-value pair.
 func (l *Log) WithField(k string, v interface{}) Logger {
 	clone := l.Clone()
 	clone.fields = append(l.fields, Field{Key: k, Val: v})
-	return clone
-}
-
-// Fields returns a logger configured with the key-value pairs.
-func (l *Log) Fields(fields ...Field) Logger {
-	clone := l.Clone()
-	clone.fields = append(l.fields, fields...)
 	return clone
 }
 
@@ -248,6 +241,10 @@ func (l *Log) logf(level Level, format string, args ...interface{}) {
 		msg = format
 	}
 	l.output(level, msg, l.fields...)
+}
+
+func (l *Log) log(level Level, msg string, fields []Field) {
+	l.output(level, msg, append(fields, l.fields...)...)
 }
 
 func (l *Log) output(level Level, msg string, fields ...Field) {
@@ -295,14 +292,7 @@ func (l *Log) isStacktraceEnabled(level Level) bool {
 // Clone returns a copy of this "l" Logger.
 // This copy is returned as pointer as well.
 func (l *Log) Clone() *Log {
-	return &Log{
-		level:         l.level,
-		module:        l.module,
-		writer:        l.writer,
-		fields:        l.fields,
-		encoder:       l.encoder,
-		callerMap:     l.callerMap,
-		stacktraceMap: l.stacktraceMap,
-		once:          sync.Once{},
-	}
+	copy := *l
+	copy.callerSkip = 0
+	return &copy
 }

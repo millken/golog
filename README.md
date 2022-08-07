@@ -42,4 +42,11 @@ func main() {
 ## Performance 
 > Note: disabled time and colors
 
-very very fast
+```
+BenchmarkGlobal-8                       17820811                67.55 ns/op            0 B/op          0 allocs/op
+BenchmarkGlobal_WithField-8             10794764               110.7 ns/op            32 B/op          1 allocs/op
+BenchmarkLogConsole-8                   21667298                53.65 ns/op            0 B/op          0 allocs/op
+BenchmarkLogConsole_WithField-8          4162293               289.5 ns/op             0 B/op          0 allocs/op
+BenchmarkLogJSON-8                      11371420               105.0 ns/op            16 B/op          1 allocs/op
+BenchmarkLogJSON_WithField-8             3810990               315.7 ns/op            16 B/op          1 allocs/op
+```

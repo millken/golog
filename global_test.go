@@ -95,7 +95,7 @@ func TestGlobalLogRaces(t *testing.T) {
 	f := func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		for i := 0; i < 10000; i++ {
-			log.Info("info")
+			log.WithField("a", 1).Info("info")
 		}
 	}
 
@@ -109,23 +109,25 @@ func TestGlobalLogRaces(t *testing.T) {
 }
 
 func BenchmarkGlobal(b *testing.B) {
+	defer resetConfigs()
 	require := require.New(b)
 	err := LoadConfig("testdata/bench.yml")
 	require.NoError(err)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Infof("abcde1234")
+		Info("abcde1234")
 	}
 }
 
 func BenchmarkGlobal_WithField(b *testing.B) {
+	defer resetConfigs()
 	require := require.New(b)
 	err := LoadConfig("testdata/bench.yml")
 	require.NoError(err)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		WithField("a", 1).Infof("abcde1234")
+		Info("abcde1234", Field{"k", 1})
 	}
 }

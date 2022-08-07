@@ -61,33 +61,33 @@ func LoadConfig(path string) error {
 }
 
 // Panic logs a message using Panic level and panics.
-func Panic(msg string) {
-	loggerProvider().Panic(msg)
+func Panic(msg string, fields ...Field) {
+	loggerProvider().Panic(msg, fields...)
 }
 
 // Fatal logs a message using Fatal level and exits with status 1.
-func Fatal(msg string) {
-	loggerProvider().Fatal(msg)
+func Fatal(msg string, fields ...Field) {
+	loggerProvider().Fatal(msg, fields...)
 }
 
 // Error logs a message using Error level.
-func Error(msg string) {
-	loggerProvider().Error(msg)
+func Error(msg string, fields ...Field) {
+	loggerProvider().Error(msg, fields...)
 }
 
 // Warn logs a message using Warn level.
-func Warn(msg string) {
-	loggerProvider().Warn(msg)
+func Warn(msg string, fields ...Field) {
+	loggerProvider().Warn(msg, fields...)
 }
 
 // Info logs a message using Info level.
-func Info(msg string) {
-	loggerProvider().Infof(msg)
+func Info(msg string, fields ...Field) {
+	loggerProvider().Info(msg, fields...)
 }
 
 // Debug logs a message using Debug level.
-func Debug(msg string) {
-	loggerProvider().Debugf(msg)
+func Debug(msg string, fields ...Field) {
+	loggerProvider().Debug(msg, fields...)
 }
 
 func loggerProvider() Logger {
