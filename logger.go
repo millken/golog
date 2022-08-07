@@ -40,20 +40,19 @@ type Fields map[string]interface{}
 
 // Logger represents a general-purpose logger.
 type Logger interface {
-	WithField(k string, v interface{}) Logger
-	WithFields(fields Fields) Logger
+	WithValues(keysAndVals ...interface{}) Logger
 	Panicf(msg string, args ...interface{})
 	Fatalf(msg string, args ...interface{})
 	Errorf(msg string, args ...interface{})
 	Warnf(msg string, args ...interface{})
 	Infof(msg string, args ...interface{})
 	Debugf(msg string, args ...interface{})
-	Panic(msg string, field ...Field)
-	Fatal(msg string, field ...Field)
-	Error(msg string, field ...Field)
-	Warn(msg string, field ...Field)
-	Info(msg string, field ...Field)
-	Debug(msg string, field ...Field)
+	Panic(msg string, keysAndVals ...interface{})
+	Fatal(msg string, keysAndVals ...interface{})
+	Error(msg string, keysAndVals ...interface{})
+	Warn(msg string, keysAndVals ...interface{})
+	Info(msg string, keysAndVals ...interface{})
+	Debug(msg string, keysAndVals ...interface{})
 }
 
 // Encoder is a interface for encoding log entry.

@@ -59,7 +59,7 @@ func (o *JSONEncoder) Encode(e *Entry) ([]byte, error) {
 		}
 	}
 
-	e.Data = appendFields(e.Data, e.Fields[:e.FieldsLength()]...)
+	e.Data = appendFields(e.Data, e.Fields[:e.FieldsLength()])
 	e.Data = enc.AppendEndMarker(e.Data)
 	e.Data = enc.AppendLineBreak(e.Data)
 	return e.Bytes(), nil

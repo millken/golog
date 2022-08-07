@@ -43,10 +43,10 @@ func main() {
 > Note: disabled time and colors
 
 ```
-BenchmarkGlobal-8                       17820811                67.55 ns/op            0 B/op          0 allocs/op
-BenchmarkGlobal_WithField-8             10794764               110.7 ns/op            32 B/op          1 allocs/op
-BenchmarkLogConsole-8                   21667298                53.65 ns/op            0 B/op          0 allocs/op
-BenchmarkLogConsole_WithField-8          4162293               289.5 ns/op             0 B/op          0 allocs/op
-BenchmarkLogJSON-8                      11371420               105.0 ns/op            16 B/op          1 allocs/op
-BenchmarkLogJSON_WithField-8             3810990               315.7 ns/op            16 B/op          1 allocs/op
+BenchmarkGlobal-8                       22448018                53.41 ns/op            0 B/op          0 allocs/op
+BenchmarkGlobal_WithField-8             10720359               112.4 ns/op            32 B/op          1 allocs/op
+BenchmarkLogConsole-8                   22745239                51.94 ns/op            0 B/op          0 allocs/op
+BenchmarkLogConsole_WithField-8          4971008               216.8 ns/op             0 B/op          0 allocs/op
+BenchmarkLogJSON-8                      11603274               106.6 ns/op            16 B/op          1 allocs/op
+BenchmarkLogJSON_WithField-8             4482342               266.6 ns/op            16 B/op          1 allocs/op
 ```

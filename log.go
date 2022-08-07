@@ -35,6 +35,7 @@ func newLogger() *Log {
 	return &Log{
 		callerMap:     callerMap,
 		stacktraceMap: stacktraceMap,
+		fields:        []Field{},
 	}
 }
 
@@ -111,7 +112,13 @@ func (l *Log) Fatalf(format string, args ...interface{}) {
 		return
 	}
 
-	l.logf(FATAL, format, args...)
+	var msg string
+	if len(args) > 0 {
+		msg = fmt.Sprintf(format, args...)
+	} else {
+		msg = format
+	}
+	l.output(FATAL, msg, nil)
 	os.Exit(1)
 }
 
@@ -121,8 +128,14 @@ func (l *Log) Panicf(format string, args ...interface{}) {
 		return
 	}
 
-	l.logf(PANIC, format, args...)
-	panic(fmt.Sprintf(format, args...))
+	var msg string
+	if len(args) > 0 {
+		msg = fmt.Sprintf(format, args...)
+	} else {
+		msg = format
+	}
+	l.output(PANIC, msg, nil)
+	panic(msg)
 }
 
 // Debugf calls error log function if DEBUG level enabled.
@@ -131,7 +144,13 @@ func (l *Log) Debugf(format string, args ...interface{}) {
 		return
 	}
 
-	l.logf(DEBUG, format, args...)
+	var msg string
+	if len(args) > 0 {
+		msg = fmt.Sprintf(format, args...)
+	} else {
+		msg = format
+	}
+	l.output(DEBUG, msg, nil)
 }
 
 // Infof calls error log function if INFO level enabled.
@@ -140,7 +159,13 @@ func (l *Log) Infof(format string, args ...interface{}) {
 		return
 	}
 
-	l.logf(INFO, format, args...)
+	var msg string
+	if len(args) > 0 {
+		msg = fmt.Sprintf(format, args...)
+	} else {
+		msg = format
+	}
+	l.output(WARNING, msg, nil)
 }
 
 // Warnf calls error log function if WARNING level enabled.
@@ -149,7 +174,13 @@ func (l *Log) Warnf(format string, args ...interface{}) {
 		return
 	}
 
-	l.logf(WARNING, format, args...)
+	var msg string
+	if len(args) > 0 {
+		msg = fmt.Sprintf(format, args...)
+	} else {
+		msg = format
+	}
+	l.output(WARNING, msg, nil)
 }
 
 // Errorf calls error log function if ERROR level enabled.
@@ -158,105 +189,133 @@ func (l *Log) Errorf(format string, args ...interface{}) {
 		return
 	}
 
-	l.logf(ERROR, format, args...)
-}
-
-// Fatal calls underlying logger.Fatal.
-func (l *Log) Fatal(msg string, fields ...Field) {
-	if l.level < FATAL {
-		return
-	}
-
-	l.log(FATAL, msg, fields)
-	os.Exit(1)
-}
-
-// Panic calls underlying logger.Panic.
-func (l *Log) Panic(msg string, fields ...Field) {
-	if l.level < PANIC {
-		return
-	}
-
-	l.log(PANIC, msg, fields)
-	panic(msg)
-}
-
-// Debug calls error log function if DEBUG level enabled.
-func (l *Log) Debug(msg string, fields ...Field) {
-	if l.level < DEBUG {
-		return
-	}
-
-	l.log(DEBUG, msg, fields)
-}
-
-// Info calls error log function if INFO level enabled.
-func (l *Log) Info(msg string, field ...Field) {
-	if l.level < INFO {
-		return
-	}
-
-	l.log(INFO, msg, field)
-}
-
-// Warn calls error log function if WARNING level enabled.
-func (l *Log) Warn(msg string, field ...Field) {
-	if l.level < WARNING {
-		return
-	}
-
-	l.log(WARNING, msg, field)
-}
-
-// Error calls error log function if ERROR level enabled.
-func (l *Log) Error(msg string, field ...Field) {
-	if l.level < ERROR {
-		return
-	}
-
-	l.log(ERROR, msg, field)
-}
-
-// WithField returns a logger configured with the key-value pair.
-func (l *Log) WithField(k string, v interface{}) Logger {
-	clone := l.Clone()
-	clone.fields = append(l.fields, Field{Key: k, Val: v})
-	return clone
-}
-
-// WithFields returns a logger configured with the key-value pairs.
-func (l *Log) WithFields(fields Fields) Logger {
-	clone := l.Clone()
-	for k, v := range fields {
-		clone.fields = append(l.fields, Field{Key: k, Val: v})
-	}
-	return clone
-}
-
-func (l *Log) logf(level Level, format string, args ...interface{}) {
 	var msg string
 	if len(args) > 0 {
 		msg = fmt.Sprintf(format, args...)
 	} else {
 		msg = format
 	}
-	l.output(level, msg, l.fields)
+	l.output(ERROR, msg, nil)
 }
 
-func (l *Log) log(level Level, msg string, fields []Field) {
-	if len(l.fields) > 0 {
-		fields = append(l.fields, fields...)
+// Fatal calls underlying logger.Fatal.
+func (l *Log) Fatal(msg string, keysAndVals ...interface{}) {
+	if l.level < FATAL {
+		return
 	}
-	l.output(level, msg, fields)
+
+	l.output(FATAL, msg, keysAndVals)
+	os.Exit(1)
 }
 
-func (l *Log) output(level Level, msg string, fields []Field) {
+// Panic calls underlying logger.Panic.
+func (l *Log) Panic(msg string, keysAndVals ...interface{}) {
+	if l.level < PANIC {
+		return
+	}
+
+	l.output(PANIC, msg, keysAndVals)
+	panic(msg)
+}
+
+// Debug calls error log function if DEBUG level enabled.
+func (l *Log) Debug(msg string, keysAndVals ...interface{}) {
+	if l.level < DEBUG {
+		return
+	}
+
+	l.output(DEBUG, msg, keysAndVals)
+}
+
+// Info calls error log function if INFO level enabled.
+func (l *Log) Info(msg string, keysAndVals ...interface{}) {
+	if l.level < INFO {
+		return
+	}
+
+	l.output(INFO, msg, keysAndVals)
+}
+
+// Warn calls error log function if WARNING level enabled.
+func (l *Log) Warn(msg string, keysAndVals ...interface{}) {
+	if l.level < WARNING {
+		return
+	}
+
+	l.output(WARNING, msg, keysAndVals)
+}
+
+// Error calls error log function if ERROR level enabled.
+func (l *Log) Error(msg string, keysAndVals ...interface{}) {
+	if l.level < ERROR {
+		return
+	}
+	l.output(ERROR, msg, keysAndVals)
+}
+
+// WithValues returns a logger configured with the key-value pairs.
+func (l *Log) WithValues(keysAndVals ...interface{}) Logger {
+	clone := l.Clone()
+	for i := 0; i < len(keysAndVals); {
+		if field, ok := keysAndVals[i].(Field); ok {
+			clone.fields = append(clone.fields, field)
+			i++
+			continue
+		}
+		if i == len(keysAndVals)-1 {
+			break
+		}
+		key, val := keysAndVals[i], keysAndVals[i+1]
+		keyStr, isString := key.(string)
+		if !isString {
+			break
+		}
+
+		clone.fields = append(clone.fields, field(keyStr, val))
+		i += 2
+	}
+	return clone
+}
+
+func (l *Log) output(level Level, msg string, args []interface{}) {
 	e := acquireEntry()
 	defer releaseEntry(e)
 	e.Module = l.module
 
-	e.Fields = fields
-	e.SetFieldsLen(len(fields))
+	n := 0
+	for _, f := range l.fields {
+		e.Fields = append(e.Fields, f)
+		n++
+	}
+	for i := 0; i < len(args); {
+		if fields, ok := args[i].(Fields); ok {
+			for k, v := range fields {
+				e.Fields = append(e.Fields, field(k, v))
+				n++
+			}
+			i++
+			continue
+		} else if field, ok := args[i].(Field); ok {
+			e.Fields = append(e.Fields, field)
+			i++
+			n++
+			continue
+		}
+		if i == len(args)-1 {
+			break
+		}
+		key, val := args[i], args[i+1]
+		keyStr, isString := key.(string)
+		if !isString {
+			break
+		}
+
+		e.Fields = append(e.Fields, field(keyStr, val))
+		n++
+		i += 2
+	}
+	//e.Fields = append(e.Fields, l.handleFields(args)...)
+	e.SetFieldsLen(n)
 
 	e.Message = msg
 	e.Level = level

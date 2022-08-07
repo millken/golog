@@ -10,8 +10,8 @@ var (
 	loggerProviderOnce     sync.Once
 )
 
-// Any is a shortcut to create Field.
-func Any(k string, v interface{}) Field {
+// field is a shortcut to create Field.
+func field(k string, v interface{}) Field {
 	return Field{Key: k, Val: v}
 }
 
@@ -45,44 +45,39 @@ func Debugf(format string, args ...interface{}) {
 	loggerProvider().Debugf(format, args...)
 }
 
-// WithField returns a logger configured with the key-value pair.
-func WithField(k string, v interface{}) Logger {
-	return WithFields(Fields{k: v})
-}
-
-// WithFields returns a logger configured with the key-value pairs.
-func WithFields(fields Fields) Logger {
-	return loggerProvider().WithFields(fields)
+// WithValues returns a logger configured with the key-value pairs.
+func WithValues(keysAndVals ...interface{}) Logger {
+	return loggerProvider().WithValues(keysAndVals)
 }
 
 // Panic logs a message using Panic level and panics.
-func Panic(msg string, fields ...Field) {
-	loggerProvider().Panic(msg, fields...)
+func Panic(msg string, keysAndVals ...interface{}) {
+	loggerProvider().Panic(msg, keysAndVals...)
 }
 
 // Fatal logs a message using Fatal level and exits with status 1.
-func Fatal(msg string, fields ...Field) {
-	loggerProvider().Fatal(msg, fields...)
+func Fatal(msg string, keysAndVals ...interface{}) {
+	loggerProvider().Fatal(msg, keysAndVals...)
 }
 
 // Error logs a message using Error level.
-func Error(msg string, fields ...Field) {
-	loggerProvider().Error(msg, fields...)
+func Error(msg string, keysAndVals ...interface{}) {
+	loggerProvider().Error(msg, keysAndVals...)
 }
 
 // Warn logs a message using Warn level.
-func Warn(msg string, fields ...Field) {
-	loggerProvider().Warn(msg, fields...)
+func Warn(msg string, keysAndVals ...interface{}) {
+	loggerProvider().Warn(msg, keysAndVals...)
 }
 
 // Info logs a message using Info level.
-func Info(msg string, fields ...Field) {
-	loggerProvider().Info(msg, fields...)
+func Info(msg string, keysAndVals ...interface{}) {
+	loggerProvider().Info(msg, keysAndVals...)
 }
 
 // Debug logs a message using Debug level.
-func Debug(msg string, fields ...Field) {
-	loggerProvider().Debug(msg, fields...)
+func Debug(msg string, keysAndVals ...interface{}) {
+	loggerProvider().Debug(msg, keysAndVals...)
 }
 
 func loggerProvider() Logger {

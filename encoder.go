@@ -14,7 +14,7 @@ import (
 var (
 	_ encoder = (*json.Encoder)(nil)
 
-	defaultCallerSkip int = 4
+	defaultCallerSkip int = 3
 
 	enc = json.Encoder{}
 
@@ -297,7 +297,7 @@ func appendKeyVal(dst []byte, key string, value interface{}) []byte {
 	return dst
 }
 
-func appendFields(dst []byte, fields ...Field) []byte {
+func appendFields(dst []byte, fields []Field) []byte {
 	for _, field := range fields {
 		dst = appendKeyVal(dst, field.Key, field.Val)
 	}

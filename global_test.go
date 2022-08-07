@@ -22,14 +22,14 @@ func TestGlobalLog(t *testing.T) {
 
 	Warnf("warning message %s", "warning")
 	Errorf("error message %s", "error")
-	WithField("err", errors.New("error")).Debugf("debug message")
-	WithField("err", errors.New("error")).WithField("c", false).Warnf("warn message")
-	WithFields(Fields{"a": 1, "b": true}).Infof("info message with %d fields", 2)
+	WithValues("err", errors.New("error")).Debugf("debug message")
+	WithValues("err", errors.New("error")).WithValues("c", false).Warnf("warn message")
+	WithValues(Fields{"a": 1, "b": true}).Infof("info message with %d fields", 2)
 	Debugf("debug message")
 
-	l := WithFields(Fields{"a": 1, "b": 3})
+	l := WithValues("a", 1, "b", 3)
 	l.Error("error message")
-	l.WithField("c", false).Warn("warn message")
+	l.WithValues("c", false).Warn("warn message")
 }
 
 func TestGlobal_Panic(t *testing.T) {
@@ -95,7 +95,7 @@ func TestGlobalLogRaces(t *testing.T) {
 	f := func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		for i := 0; i < 10000; i++ {
-			log.WithField("a", 1).Info("info")
+			log.WithValues("a", 1).Info("info")
 		}
 	}
 
@@ -128,6 +128,6 @@ func BenchmarkGlobal_WithField(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Info("abcde1234", Field{"k", 1})
+		Info("abcde1234", "k", 1)
 	}
 }
