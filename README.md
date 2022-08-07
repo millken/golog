@@ -32,7 +32,7 @@ import (
 
 func main() {
     golog.Infof("hello %s", "world")
-	  golog.Info("hello world with fields", "a", 1, "b", true, "c", "string")
+    golog.Info("hello world with fields", "a", 1, "b", true, "c", "string")
 }
 
 // Output: 
