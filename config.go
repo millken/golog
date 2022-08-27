@@ -115,6 +115,13 @@ func LoadConfig(path string) error {
 	return nil
 }
 
+// SetModuleConfig - setting config for given module.
+func SetModuleConfig(module string, cfg Config) {
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
+	configs.Modules[module] = cfg
+}
+
 // GetModuleConfig - getting config for given module.
 func GetModuleConfig(module string) Config {
 	rwmutex.RLock()
