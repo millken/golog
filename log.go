@@ -165,7 +165,7 @@ func (l *Log) Infof(format string, args ...interface{}) {
 	} else {
 		msg = format
 	}
-	l.output(WARNING, msg, nil)
+	l.output(INFO, msg, nil)
 }
 
 // Warnf calls error log function if WARNING level enabled.
