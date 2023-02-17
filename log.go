@@ -87,7 +87,7 @@ func (l *Log) initConfig(cfg Config) error {
 	default:
 		l.encoder = NewConsoleEncoder(cfg.ConsoleEncoderConfig)
 	}
-	l.level = DefaultLevel // if level is not set, set it to INFO
+	l.level = INFO // if level is not set, set it to INFO
 	if cfg.Level > 0 {
 		l.level = cfg.Level
 	}

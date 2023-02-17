@@ -88,6 +88,56 @@ func newConfigs() *Configs {
 	}
 }
 
+// SetLevel - set log level.
+func SetLevel(level Level) {
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
+	configs.Default.Level = level
+}
+
+// SetEncoding - set log encoding.
+func SetEncoding(encoding string) {
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
+	configs.Default.Encoding = encoding
+}
+
+// SetConsoleEncoderConfig - set console encoder config.
+func SetConsoleEncoderConfig(cfg ConsoleEncoderConfig) {
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
+	configs.Default.ConsoleEncoderConfig = cfg
+}
+
+// SetJSONEncoderConfig - set json encoder config.
+func SetJSONEncoderConfig(cfg JSONEncoderConfig) {
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
+	configs.Default.JSONEncoderConfig = cfg
+}
+
+// SetCallerLevels - set caller levels.
+func SetCallerLevels(levels ...Level) {
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
+	configs.Default.CallerLevels = levels
+}
+
+// SetStacktraceLevels - set stacktrace levels.
+func SetStacktraceLevels(levels ...Level) {
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
+	configs.Default.StacktraceLevels = levels
+}
+
+// SetWriter - set writer.
+func SetWriter(writer io.Writer) {
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
+	configs.Default.Writer.Type = "custom"
+	configs.Default.Writer.CustomWriter = writer
+}
+
 // LoadConfig - load config from file.
 func LoadConfig(path string) error {
 	var out Configs

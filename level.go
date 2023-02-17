@@ -8,8 +8,6 @@ import (
 )
 
 var (
-	//DefaultLevel is the default log level.
-	DefaultLevel = INFO
 	// Levels is a slice of all log levels.
 	Levels = []Level{
 		PANIC,
