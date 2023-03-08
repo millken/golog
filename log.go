@@ -82,7 +82,7 @@ func (l *Log) initConfig(cfg Config) error {
 		return err
 	}
 	switch cfg.Encoding {
-	case "json":
+	case JSONEncoding:
 		l.encoder = NewJSONEncoder(cfg.JSONEncoderConfig)
 	default:
 		l.encoder = NewConsoleEncoder(cfg.ConsoleEncoderConfig)
@@ -100,7 +100,7 @@ func (l *Log) initConfig(cfg Config) error {
 	return nil
 }
 
-//CallerSkip is used to set the number of caller frames to skip.
+// CallerSkip is used to set the number of caller frames to skip.
 func (l *Log) CallerSkip(skip int) *Log {
 	l.callerSkip += skip
 	return l
@@ -320,7 +320,6 @@ func (l *Log) output(level Level, msg string, args []interface{}) {
 		n++
 		i += 2
 	}
-	//e.Fields = append(e.Fields, l.handleFields(args)...)
 	e.SetFieldsLen(n)
 
 	e.Message = msg

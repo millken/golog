@@ -11,9 +11,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Encoding is the encoding type.
+type Encoding string
+
 const (
 	defaultLogLevel = INFO
 	defaultModule   = "-"
+	//JSONEncoding is the json encoding.
+	JSONEncoding = "json"
+	//ConsoleEncoding is the console encoding.
+	ConsoleEncoding = "console"
 )
 
 var (
@@ -32,7 +39,7 @@ type Config struct {
 	// Level is the default log level.
 	Level Level `json:"level" yaml:"level"`
 	// Encoding is the log encoding.  console or json.
-	Encoding             string               `json:"encoding" yaml:"encoding"`
+	Encoding             Encoding             `json:"encoding" yaml:"encoding"`
 	ConsoleEncoderConfig ConsoleEncoderConfig `json:"consoleEncodingConfig" yaml:"consoleEncodingConfig"`
 	JSONEncoderConfig    JSONEncoderConfig    `json:"jsonEncoderConfig" yaml:"jsonEncoderConfig"`
 	//CallerLevels is the default levels for show caller info.
@@ -84,6 +91,10 @@ type FileConfig struct {
 
 func newConfigs() *Configs {
 	return &Configs{
+		Default: Config{
+			Level:    defaultLogLevel,
+			Encoding: ConsoleEncoding,
+		},
 		Modules: make(map[string]Config),
 	}
 }
@@ -96,7 +107,7 @@ func SetLevel(level Level) {
 }
 
 // SetEncoding - set log encoding.
-func SetEncoding(encoding string) {
+func SetEncoding(encoding Encoding) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
 	configs.Default.Encoding = encoding
