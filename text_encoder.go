@@ -14,10 +14,10 @@ import (
 )
 
 var (
-	_ Encoder = (*ConsoleEncoder)(nil)
+	_ Encoder = (*TextEncoder)(nil)
 )
 
-// DefaultLineEnding is the default line ending used by the console encoder.
+// DefaultLineEnding is the default line ending used by the text encoder.
 const DefaultLineEnding = '\n'
 
 const (
@@ -35,26 +35,26 @@ const (
 )
 
 const (
-	consoleDefaultTimeFormat = time.RFC3339
+	textDefaultTimeFormat = time.RFC3339
 )
 
-// ConsoleEncoder encodes entries to the console.
-type ConsoleEncoder struct {
-	cfg ConsoleEncoderConfig
+// TextEncoder encodes entries to the text.
+type TextEncoder struct {
+	cfg TextEncoderConfig
 }
 
-// NewConsoleEncoder returns a new console encoder.
-func NewConsoleEncoder(cfg ConsoleEncoderConfig) *ConsoleEncoder {
+// NewTextEncoder returns a new text encoder.
+func NewTextEncoder(cfg TextEncoderConfig) *TextEncoder {
 	if len(cfg.PartsOrder) == 0 {
-		cfg.PartsOrder = consoleDefaultPartsOrder()
+		cfg.PartsOrder = textDefaultPartsOrder()
 	}
-	return &ConsoleEncoder{
+	return &TextEncoder{
 		cfg: cfg,
 	}
 }
 
 // Encode encodes the entry and writes it to the writer.
-func (o *ConsoleEncoder) Encode(e *Entry) ([]byte, error) {
+func (o *TextEncoder) Encode(e *Entry) ([]byte, error) {
 	if e == nil {
 		return nil, errors.New("nil entry")
 	}
@@ -163,7 +163,7 @@ func defaultModuleName(e *Entry) {
 
 func defaultFormatTimestamp(e *Entry, timeFormat string) {
 	if timeFormat == "" {
-		timeFormat = consoleDefaultTimeFormat
+		timeFormat = textDefaultTimeFormat
 	}
 	e.Data = time.Now().AppendFormat(e.Data, timeFormat)
 }
@@ -222,7 +222,7 @@ func defaultFormatFieldValue(e *Entry, value interface{}) {
 	case []byte:
 		e.Data = append(e.Data, fValue...)
 	case time.Time:
-		e.Data = fValue.AppendFormat(e.Data, consoleDefaultTimeFormat)
+		e.Data = fValue.AppendFormat(e.Data, textDefaultTimeFormat)
 	case time.Duration:
 		e.Data = append(e.Data, fValue.String()...)
 	case json.Number:
@@ -255,7 +255,7 @@ func colorize(s string, c int, disabled bool) string {
 	return "\x1b[" + strconv.Itoa(c) + "m" + s + "\x1b[0m"
 }
 
-func consoleDefaultPartsOrder() []string {
+func textDefaultPartsOrder() []string {
 	return []string{
 		TimestampFieldName,
 		LevelFieldName,

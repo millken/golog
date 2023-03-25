@@ -39,9 +39,9 @@ type Config struct {
 	// Level is the default log level.
 	Level Level `json:"level" yaml:"level"`
 	// Encoding is the log encoding.  console or json.
-	Encoding             Encoding             `json:"encoding" yaml:"encoding"`
-	ConsoleEncoderConfig ConsoleEncoderConfig `json:"consoleEncodingConfig" yaml:"consoleEncodingConfig"`
-	JSONEncoderConfig    JSONEncoderConfig    `json:"jsonEncoderConfig" yaml:"jsonEncoderConfig"`
+	Encoding             Encoding          `json:"encoding" yaml:"encoding"`
+	ConsoleEncoderConfig TextEncoderConfig `json:"consoleEncodingConfig" yaml:"consoleEncodingConfig"`
+	JSONEncoderConfig    JSONEncoderConfig `json:"jsonEncoderConfig" yaml:"jsonEncoderConfig"`
 	//CallerLevels is the default levels for show caller info.
 	CallerLevels []Level `json:"callerLevels" yaml:"callerLevels"`
 	// StacktraceLevels is the default levels for show stacktrace.
@@ -49,8 +49,8 @@ type Config struct {
 	Writer           WriterConfig `json:"handler" yaml:"handler"`
 }
 
-// ConsoleEncoderConfig is the configuration for the console encoder.
-type ConsoleEncoderConfig struct {
+// TextEncoderConfig is the configuration for the console encoder.
+type TextEncoderConfig struct {
 	// PartsOrder is the order of the parts of the log entry.
 	PartsOrder []string `json:"partsOrder" yaml:"partsOrder"`
 	// TimeFormat specifies the format for timestamp in output.
@@ -114,7 +114,7 @@ func SetEncoding(encoding Encoding) {
 }
 
 // SetConsoleEncoderConfig - set console encoder config.
-func SetConsoleEncoderConfig(cfg ConsoleEncoderConfig) {
+func SetConsoleEncoderConfig(cfg TextEncoderConfig) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
 	configs.Default.ConsoleEncoderConfig = cfg

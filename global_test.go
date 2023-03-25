@@ -52,7 +52,7 @@ func TestGlobal_Panic(t *testing.T) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: ConsoleEncoding,
-		ConsoleEncoderConfig: ConsoleEncoderConfig{
+		ConsoleEncoderConfig: TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},
@@ -94,7 +94,7 @@ func TestGlobalLogRaces(t *testing.T) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: "console",
-		ConsoleEncoderConfig: ConsoleEncoderConfig{
+		ConsoleEncoderConfig: TextEncoderConfig{
 			DisableTimestamp: true,
 		},
 		Writer: WriterConfig{

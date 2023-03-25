@@ -9,7 +9,7 @@ import (
 func TestConsole(t *testing.T) {
 
 	module := "test-module"
-	cs := NewConsoleEncoder(ConsoleEncoderConfig{})
+	cs := NewTextEncoder(TextEncoderConfig{})
 	_, err := cs.Encode(nil)
 	require.Error(t, err)
 	e := &Entry{
@@ -23,6 +23,6 @@ func TestConsole(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(b), "test")
 	require.Contains(t, string(b), "INF")
-	require.Contains(t, string(b), "console_encoder_test.go")
+	require.Contains(t, string(b), "text_encoder_test.go")
 
 }

@@ -124,7 +124,7 @@ func BenchmarkLogConsole(b *testing.B) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: ConsoleEncoding,
-		ConsoleEncoderConfig: ConsoleEncoderConfig{
+		ConsoleEncoderConfig: TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},
@@ -149,7 +149,7 @@ func BenchmarkLogConsole_WithField(b *testing.B) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: ConsoleEncoding,
-		ConsoleEncoderConfig: ConsoleEncoderConfig{
+		ConsoleEncoderConfig: TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},

@@ -23,7 +23,7 @@ func TestSetConfig(t *testing.T) {
 	SetStacktraceLevels(PANIC, FATAL, ERROR, WARNING)
 	buf := &bytes.Buffer{}
 	SetWriter(buf)
-	SetConsoleEncoderConfig(ConsoleEncoderConfig{DisableTimestamp: true})
+	SetConsoleEncoderConfig(TextEncoderConfig{DisableTimestamp: true})
 	SetJSONEncoderConfig(JSONEncoderConfig{DisableTimestamp: true})
 	require.Equal(INFO, configs.Default.Level)
 	require.Equal(ConsoleEncoding, configs.Default.Encoding)
