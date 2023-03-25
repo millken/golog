@@ -19,8 +19,8 @@ const (
 	defaultModule   = "-"
 	//JSONEncoding is the json encoding.
 	JSONEncoding Encoding = "json"
-	//ConsoleEncoding is the console encoding.
-	ConsoleEncoding Encoding = "console"
+	//TextEncoding is the console encoding.
+	TextEncoding Encoding = "console"
 )
 
 var (
@@ -38,10 +38,10 @@ type Configs struct {
 type Config struct {
 	// Level is the default log level.
 	Level Level `json:"level" yaml:"level"`
-	// Encoding is the log encoding.  console or json.
-	Encoding             Encoding          `json:"encoding" yaml:"encoding"`
-	ConsoleEncoderConfig TextEncoderConfig `json:"consoleEncodingConfig" yaml:"consoleEncodingConfig"`
-	JSONEncoderConfig    JSONEncoderConfig `json:"jsonEncoderConfig" yaml:"jsonEncoderConfig"`
+	// Encoding is the log encoding.  text or json.
+	Encoding          Encoding          `json:"encoding" yaml:"encoding"`
+	TextEncoderConfig TextEncoderConfig `json:"textEncodingConfig" yaml:"textEncodingConfig"`
+	JSONEncoderConfig JSONEncoderConfig `json:"jsonEncoderConfig" yaml:"jsonEncoderConfig"`
 	//CallerLevels is the default levels for show caller info.
 	CallerLevels []Level `json:"callerLevels" yaml:"callerLevels"`
 	// StacktraceLevels is the default levels for show stacktrace.
@@ -49,7 +49,7 @@ type Config struct {
 	Writer           WriterConfig `json:"handler" yaml:"handler"`
 }
 
-// TextEncoderConfig is the configuration for the console encoder.
+// TextEncoderConfig is the configuration for the text encoder.
 type TextEncoderConfig struct {
 	// PartsOrder is the order of the parts of the log entry.
 	PartsOrder []string `json:"partsOrder" yaml:"partsOrder"`
@@ -93,7 +93,7 @@ func newConfigs() *Configs {
 	return &Configs{
 		Default: Config{
 			Level:    defaultLogLevel,
-			Encoding: ConsoleEncoding,
+			Encoding: TextEncoding,
 		},
 		Modules: make(map[string]Config),
 	}
@@ -117,7 +117,7 @@ func SetEncoding(encoding Encoding) {
 func SetConsoleEncoderConfig(cfg TextEncoderConfig) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
-	configs.Default.ConsoleEncoderConfig = cfg
+	configs.Default.TextEncoderConfig = cfg
 }
 
 // SetJSONEncoderConfig - set json encoder config.

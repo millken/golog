@@ -85,7 +85,7 @@ func (l *Log) initConfig(cfg Config) error {
 	case JSONEncoding:
 		l.encoder = NewJSONEncoder(cfg.JSONEncoderConfig)
 	default:
-		l.encoder = NewTextEncoder(cfg.ConsoleEncoderConfig)
+		l.encoder = NewTextEncoder(cfg.TextEncoderConfig)
 	}
 	l.level = INFO // if level is not set, set it to INFO
 	if cfg.Level > 0 {

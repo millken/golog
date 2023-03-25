@@ -123,8 +123,8 @@ func BenchmarkLogConsole(b *testing.B) {
 	require := require.New(b)
 	cfg := Config{
 		Level:    INFO,
-		Encoding: ConsoleEncoding,
-		ConsoleEncoderConfig: TextEncoderConfig{
+		Encoding: TextEncoding,
+		TextEncoderConfig: TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},
@@ -148,8 +148,8 @@ func BenchmarkLogConsole_WithField(b *testing.B) {
 	require := require.New(b)
 	cfg := Config{
 		Level:    INFO,
-		Encoding: ConsoleEncoding,
-		ConsoleEncoderConfig: TextEncoderConfig{
+		Encoding: TextEncoding,
+		TextEncoderConfig: TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},

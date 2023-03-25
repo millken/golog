@@ -18,7 +18,7 @@ func TestSetConfig(t *testing.T) {
 	defer resetConfigs()
 	require := require.New(t)
 	SetLevel(INFO)
-	SetEncoding(ConsoleEncoding)
+	SetEncoding(TextEncoding)
 	SetCallerLevels(PANIC, FATAL, ERROR, WARNING, INFO, DEBUG)
 	SetStacktraceLevels(PANIC, FATAL, ERROR, WARNING)
 	buf := &bytes.Buffer{}
@@ -26,13 +26,13 @@ func TestSetConfig(t *testing.T) {
 	SetConsoleEncoderConfig(TextEncoderConfig{DisableTimestamp: true})
 	SetJSONEncoderConfig(JSONEncoderConfig{DisableTimestamp: true})
 	require.Equal(INFO, configs.Default.Level)
-	require.Equal(ConsoleEncoding, configs.Default.Encoding)
+	require.Equal(TextEncoding, configs.Default.Encoding)
 	sort.Slice(configs.Default.CallerLevels, func(i, j int) bool {
 		return configs.Default.CallerLevels[i] < configs.Default.CallerLevels[j]
 	})
 	require.Equal([]Level{PANIC, FATAL, ERROR, WARNING, INFO, DEBUG}, configs.Default.CallerLevels)
 	require.Equal([]Level{PANIC, FATAL, ERROR, WARNING}, configs.Default.StacktraceLevels)
-	require.True(configs.Default.ConsoleEncoderConfig.DisableTimestamp)
+	require.True(configs.Default.TextEncoderConfig.DisableTimestamp)
 	require.True(configs.Default.JSONEncoderConfig.DisableTimestamp)
 
 	SetModuleConfig("mudule/1", Config{Level: DEBUG, Encoding: JSONEncoding})
@@ -46,7 +46,7 @@ func TestConfig(t *testing.T) {
 	err := LoadConfig("./testdata/yaml_001.yml")
 	require.NoError(err)
 	require.Equal(INFO, configs.Default.Level)
-	require.Equal(ConsoleEncoding, configs.Default.Encoding)
+	require.Equal(TextEncoding, configs.Default.Encoding)
 	sort.Slice(configs.Default.CallerLevels, func(i, j int) bool {
 		return configs.Default.CallerLevels[i] < configs.Default.CallerLevels[j]
 	})

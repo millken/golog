@@ -51,8 +51,8 @@ func TestGlobal_Panic(t *testing.T) {
 	require := require.New(t)
 	cfg := Config{
 		Level:    INFO,
-		Encoding: ConsoleEncoding,
-		ConsoleEncoderConfig: TextEncoderConfig{
+		Encoding: TextEncoding,
+		TextEncoderConfig: TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},
@@ -94,7 +94,7 @@ func TestGlobalLogRaces(t *testing.T) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: "console",
-		ConsoleEncoderConfig: TextEncoderConfig{
+		TextEncoderConfig: TextEncoderConfig{
 			DisableTimestamp: true,
 		},
 		Writer: WriterConfig{
