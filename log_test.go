@@ -123,7 +123,7 @@ func BenchmarkLogConsole(b *testing.B) {
 	require := require.New(b)
 	cfg := Config{
 		Level:    INFO,
-		Encoding: "console",
+		Encoding: ConsoleEncoding,
 		ConsoleEncoderConfig: ConsoleEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
@@ -148,7 +148,7 @@ func BenchmarkLogConsole_WithField(b *testing.B) {
 	require := require.New(b)
 	cfg := Config{
 		Level:    INFO,
-		Encoding: "console",
+		Encoding: ConsoleEncoding,
 		ConsoleEncoderConfig: ConsoleEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
@@ -178,7 +178,7 @@ func BenchmarkLogJSON(b *testing.B) {
 	require := require.New(b)
 	cfg := Config{
 		Level:    INFO,
-		Encoding: "json",
+		Encoding: JSONEncoding,
 		JSONEncoderConfig: JSONEncoderConfig{
 			DisableTimestamp: true,
 		},
@@ -202,7 +202,7 @@ func BenchmarkLogJSON_WithField(b *testing.B) {
 	require := require.New(b)
 	cfg := Config{
 		Level:    INFO,
-		Encoding: "json",
+		Encoding: JSONEncoding,
 		JSONEncoderConfig: JSONEncoderConfig{
 			DisableTimestamp: true,
 		},

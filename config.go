@@ -18,9 +18,9 @@ const (
 	defaultLogLevel = INFO
 	defaultModule   = "-"
 	//JSONEncoding is the json encoding.
-	JSONEncoding = "json"
+	JSONEncoding Encoding = "json"
 	//ConsoleEncoding is the console encoding.
-	ConsoleEncoding = "console"
+	ConsoleEncoding Encoding = "console"
 )
 
 var (

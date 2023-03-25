@@ -2,27 +2,40 @@ package stack
 
 import (
 	"runtime"
+	"sync"
 
 	"github.com/millken/golog/internal/buffer"
 )
 
+const (
+	offset64 = 14695981039346656037
+	prime64  = 1099511628211
+)
+
 var (
-	// MaxCallers is the maximum number of callers to include in the stack.
-	MaxCallers = 20
+	m sync.Map
 )
 
 // Tracer returns a slice of Frames, calling runtime.Callers.
 func Tracer(skip int) []runtime.Frame {
 	var stack []runtime.Frame
 
-	fpcs := make([]uintptr, MaxCallers)
+	//the maximum number of callers to include in the stack.
+	fpcs := [20]uintptr{}
 
 	//+2 to skip Tracer and runtime.Callers.
-	n := runtime.Callers(skip+2, fpcs)
+	n := runtime.Callers(skip+2, fpcs[:])
 	if n == 0 {
 		return nil
 	}
-
+	hash := uint(offset64)
+	for _, pc := range fpcs[:n] {
+		hash *= prime64
+		hash ^= uint(pc)
+	}
+	if item, ok := m.Load(hash); ok {
+		return item.([]runtime.Frame)
+	}
 	frames := runtime.CallersFrames(fpcs[:n])
 	for f, more := frames.Next(); more; f, more = frames.Next() {
 		stack = append(stack, f)
@@ -30,7 +43,7 @@ func Tracer(skip int) []runtime.Frame {
 	if len(stack) == 0 {
 		return nil
 	}
-
+	m.Store(hash, stack)
 	return stack
 }
 

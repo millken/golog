@@ -18,7 +18,7 @@ func TestSetConfig(t *testing.T) {
 	defer resetConfigs()
 	require := require.New(t)
 	SetLevel(INFO)
-	SetEncoding("console")
+	SetEncoding(ConsoleEncoding)
 	SetCallerLevels(PANIC, FATAL, ERROR, WARNING, INFO, DEBUG)
 	SetStacktraceLevels(PANIC, FATAL, ERROR, WARNING)
 	buf := &bytes.Buffer{}
@@ -26,7 +26,7 @@ func TestSetConfig(t *testing.T) {
 	SetConsoleEncoderConfig(ConsoleEncoderConfig{DisableTimestamp: true})
 	SetJSONEncoderConfig(JSONEncoderConfig{DisableTimestamp: true})
 	require.Equal(INFO, configs.Default.Level)
-	require.Equal("console", configs.Default.Encoding)
+	require.Equal(ConsoleEncoding, configs.Default.Encoding)
 	sort.Slice(configs.Default.CallerLevels, func(i, j int) bool {
 		return configs.Default.CallerLevels[i] < configs.Default.CallerLevels[j]
 	})
@@ -35,7 +35,7 @@ func TestSetConfig(t *testing.T) {
 	require.True(configs.Default.ConsoleEncoderConfig.DisableTimestamp)
 	require.True(configs.Default.JSONEncoderConfig.DisableTimestamp)
 
-	SetModuleConfig("mudule/1", Config{Level: DEBUG, Encoding: "json"})
+	SetModuleConfig("mudule/1", Config{Level: DEBUG, Encoding: JSONEncoding})
 	require.Equal(1, len(configs.Modules))
 	require.Equal(DEBUG, configs.Modules["mudule/1"].Level)
 }
@@ -46,7 +46,7 @@ func TestConfig(t *testing.T) {
 	err := LoadConfig("./testdata/yaml_001.yml")
 	require.NoError(err)
 	require.Equal(INFO, configs.Default.Level)
-	require.Equal("console", configs.Default.Encoding)
+	require.Equal(ConsoleEncoding, configs.Default.Encoding)
 	sort.Slice(configs.Default.CallerLevels, func(i, j int) bool {
 		return configs.Default.CallerLevels[i] < configs.Default.CallerLevels[j]
 	})
@@ -64,9 +64,9 @@ func TestConfig(t *testing.T) {
 
 	require.Equal(1, len(configs.Modules))
 	require.Equal(DEBUG, configs.Modules["mudule/1"].Level)
-	require.Equal("json", configs.Modules["mudule/1"].Encoding)
+	require.Equal(JSONEncoding, configs.Modules["mudule/1"].Encoding)
 
 	cfg := GetModuleConfig("mudule/1")
 	require.Equal(DEBUG, cfg.Level)
-	require.Equal("json", cfg.Encoding)
+	require.Equal(JSONEncoding, cfg.Encoding)
 }

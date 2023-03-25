@@ -51,7 +51,7 @@ func TestGlobal_Panic(t *testing.T) {
 	require := require.New(t)
 	cfg := Config{
 		Level:    INFO,
-		Encoding: "console",
+		Encoding: ConsoleEncoding,
 		ConsoleEncoderConfig: ConsoleEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
@@ -142,6 +142,19 @@ func BenchmarkGlobal_WithField(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		Info("abcde1234", "k", 1)
+	}
+}
+
+func TestDebug(t *testing.T) {
+	defer resetConfigs()
+	require := require.New(t)
+	err := LoadConfig("testdata/debug.yml")
+	require.NoError(err)
+	for i := 0; i < 2; i++ {
+		Info("abcde1234", "k", 1)
+	}
+	for i := 0; i < 2; i++ {
 		Info("abcde1234", "k", 1)
 	}
 }
