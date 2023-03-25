@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	offset64 = 14695981039346656037
-	prime64  = 1099511628211
+	offset32 = 2166136261
+	prime32  = 16777619
 )
 
 var (
@@ -28,10 +28,10 @@ func Tracer(skip int) []runtime.Frame {
 	if n == 0 {
 		return nil
 	}
-	hash := uint(offset64)
+	hash := uint(offset32)
 	for _, pc := range fpcs[:n] {
-		hash *= prime64
 		hash ^= uint(pc)
+		hash *= prime32
 	}
 	if item, ok := m.Load(hash); ok {
 		return item.([]runtime.Frame)
