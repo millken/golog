@@ -289,17 +289,3 @@ func appendVal(dst []byte, value interface{}) []byte {
 	}
 	return dst
 }
-
-func appendKeyVal(dst []byte, key string, value interface{}) []byte {
-	dst = enc.AppendKey(dst, key)
-	dst = appendVal(dst, value)
-
-	return dst
-}
-
-func appendFields(dst []byte, fields []Field) []byte {
-	for _, field := range fields {
-		dst = appendKeyVal(dst, field.Key, field.Val)
-	}
-	return dst
-}

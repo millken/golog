@@ -205,6 +205,7 @@ func BenchmarkLogJSON_WithField(b *testing.B) {
 		Encoding: JSONEncoding,
 		JSONEncoderConfig: JSONEncoderConfig{
 			DisableTimestamp: true,
+			ShowModuleName:   true,
 		},
 		Writer: WriterConfig{
 			Type: "file",

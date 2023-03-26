@@ -33,13 +33,17 @@ func (o *JSONEncoder) Encode(e *Entry) ([]byte, error) {
 	}
 	e.Data = enc.AppendBeginMarker(e.Data)
 	if !o.cfg.DisableTimestamp {
-		e.Data = appendKeyVal(e.Data, TimestampFieldName, time.Now())
+		e.Data = enc.AppendKey(e.Data, TimestampFieldName)
+		e.Data = enc.AppendTime(e.Data, time.Now(), TimeFieldFormat)
 	}
-	e.Data = appendKeyVal(e.Data, LevelFieldName, e.Level.String())
+	e.Data = enc.AppendKey(e.Data, LevelFieldName)
+	e.Data = enc.AppendString(e.Data, e.Level.String())
 	if o.cfg.ShowModuleName {
-		e.Data = appendKeyVal(e.Data, ModuleFieldName, e.Module)
+		e.Data = enc.AppendKey(e.Data, ModuleFieldName)
+		e.Data = enc.AppendString(e.Data, e.Module)
 	}
-	e.Data = appendKeyVal(e.Data, MessageFieldName, &e.Message)
+	e.Data = enc.AppendKey(e.Data, MessageFieldName)
+	e.Data = enc.AppendString(e.Data, e.Message)
 
 	var frames []runtime.Frame
 	if e.HasFlag(FlagCaller) || e.HasFlag(FlagStacktrace) {
@@ -51,18 +55,22 @@ func (o *JSONEncoder) Encode(e *Entry) ([]byte, error) {
 		if e.HasFlag(FlagCaller) {
 			frame := frames[0]
 			c := frame.File + ":" + strconv.Itoa(frame.Line)
-			e.Data = appendKeyVal(e.Data, CallerFieldName, c)
+			e.Data = enc.AppendKey(e.Data, CallerFieldName)
+			e.Data = enc.AppendString(e.Data, c)
 		}
 		if e.HasFlag(FlagStacktrace) {
 			buffer := buffer.Get()
 			defer buffer.Free()
 			stackfmt := stack.NewStackFormatter(buffer)
 			stackfmt.FormatFrames(frames)
-			e.Data = appendKeyVal(e.Data, ErrorStackFieldName, buffer.String())
+			e.Data = enc.AppendKey(e.Data, ErrorStackFieldName)
+			e.Data = enc.AppendBytes(e.Data, buffer.Bytes())
 		}
 	}
-
-	e.Data = appendFields(e.Data, e.Fields[:e.FieldsLength()])
+	for _, field := range e.Fields[:e.FieldsLength()] {
+		e.Data = enc.AppendKey(e.Data, field.Key)
+		e.Data = appendVal(e.Data, field.Val)
+	}
 	e.Data = enc.AppendEndMarker(e.Data)
 	e.Data = enc.AppendLineBreak(e.Data)
 	return e.Bytes(), nil
