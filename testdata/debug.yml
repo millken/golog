@@ -1,7 +1,7 @@
 default:
   level: debug
-  encoding: console
-  consoleEncodingConfig:
+  encoding: text
+  textEncodingConfig:
     disableTimestamp: false
     disableColor: true
     showModuleName: true

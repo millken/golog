@@ -19,8 +19,8 @@ const (
 	defaultModule   = "-"
 	//JSONEncoding is the json encoding.
 	JSONEncoding Encoding = "json"
-	//TextEncoding is the console encoding.
-	TextEncoding Encoding = "console"
+	//TextEncoding is the text encoding.
+	TextEncoding Encoding = "text"
 )
 
 var (

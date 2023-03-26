@@ -1,7 +1,7 @@
 default:
   level: info
-  encoding: console
-  consoleEncodingConfig:
+  encoding: text
+  textEncodingConfig:
     partsOrder: [level, message]
     disableTimestamp: true
     disableColor: true

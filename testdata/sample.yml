@@ -1,7 +1,7 @@
 default:
   level: info
-  encoding: console
-  consoleEncodingConfig:
+  encoding: text
+  textEncodingConfig:
     disableTimestamp: false
     disableColor: true
   callerLevels: [debug, info, warn, error, fatal, panic]

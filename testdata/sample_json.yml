@@ -1,7 +1,7 @@
 default:
   level: info
   encoding: json
-  consoleEncodingConfig:
+  textEncodingConfig:
     disableTimestamp: false
   callerLevels: [debug, info, warn, error, fatal, panic]
   stacktraceLevels: [warn, error, fatal, panic]

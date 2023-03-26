@@ -119,7 +119,7 @@ func TestDebugLog(t *testing.T) {
 	)
 }
 
-func BenchmarkLogConsole(b *testing.B) {
+func BenchmarkLogText(b *testing.B) {
 	require := require.New(b)
 	cfg := Config{
 		Level:    INFO,
@@ -144,7 +144,7 @@ func BenchmarkLogConsole(b *testing.B) {
 	}
 }
 
-func BenchmarkLogConsole_WithField(b *testing.B) {
+func BenchmarkLogText_WithField(b *testing.B) {
 	require := require.New(b)
 	cfg := Config{
 		Level:    INFO,

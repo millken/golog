@@ -283,7 +283,7 @@ func (l *Log) WithValues(keysAndVals ...interface{}) Logger {
 	return clone
 }
 
-func (l *Log) output(level Level, msg string, args []interface{}) {
+func (l *Log) output(level Level, msg string, args []interface{}) { //nolint:funlen
 	e := acquireEntry()
 	defer releaseEntry(e)
 	e.Module = l.module
