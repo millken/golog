@@ -2,7 +2,8 @@ package golog
 
 import (
 	"io"
-	"sync"
+
+	"github.com/millken/golog/internal/sync"
 )
 
 type Flag uint8
@@ -107,19 +108,18 @@ func (e *Entry) Reset() {
 }
 
 var (
-	entryPool = &sync.Pool{
-		New: func() interface{} {
+	entryPool = sync.NewPool(
+		func() *Entry {
 			return &Entry{
 				Data:   make([]byte, 0, 4096),
 				Fields: make([]Field, 0, 500),
 			}
-		},
-	}
+		})
 )
 
 // acquireEntry returns a new entry.
 func acquireEntry() *Entry {
-	return entryPool.Get().(*Entry) //nolint:errcheck
+	return entryPool.Get() //nolint:errcheck
 }
 
 // releaseEntry releases the entry.

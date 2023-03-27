@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	// fakeDisableColor is used to disable color output in tests.
+	fakeDisableColor = false
+)
+
 func makeFields() []interface{} {
 	return []interface{}{
 		"a", 1,
@@ -121,7 +126,7 @@ func BenchmarkLogText(b *testing.B) {
 		Encoding: TextEncoding,
 		TextEncoder: TextEncoderConfig{
 			DisableTimestamp: true,
-			DisableColor:     true,
+			DisableColor:     fakeDisableColor,
 		},
 		Handler: HandlerConfig{
 			Type: "file",
@@ -146,7 +151,7 @@ func BenchmarkLogText_WithField(b *testing.B) {
 		Encoding: TextEncoding,
 		TextEncoder: TextEncoderConfig{
 			DisableTimestamp: true,
-			DisableColor:     true,
+			DisableColor:     fakeDisableColor,
 		},
 		Handler: HandlerConfig{
 			Type: "file",

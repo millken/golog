@@ -134,25 +134,24 @@ func writeFields(e *Entry) {
 }
 
 func defaultFormatLevel(e *Entry) {
-	var l string
 	noColor := e.HasFlag(FlagNoColor)
 	switch e.Level {
 	case DEBUG:
-		l = colorize("DBUG", colorCyan, noColor)
+		ansiColorize("DBUG", colorCyan, noColor, e)
 	case INFO:
-		l = colorize("INFO", colorBlue, noColor)
+		ansiColorize("INFO", colorBlue, noColor, e)
 	case WARNING:
-		l = colorize("WARN", colorYellow, noColor)
+		ansiColorize("WARN", colorYellow, noColor, e)
 	case ERROR:
-		l = colorize("ERRO", colorRed, noColor)
+		ansiColorize("ERRO", colorRed, noColor, e)
 	case FATAL:
-		l = colorize(colorize("FATA", colorRed, noColor), colorBold, noColor)
+		ansiColorize("FATA", colorRed, noColor, e)
 	case PANIC:
-		l = colorize(colorize("PNIC", colorDarkGray, noColor), colorBold, noColor)
+		ansiColorize("PNIC", colorDarkGray, noColor, e)
 	default:
-		l = colorize("????", colorBold, noColor)
+		ansiColorize("????", colorBold, noColor, e)
 	}
-	e.WriteString(l)
+	return
 }
 
 func defaultModuleName(e *Entry) {
@@ -177,8 +176,7 @@ func defaultFormatCaller(e *Entry) {
 		_, _ = e.WriteString(e.GetCaller())
 		return
 	}
-	c := colorize(e.GetCaller(), colorBold, true)
-	_, _ = e.WriteString(c)
+	ansiColorize(e.GetCaller(), colorBold, true, e)
 }
 
 func defaultFormatFieldName(e *Entry, name string) {
@@ -188,8 +186,8 @@ func defaultFormatFieldName(e *Entry, name string) {
 		e.Data = append(e.Data, equal...)
 		return
 	}
-	colorName := colorize(name+equal, colorCyan, true)
-	_, _ = e.WriteString(colorName)
+	ansiColorize(name+equal, colorCyan, false, e)
+
 	return
 }
 
@@ -258,19 +256,22 @@ func needsQuote(s string) bool {
 	return false
 }
 
-// colorize returns the string s wrapped in ANSI code c, unless disabled is true.
-func colorize(s string, c int, disabled bool) string {
+const (
+	ansiReset = "\x1b[0m"
+	ansiBold  = "\x1b["
+)
+
+func ansiColorize(s string, c int, disabled bool, e *Entry) {
 	if disabled {
-		return s
+		_, _ = e.WriteString(s)
+		return
 	}
-	buffer := buffer.Get()
-	defer buffer.Free()
-	buffer.AppendString("\x1b[")
-	buffer.AppendInt(int64(c))
-	buffer.AppendString("m")
-	buffer.AppendString(s)
-	buffer.AppendString("\x1b[0m")
-	return buffer.String()
+	_, _ = e.WriteString(ansiBold)
+	_, _ = e.WriteString(strconv.Itoa(c))
+	_, _ = e.WriteString("m")
+	_, _ = e.WriteString(s)
+	_, _ = e.WriteString(ansiReset)
+	return
 }
 
 func textDefaultPartsOrder() []string {

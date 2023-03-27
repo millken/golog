@@ -46,16 +46,16 @@ func main() {
 > Note: disabled time and colors
 
 ```
-$ go test -benchmem -run=^$ -bench ^Benchmark
+go test -benchmem -run=^$ -bench ^Benchmark
 goos: darwin
 goarch: arm64
 pkg: github.com/millken/golog
-BenchmarkGlobal-8               20040706                53.30 ns/op            0 B/op          0 allocs/op
-BenchmarkGlobal_WithField-8      9936032               119.3 ns/op            96 B/op          1 allocs/op
-BenchmarkLogText-8              23735408                50.14 ns/op            0 B/op          0 allocs/op
-BenchmarkLogText_WithField-8     9302012               128.3 ns/op             0 B/op          0 allocs/op
-BenchmarkLogJSON-8              22351086                53.23 ns/op            0 B/op          0 allocs/op
-BenchmarkLogJSON_WithField-8     6749650               177.3 ns/op             0 B/op          0 allocs/op
+BenchmarkGlobal-8               22548828                53.19 ns/op            0 B/op          0 allocs/op
+BenchmarkGlobal_WithField-8     10334288               114.6 ns/op            96 B/op          1 allocs/op
+BenchmarkLogText-8              24042835                49.50 ns/op            0 B/op          0 allocs/op
+BenchmarkLogText_WithField-8     9617451               124.2 ns/op             0 B/op          0 allocs/op
+BenchmarkLogJSON-8              22390182                53.25 ns/op            0 B/op          0 allocs/op
+BenchmarkLogJSON_WithField-8     6803854               175.9 ns/op             0 B/op          0 allocs/op
 PASS
-ok      github.com/millken/golog        7.753s
+ok      github.com/millken/golog        9.139s
 ```
