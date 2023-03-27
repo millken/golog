@@ -2,11 +2,13 @@ package golog
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"os"
 	"os/exec"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -16,6 +18,19 @@ func TestGlobalUsage(t *testing.T) {
 	require := require.New(t)
 	require.NoError(LoadConfig("./testdata/debug.yml"))
 	Infof("hello %s", "world")
+	Debug("test int", "int8", int8(1), "int16", int16(2), "int32", int32(3), "int64", int64(4))
+	Debug("test uint", "uint", uint(0), "uint8", uint8(1), "uint16", uint16(2), "uint32", uint32(3), "uint64", uint64(4))
+	Debug("test float", "float32", float32(1.1), "float64", float64(2.2))
+	Debug("test bool", "bool", true)
+	Debug("test string", "string", "string")
+	Debug("test error", "error", errors.New("error"))
+	Debug("test nil", "nil", nil)
+	Debug("test map", "map", map[string]interface{}{"a": 1, "b": true})
+	Debug("test array", "array", []interface{}{1, true, "string"})
+	Debug("test struct", "struct", struct{}{})
+	Debug("test time", "time", time.Now())
+	Debug("test duration", "duration", time.Duration(1))
+	Debug("test json.Number", "json.Number", json.Number("1.1"))
 	Info("hello world with fields", "a", 1, "b", true, "c", "string")
 }
 
