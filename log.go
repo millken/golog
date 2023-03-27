@@ -259,17 +259,6 @@ func (l *Log) Error(msg string, keysAndVals ...interface{}) {
 func (l *Log) WithValues(keysAndVals ...interface{}) Logger {
 	clone := l.clone()
 	for i := 0; i < len(keysAndVals); {
-		if fields, ok := keysAndVals[i].(Fields); ok {
-			for k, v := range fields {
-				clone.fields = append(clone.fields, field(k, v))
-			}
-			i++
-			continue
-		} else if field, ok := keysAndVals[i].(Field); ok {
-			clone.fields = append(clone.fields, field)
-			i++
-			continue
-		}
 		if i == len(keysAndVals)-1 {
 			break
 		}

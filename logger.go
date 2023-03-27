@@ -37,9 +37,6 @@ type Field struct {
 	Val interface{}
 }
 
-// Fields is a map of fields.
-type Fields map[string]interface{}
-
 // Logger represents a general-purpose logger.
 type Logger interface {
 	WithValues(keysAndVals ...interface{}) Logger

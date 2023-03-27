@@ -112,11 +112,6 @@ func TestDebugLog(t *testing.T) {
 		"b", true,
 		"c", 1.234,
 	)
-	Info("The quick brown fox jumps over the lazy dog",
-		Fields{"a": 1,
-			"b": true,
-			"c": 1.234},
-	)
 }
 
 func BenchmarkLogText(b *testing.B) {

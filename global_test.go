@@ -47,7 +47,7 @@ func TestGlobalLog(t *testing.T) {
 	Errorf("error message %s", "error")
 	WithValues("err", errors.New("error")).Debugf("debug message")
 	WithValues("err", errors.New("error")).WithValues("c", false).Warnf("warn message")
-	WithValues(Fields{"a": 1, "b": true}).Infof("info message with %d fields", 2)
+	WithValues("a", 1, "b", true).Infof("info message with %d fields", 2)
 	Debugf("debug message")
 
 	l := WithValues("a", 1, "b", 3)
