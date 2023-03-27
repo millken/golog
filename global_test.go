@@ -52,13 +52,13 @@ func TestGlobal_Panic(t *testing.T) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: TextEncoding,
-		TextEncoderConfig: TextEncoderConfig{
+		TextEncoder: TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},
-		Writer: WriterConfig{
-			Type:         "custom",
-			CustomWriter: &buf,
+		Handler: HandlerConfig{
+			Type:   "custom",
+			Writer: &buf,
 		},
 	}
 	log, err := NewLoggerByConfig("test", cfg)
@@ -93,13 +93,13 @@ func TestGlobalLogRaces(t *testing.T) {
 	require := require.New(t)
 	cfg := Config{
 		Level:    INFO,
-		Encoding: "console",
-		TextEncoderConfig: TextEncoderConfig{
+		Encoding: TextEncoding,
+		TextEncoder: TextEncoderConfig{
 			DisableTimestamp: true,
 		},
-		Writer: WriterConfig{
+		Handler: HandlerConfig{
 			Type: "file",
-			FileConfig: FileConfig{
+			File: FileConfig{
 				Path: "",
 			},
 		},
@@ -142,7 +142,7 @@ func BenchmarkGlobal_WithField(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Info("abcde1234", "k", 1)
+		Info("abcde1234", "k", 1, "a", "c", "b", true)
 	}
 }
 

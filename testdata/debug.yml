@@ -1,7 +1,7 @@
 default:
   level: debug
   encoding: text
-  textEncodingConfig:
+  textEncoder:
     disableTimestamp: false
     disableColor: true
     showModuleName: true
@@ -9,5 +9,5 @@ default:
   stacktraceLevels: [debug, info,warn, error, fatal, panic]
   handler:
     type: file
-    fileConfig:
+    file:
       path: stdout

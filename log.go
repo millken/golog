@@ -70,11 +70,13 @@ func (l *Log) init() {
 
 func (l *Log) initConfig(cfg Config) error {
 	var err error
-	switch cfg.Writer.Type {
+	switch cfg.Handler.Type {
 	case "file":
-		l.writer, err = NewFile(cfg.Writer.FileConfig)
+		l.writer, err = NewFile(cfg.Handler.File)
+	case "rotateFile":
+		l.writer, err = NewRotateFile(cfg.Handler.RotateFile)
 	case "custom":
-		l.writer = cfg.Writer.CustomWriter
+		l.writer = cfg.Handler.Writer
 	default:
 		l.writer, err = NewFile(FileConfig{Path: "stdout"})
 	}
@@ -83,9 +85,9 @@ func (l *Log) initConfig(cfg Config) error {
 	}
 	switch cfg.Encoding {
 	case JSONEncoding:
-		l.encoder = NewJSONEncoder(cfg.JSONEncoderConfig)
+		l.encoder = NewJSONEncoder(cfg.JSONEncoder)
 	default:
-		l.encoder = NewTextEncoder(cfg.TextEncoderConfig)
+		l.encoder = NewTextEncoder(cfg.TextEncoder)
 	}
 	l.level = INFO // if level is not set, set it to INFO
 	if cfg.Level > 0 {
@@ -294,19 +296,6 @@ func (l *Log) output(level Level, msg string, args []interface{}) { //nolint:fun
 		n++
 	}
 	for i := 0; i < len(args); {
-		if fields, ok := args[i].(Fields); ok {
-			for k, v := range fields {
-				e.Fields = append(e.Fields, field(k, v))
-				n++
-			}
-			i++
-			continue
-		} else if field, ok := args[i].(Field); ok {
-			e.Fields = append(e.Fields, field)
-			i++
-			n++
-			continue
-		}
 		if i == len(args)-1 {
 			break
 		}

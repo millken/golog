@@ -1,4 +1,4 @@
-package rotatefile
+package golog
 
 import (
 	"io/ioutil"
@@ -23,9 +23,10 @@ func TestNewFile(t *testing.T) {
 	dir := makeTempDir("TestNewFile", t)
 	defer os.RemoveAll(dir)
 	filename := logFile(dir)
-	l := &RotateFile{
+	l, err := NewRotateFile(RotateFileConfig{
 		Filename: filename,
-	}
+	})
+	require.NoError(err)
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
@@ -57,10 +58,11 @@ func TestRotate(t *testing.T) {
 
 	filename := logFile(dir)
 
-	l := &RotateFile{
+	l, err := NewRotateFile(RotateFileConfig{
 		Filename:   filename,
 		MaxBackups: 1,
-	}
+	})
+	require.NoError(err)
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)

@@ -39,14 +39,14 @@ type Config struct {
 	// Level is the default log level.
 	Level Level `json:"level" yaml:"level"`
 	// Encoding is the log encoding.  text or json.
-	Encoding          Encoding          `json:"encoding" yaml:"encoding"`
-	TextEncoderConfig TextEncoderConfig `json:"textEncodingConfig" yaml:"textEncodingConfig"`
-	JSONEncoderConfig JSONEncoderConfig `json:"jsonEncoderConfig" yaml:"jsonEncoderConfig"`
+	Encoding    Encoding          `json:"encoding" yaml:"encoding"`
+	TextEncoder TextEncoderConfig `json:"textEncoder" yaml:"textEncoder"`
+	JSONEncoder JSONEncoderConfig `json:"jsonEncoder" yaml:"jsonEncoder"`
 	//CallerLevels is the default levels for show caller info.
 	CallerLevels []Level `json:"callerLevels" yaml:"callerLevels"`
 	// StacktraceLevels is the default levels for show stacktrace.
-	StacktraceLevels []Level      `json:"stacktraceLevels" yaml:"stacktraceLevels"`
-	Writer           WriterConfig `json:"handler" yaml:"handler"`
+	StacktraceLevels []Level       `json:"stacktraceLevels" yaml:"stacktraceLevels"`
+	Handler          HandlerConfig `json:"handler" yaml:"handler"`
 }
 
 // TextEncoderConfig is the configuration for the text encoder.
@@ -77,11 +77,12 @@ type JSONEncoderConfig struct {
 	ShowModuleName bool `json:"showModuleName" yaml:"showModuleName"`
 }
 
-// WriterConfig is a configuration for a writer.
-type WriterConfig struct {
-	Type         string     `json:"type" yaml:"type"`
-	CustomWriter io.Writer  `json:"-" yaml:"-"`
-	FileConfig   FileConfig `json:"fileConfig" yaml:"fileConfig"`
+// HandlerConfig is a configuration for a writer.
+type HandlerConfig struct {
+	Type       string           `json:"type" yaml:"type"`
+	Writer     io.Writer        `json:"-" yaml:"-"`
+	File       FileConfig       `json:"file" yaml:"file"`
+	RotateFile RotateFileConfig `json:"rotateFile" yaml:"rotateFile"`
 }
 
 // FileConfig is a configuration for a file writer.
@@ -113,18 +114,18 @@ func SetEncoding(encoding Encoding) {
 	configs.Default.Encoding = encoding
 }
 
-// SetConsoleEncoderConfig - set console encoder config.
-func SetConsoleEncoderConfig(cfg TextEncoderConfig) {
+// SetTextEncoderConfig - set text encoder config.
+func SetTextEncoderConfig(cfg TextEncoderConfig) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
-	configs.Default.TextEncoderConfig = cfg
+	configs.Default.TextEncoder = cfg
 }
 
 // SetJSONEncoderConfig - set json encoder config.
 func SetJSONEncoderConfig(cfg JSONEncoderConfig) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
-	configs.Default.JSONEncoderConfig = cfg
+	configs.Default.JSONEncoder = cfg
 }
 
 // SetCallerLevels - set caller levels.
@@ -145,8 +146,8 @@ func SetStacktraceLevels(levels ...Level) {
 func SetWriter(writer io.Writer) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
-	configs.Default.Writer.Type = "custom"
-	configs.Default.Writer.CustomWriter = writer
+	configs.Default.Handler.Type = "custom"
+	configs.Default.Handler.Writer = writer
 }
 
 // LoadConfig - load config from file.

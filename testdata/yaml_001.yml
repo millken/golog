@@ -5,7 +5,7 @@ default:
   stacktraceLevels: [warn, error, fatal, panic]
   handler:
     type: file
-    fileConfig:
+    file:
       path: /var/log/golog.log
 modules:
   mudule/1:

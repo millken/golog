@@ -1,13 +1,13 @@
 default:
   level: info
   encoding: json
-  textEncodingConfig:
+  textEncoder:
     disableTimestamp: false
   callerLevels: [debug, info, warn, error, fatal, panic]
   stacktraceLevels: [warn, error, fatal, panic]
   handler:
     type: file
-    fileConfig:
+    file:
       path: stdout
 modules:
   mudule/1:

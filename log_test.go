@@ -124,13 +124,13 @@ func BenchmarkLogText(b *testing.B) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: TextEncoding,
-		TextEncoderConfig: TextEncoderConfig{
+		TextEncoder: TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},
-		Writer: WriterConfig{
+		Handler: HandlerConfig{
 			Type: "file",
-			FileConfig: FileConfig{
+			File: FileConfig{
 				Path: "",
 			},
 		},
@@ -149,13 +149,13 @@ func BenchmarkLogText_WithField(b *testing.B) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: TextEncoding,
-		TextEncoderConfig: TextEncoderConfig{
+		TextEncoder: TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,
 		},
-		Writer: WriterConfig{
+		Handler: HandlerConfig{
 			Type: "file",
-			FileConfig: FileConfig{
+			File: FileConfig{
 				Path: "",
 			},
 		},
@@ -179,12 +179,12 @@ func BenchmarkLogJSON(b *testing.B) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: JSONEncoding,
-		JSONEncoderConfig: JSONEncoderConfig{
+		JSONEncoder: JSONEncoderConfig{
 			DisableTimestamp: true,
 		},
-		Writer: WriterConfig{
+		Handler: HandlerConfig{
 			Type: "file",
-			FileConfig: FileConfig{
+			File: FileConfig{
 				Path: "",
 			},
 		},
@@ -203,13 +203,13 @@ func BenchmarkLogJSON_WithField(b *testing.B) {
 	cfg := Config{
 		Level:    INFO,
 		Encoding: JSONEncoding,
-		JSONEncoderConfig: JSONEncoderConfig{
+		JSONEncoder: JSONEncoderConfig{
 			DisableTimestamp: true,
 			ShowModuleName:   true,
 		},
-		Writer: WriterConfig{
+		Handler: HandlerConfig{
 			Type: "file",
-			FileConfig: FileConfig{
+			File: FileConfig{
 				Path: "",
 			},
 		},

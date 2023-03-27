@@ -173,14 +173,24 @@ func defaultFormatMessage(e *Entry) {
 }
 
 func defaultFormatCaller(e *Entry) {
-	noColor := e.HasFlag(FlagNoColor)
-	c := colorize(e.GetCaller(), colorBold, noColor)
+	if e.HasFlag(FlagNoColor) {
+		_, _ = e.WriteString(e.GetCaller())
+		return
+	}
+	c := colorize(e.GetCaller(), colorBold, true)
 	_, _ = e.WriteString(c)
 }
 
 func defaultFormatFieldName(e *Entry, name string) {
-	noColor := e.HasFlag(FlagNoColor)
-	_, _ = e.WriteString(colorize(name+"=", colorCyan, noColor))
+	const equal string = "="
+	if e.HasFlag(FlagNoColor) {
+		e.Data = append(e.Data, name...)
+		e.Data = append(e.Data, equal...)
+		return
+	}
+	colorName := colorize(name+equal, colorCyan, true)
+	_, _ = e.WriteString(colorName)
+	return
 }
 
 func defaultFormatFieldValue(e *Entry, value interface{}) {
@@ -240,7 +250,8 @@ func defaultFormatFieldValue(e *Entry, value interface{}) {
 // needsQuote returns true when the string s should be quoted in output.
 func needsQuote(s string) bool {
 	for i := range s {
-		if s[i] < 0x20 || s[i] > 0x7e || s[i] == ' ' || s[i] == '\\' || s[i] == '"' {
+		c := s[i]
+		if c < 0x20 || c > 0x7e || c == ' ' || c == '\\' || c == '"' || c == '\n' || c == '\r' {
 			return true
 		}
 	}
@@ -252,7 +263,14 @@ func colorize(s string, c int, disabled bool) string {
 	if disabled {
 		return s
 	}
-	return "\x1b[" + strconv.Itoa(c) + "m" + s + "\x1b[0m"
+	buffer := buffer.Get()
+	defer buffer.Free()
+	buffer.AppendString("\x1b[")
+	buffer.AppendInt(int64(c))
+	buffer.AppendString("m")
+	buffer.AppendString(s)
+	buffer.AppendString("\x1b[0m")
+	return buffer.String()
 }
 
 func textDefaultPartsOrder() []string {

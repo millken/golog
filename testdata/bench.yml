@@ -1,11 +1,10 @@
 default:
   level: info
   encoding: text
-  textEncodingConfig:
-    partsOrder: [level, message]
+  textEncoder:
     disableTimestamp: true
     disableColor: true
   handler:
     type: file
-    fileConfig:
+    file:
       path: ""

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestConsole(t *testing.T) {
+func TestConsoleText(t *testing.T) {
 
 	module := "test-module"
 	cs := NewTextEncoder(TextEncoderConfig{})

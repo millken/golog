@@ -1,0 +1,15 @@
+default:
+  level: info
+  encoding: json
+  handler:
+    type: rotateFile
+    rotateFile:
+      filename: /var/log/golog.log
+      maxbackups: 3
+      backupTimeFormat: 2006-01-02
+      localtime: true
+      async: true
+modules:
+  mudule/1:
+    level: debug
+    encoding: json

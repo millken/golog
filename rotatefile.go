@@ -1,7 +1,9 @@
-package rotatefile
+package golog
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -16,10 +18,12 @@ import (
 var (
 	currentTime             = time.Now
 	defaultBackupTimeFormat = "20060102"
+
+	_ io.Writer = (*RotateFile)(nil)
 )
 
-//RotateFile rotate log to file
-type RotateFile struct {
+// RotateFileConfig is the configuration for RotateFile.
+type RotateFileConfig struct {
 	// Filename is the file to write logs to.  Backup log files will be retained in the same directory.
 	// It uses <processname>.log in os.TempDir() if empty.
 	Filename string `json:"filename" yaml:"filename"`
@@ -35,29 +39,55 @@ type RotateFile struct {
 	// time.
 	LocalTime bool `json:"localtime" yaml:"localtime"`
 
+	// Async determines if the log write should be async
+	Async bool `json:"async" yaml:"async"`
+}
+
+// RotateFile rotate log to file
+type RotateFile struct {
+	cfg               RotateFileConfig
 	file              *os.File
+	bufferWriter      *bufio.Writer
 	currentBackupName string
 	mu                sync.Mutex
 	wokerOnce         sync.Once
 	workerCh          chan bool
 }
 
-// filename generates the name of the logfile from the current time.
-func (f *RotateFile) filename() string {
-	if f.Filename != "" {
-		return f.Filename
+// NewRotateFile creates a new RotateFile.
+func NewRotateFile(cfg RotateFileConfig) (*RotateFile, error) {
+	if cfg.MaxBackups < 0 {
+		return nil, fmt.Errorf("maxbackups cannot be negative")
+	}
+	f := &RotateFile{
+		cfg: cfg,
+	}
+	if err := f.open(); err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
+// Filename generates the name of the logfile from the current time.
+func (f *RotateFile) Filename() string {
+	if f.cfg.Filename != "" {
+		return f.cfg.Filename
 	}
 	name := filepath.Base(os.Args[0]) + ".log"
-	return filepath.Join(os.TempDir(), name)
+	ex, err := os.Executable()
+	if err != nil {
+		return filepath.Join(os.TempDir(), name)
+	}
+	return filepath.Join(filepath.Dir(ex), name)
 }
 
 func (f *RotateFile) dir() string {
-	return filepath.Dir(f.filename())
+	return filepath.Dir(f.Filename())
 }
 
 func (f *RotateFile) backupTimeFormat() string {
-	if f.BackupTimeFormat != "" {
-		return f.BackupTimeFormat
+	if f.cfg.BackupTimeFormat != "" {
+		return f.cfg.BackupTimeFormat
 	}
 	return defaultBackupTimeFormat
 }
@@ -65,12 +95,13 @@ func (f *RotateFile) backupTimeFormat() string {
 func (f *RotateFile) open() error {
 	var err error
 	t := currentTime()
-	if !f.LocalTime {
+	if !f.cfg.LocalTime {
 		t = t.UTC()
 	}
 	f.currentBackupName = t.Format(f.backupTimeFormat())
 
-	f.file, err = os.OpenFile(f.filename(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	f.file, err = os.OpenFile(f.Filename(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	f.bufferWriter = bufio.NewWriter(f.file)
 	return err
 }
 
@@ -86,6 +117,9 @@ func (f *RotateFile) close() error {
 	if f.file == nil {
 		return nil
 	}
+	if err := f.bufferWriter.Flush(); err != nil {
+		return err
+	}
 	err := f.file.Close()
 	f.file = nil
 	return err
@@ -97,7 +131,7 @@ func (f *RotateFile) reopenIfNeeded() (bool, error) {
 		return false, f.open()
 	}
 	t := currentTime()
-	if !f.LocalTime {
+	if !f.cfg.LocalTime {
 		t = t.UTC()
 	}
 	if f.currentBackupName == t.Format(f.backupTimeFormat()) {
@@ -119,8 +153,14 @@ func (f *RotateFile) Write(d []byte) (int, error) {
 			return 0, err
 		}
 	}
-
-	return f.file.Write(d)
+	n, err := f.bufferWriter.Write(d)
+	if err != nil {
+		return n, err
+	}
+	if f.cfg.Async {
+		return n, nil
+	}
+	return n, f.bufferWriter.Flush()
 }
 
 // Rotate close the existing log file and create a new one.
@@ -153,7 +193,7 @@ func (f *RotateFile) rotate() error {
 }
 
 func (f *RotateFile) doWorker() {
-	if f.MaxBackups == 0 {
+	if f.cfg.MaxBackups == 0 {
 		return
 	}
 	files, err := f.oldLogFiles()
@@ -161,8 +201,8 @@ func (f *RotateFile) doWorker() {
 		log.Println(err)
 		return
 	}
-	if f.MaxBackups > 0 && f.MaxBackups < len(files) {
-		for _, fi := range files[0 : len(files)-f.MaxBackups] {
+	if f.cfg.MaxBackups > 0 && f.cfg.MaxBackups < len(files) {
+		for _, fi := range files[0 : len(files)-f.cfg.MaxBackups] {
 			os.Remove(filepath.Join(f.dir(), fi.Name()))
 		}
 	}
@@ -175,7 +215,7 @@ func (f *RotateFile) oldLogFiles() ([]logInfo, error) {
 	}
 	logFiles := []logInfo{}
 
-	filename := filepath.Base(f.filename())
+	filename := filepath.Base(f.Filename())
 	ext := filepath.Ext(filename)
 	prefix := filename[:len(filename)-len(ext)] + "-"
 
@@ -209,7 +249,7 @@ func (f *RotateFile) openNew() error {
 		return fmt.Errorf("can't make directories for new logfile: %s", err)
 	}
 
-	name := f.filename()
+	name := f.Filename()
 	fi, err := os.Stat(name)
 	if err != nil {
 		return err
@@ -225,12 +265,12 @@ func (f *RotateFile) openNew() error {
 }
 
 func (f *RotateFile) backupName() string {
-	dir := filepath.Dir(f.filename())
-	filename := filepath.Base(f.filename())
+	dir := filepath.Dir(f.Filename())
+	filename := filepath.Base(f.Filename())
 	ext := filepath.Ext(filename)
 	prefix := filename[:len(filename)-len(ext)]
 	t := currentTime()
-	if !f.LocalTime {
+	if !f.cfg.LocalTime {
 		t = t.UTC()
 	}
 	return filepath.Join(dir, fmt.Sprintf("%s-%s%s.%d", prefix, t.Format(f.backupTimeFormat()), ext, t.Unix()))

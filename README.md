@@ -50,12 +50,12 @@ $ go test -benchmem -run=^$ -bench ^Benchmark
 goos: darwin
 goarch: arm64
 pkg: github.com/millken/golog
-BenchmarkGlobal-8               25937742                45.86 ns/op            0 B/op          0 allocs/op
-BenchmarkGlobal_WithField-8     12905550                92.81 ns/op           32 B/op          1 allocs/op
-BenchmarkLogText-8              20500350                49.62 ns/op            0 B/op          0 allocs/op
-BenchmarkLogText_WithField-8     7224022               165.2 ns/op             0 B/op          0 allocs/op
-BenchmarkLogJSON-8              22373744                54.55 ns/op            0 B/op          0 allocs/op
-BenchmarkLogJSON_WithField-8     6632361               179.6 ns/op             0 B/op          0 allocs/op
+BenchmarkGlobal-8               22376409                53.54 ns/op            0 B/op          0 allocs/op
+BenchmarkGlobal_WithField-8     11870341                99.66 ns/op           32 B/op          1 allocs/op
+BenchmarkLogText-8              23323142                50.55 ns/op            0 B/op          0 allocs/op
+BenchmarkLogText_WithField-8     7128315               167.9 ns/op             0 B/op          0 allocs/op
+BenchmarkLogJSON-8              21974331                53.52 ns/op            0 B/op          0 allocs/op
+BenchmarkLogJSON_WithField-8     6556194               181.1 ns/op             0 B/op          0 allocs/op
 PASS
-ok      github.com/millken/golog        9.307s
+ok      github.com/millken/golog        9.219s
 ```
