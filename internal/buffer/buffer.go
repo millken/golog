@@ -3,6 +3,7 @@ package buffer // import "go.uber.org/zap/buffer"
 import (
 	"strconv"
 	"time"
+	"unsafe"
 )
 
 const _size = 1024 // by default, create 1 KiB buffers
@@ -68,7 +69,8 @@ func (b *Buffer) Bytes() []byte {
 
 // String returns a string copy of the underlying byte slice.
 func (b *Buffer) String() string {
-	return string(b.bs)
+	//unsafe.String(unsafe.SliceData(b.buf), len(b.buf)) go 1.20
+	return *(*string)(unsafe.Pointer(&b.bs))
 }
 
 // Reset resets the underlying byte slice. Subsequent writes re-use the slice's
