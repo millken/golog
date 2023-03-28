@@ -1,83 +1,85 @@
-package golog
+package golog_test
 
 import (
 	"bytes"
 	"sort"
 	"testing"
 
+	"github.com/millken/golog"
 	"github.com/stretchr/testify/require"
 )
 
 func resetConfigs() {
-	rwmutex.Lock()
-	defer rwmutex.Unlock()
-	configs = newConfigs()
+	golog.ResetConfigs()
 }
 
 func TestSetConfig(t *testing.T) {
 	defer resetConfigs()
+	configs := golog.GetConfigs()
 	require := require.New(t)
-	SetLevel(INFO)
-	SetEncoding(TextEncoding)
-	SetCallerLevels(PANIC, FATAL, ERROR, WARNING, INFO, DEBUG)
-	SetStacktraceLevels(PANIC, FATAL, ERROR, WARNING)
+	golog.SetLevel(golog.INFO)
+	golog.SetEncoding(golog.TextEncoding)
+	golog.SetCallerLevels(golog.PANIC, golog.FATAL, golog.ERROR, golog.WARNING, golog.INFO, golog.DEBUG)
+	golog.SetStacktraceLevels(golog.PANIC, golog.FATAL, golog.ERROR, golog.WARNING)
 	buf := &bytes.Buffer{}
-	SetWriter(buf)
-	SetTextEncoderConfig(TextEncoderConfig{DisableTimestamp: true})
-	SetJSONEncoderConfig(JSONEncoderConfig{DisableTimestamp: true})
-	require.Equal(INFO, configs.Default.Level)
-	require.Equal(TextEncoding, configs.Default.Encoding)
+	golog.SetWriter(buf)
+	golog.SetTextEncoderConfig(golog.TextEncoderConfig{DisableTimestamp: true})
+	golog.SetJSONEncoderConfig(golog.JSONEncoderConfig{DisableTimestamp: true})
+	require.Equal(golog.INFO, configs.Default.Level)
+	require.Equal(golog.TextEncoding, configs.Default.Encoding)
 	sort.Slice(configs.Default.CallerLevels, func(i, j int) bool {
 		return configs.Default.CallerLevels[i] < configs.Default.CallerLevels[j]
 	})
-	require.Equal([]Level{PANIC, FATAL, ERROR, WARNING, INFO, DEBUG}, configs.Default.CallerLevels)
-	require.Equal([]Level{PANIC, FATAL, ERROR, WARNING}, configs.Default.StacktraceLevels)
+	require.Equal([]golog.Level{golog.PANIC, golog.FATAL, golog.ERROR, golog.WARNING, golog.INFO, golog.DEBUG}, configs.Default.CallerLevels)
+	require.Equal([]golog.Level{golog.PANIC, golog.FATAL, golog.ERROR, golog.WARNING}, configs.Default.StacktraceLevels)
 	require.True(configs.Default.TextEncoder.DisableTimestamp)
 	require.True(configs.Default.JSONEncoder.DisableTimestamp)
 
-	SetModuleConfig("mudule/1", Config{Level: DEBUG, Encoding: JSONEncoding})
+	golog.SetModuleConfig("mudule/1", golog.Config{Level: golog.DEBUG, Encoding: golog.JSONEncoding})
 	require.Equal(1, len(configs.Modules))
-	require.Equal(DEBUG, configs.Modules["mudule/1"].Level)
+	require.Equal(golog.DEBUG, configs.Modules["mudule/1"].Level)
 }
 
 func TestConfig(t *testing.T) {
 	defer resetConfigs()
 	require := require.New(t)
-	err := LoadConfig("./testdata/yaml_001.yml")
+	err := golog.LoadConfig("./testdata/yaml_001.yml")
 	require.NoError(err)
-	require.Equal(INFO, configs.Default.Level)
-	require.Equal(TextEncoding, configs.Default.Encoding)
+	configs := golog.GetConfigs()
+	require.Equal(golog.INFO, configs.Default.Level)
+	require.Equal(golog.TextEncoding, configs.Default.Encoding)
 	sort.Slice(configs.Default.CallerLevels, func(i, j int) bool {
 		return configs.Default.CallerLevels[i] < configs.Default.CallerLevels[j]
 	})
-	require.Equal([]Level{PANIC, FATAL, ERROR, WARNING, INFO, DEBUG},
+	require.Equal([]golog.Level{golog.PANIC, golog.FATAL, golog.ERROR, golog.WARNING, golog.INFO, golog.DEBUG},
 		configs.Default.CallerLevels,
 	)
 	sort.Slice(configs.Default.StacktraceLevels, func(i, j int) bool {
 		return configs.Default.StacktraceLevels[i] < configs.Default.StacktraceLevels[j]
 	})
-	require.Equal([]Level{PANIC, FATAL, ERROR, WARNING},
+	require.Equal([]golog.Level{golog.PANIC, golog.FATAL, golog.ERROR, golog.WARNING},
 		configs.Default.StacktraceLevels,
 	)
 	require.Equal("file", configs.Default.Handler.Type)
 	require.Equal("/var/log/golog.log", configs.Default.Handler.File.Path)
 
 	require.Equal(1, len(configs.Modules))
-	require.Equal(DEBUG, configs.Modules["mudule/1"].Level)
-	require.Equal(JSONEncoding, configs.Modules["mudule/1"].Encoding)
+	require.Equal(golog.DEBUG, configs.Modules["mudule/1"].Level)
+	require.Equal(golog.JSONEncoding, configs.Modules["mudule/1"].Encoding)
 
-	cfg := GetModuleConfig("mudule/1")
-	require.Equal(DEBUG, cfg.Level)
-	require.Equal(JSONEncoding, cfg.Encoding)
+	cfg := golog.GetModuleConfig("mudule/1")
+	require.Equal(golog.DEBUG, cfg.Level)
+	require.Equal(golog.JSONEncoding, cfg.Encoding)
 }
 
 func TestConfig2(t *testing.T) {
 	defer resetConfigs()
 	require := require.New(t)
-	err := LoadConfig("./testdata/yaml_002.yml")
+	err := golog.LoadConfig("./testdata/yaml_002.yml")
 	require.NoError(err)
-	require.Equal(INFO, configs.Default.Level)
-	require.Equal(JSONEncoding, configs.Default.Encoding)
+	configs := golog.GetConfigs()
+	require.Equal(golog.INFO, configs.Default.Level)
+	require.Equal(golog.JSONEncoding, configs.Default.Encoding)
 
 	require.Equal("rotateFile", configs.Default.Handler.Type)
 	require.Equal("", configs.Default.Handler.File.Path)
@@ -87,10 +89,10 @@ func TestConfig2(t *testing.T) {
 	require.True(configs.Default.Handler.RotateFile.LocalTime)
 	require.True(configs.Default.Handler.RotateFile.Async)
 	require.Equal(1, len(configs.Modules))
-	require.Equal(DEBUG, configs.Modules["mudule/1"].Level)
-	require.Equal(JSONEncoding, configs.Modules["mudule/1"].Encoding)
+	require.Equal(golog.DEBUG, configs.Modules["mudule/1"].Level)
+	require.Equal(golog.JSONEncoding, configs.Modules["mudule/1"].Encoding)
 
-	cfg := GetModuleConfig("mudule/1")
-	require.Equal(DEBUG, cfg.Level)
-	require.Equal(JSONEncoding, cfg.Encoding)
+	cfg := golog.GetModuleConfig("mudule/1")
+	require.Equal(golog.DEBUG, cfg.Level)
+	require.Equal(golog.JSONEncoding, cfg.Encoding)
 }

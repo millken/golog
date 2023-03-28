@@ -47,24 +47,23 @@ func (o *JSONEncoder) Encode(e *Entry) ([]byte, error) {
 
 	var frames []runtime.Frame
 	if e.HasFlag(FlagCaller) || e.HasFlag(FlagStacktrace) {
-		stackSkip := defaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
-		frames = stack.Tracer(stackSkip)
+		stackSkip := DefaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
+		frames = stack.Tracer(stackSkip, e.HasFlag(FlagStacktrace))
 	}
 
 	if len(frames) > 0 {
 		if e.HasFlag(FlagCaller) {
 			frame := frames[0]
-			c := frame.File + ":" + strconv.Itoa(frame.Line)
 			e.Data = enc.AppendKey(e.Data, CallerFieldName)
-			e.Data = enc.AppendString(e.Data, c)
+			e.Data = enc.AppendString(e.Data, frame.File+":"+strconv.Itoa(frame.Line))
 		}
 		if e.HasFlag(FlagStacktrace) {
 			buffer := buffer.Get()
-			defer buffer.Free()
 			stackfmt := stack.NewStackFormatter(buffer)
 			stackfmt.FormatFrames(frames)
 			e.Data = enc.AppendKey(e.Data, ErrorStackFieldName)
 			e.Data = enc.AppendBytes(e.Data, buffer.Bytes())
+			buffer.Free()
 		}
 	}
 	for _, field := range e.Fields[:e.FieldsLength()] {

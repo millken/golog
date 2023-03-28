@@ -17,11 +17,24 @@ var (
 )
 
 // Tracer returns a slice of Frames, calling runtime.Callers.
-func Tracer(skip int) []runtime.Frame {
+func Tracer(skip int, stacktrace bool) []runtime.Frame {
+	const depth = 20
 	var stack []runtime.Frame
+	if !stacktrace {
+		pc, file, line, ok := runtime.Caller(skip + 1)
+		if !ok {
+			return nil
+		}
+		stack = append(stack, runtime.Frame{
+			PC:   pc,
+			File: file,
+			Line: line,
+		})
+		return stack
+	}
 
 	//the maximum number of callers to include in the stack.
-	fpcs := [20]uintptr{}
+	var fpcs [depth]uintptr
 
 	//+2 to skip Tracer and runtime.Callers.
 	n := runtime.Callers(skip+2, fpcs[:])

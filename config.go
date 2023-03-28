@@ -100,6 +100,20 @@ func newConfigs() *Configs {
 	}
 }
 
+// ResetConfigs - reset configs.
+func ResetConfigs() {
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
+	loggerProviderOnce = sync.Once{} // reset logger provider
+	configs = newConfigs()
+}
+
+func GetConfigs() *Configs {
+	rwmutex.RLock()
+	defer rwmutex.RUnlock()
+	return configs
+}
+
 // SetLevel - set log level.
 func SetLevel(level Level) {
 	rwmutex.Lock()

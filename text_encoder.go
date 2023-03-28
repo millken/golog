@@ -67,8 +67,8 @@ func (o *TextEncoder) Encode(e *Entry) ([]byte, error) {
 		e.SetFlag(FlagName)
 	}
 	if e.HasFlag(FlagCaller) || e.HasFlag(FlagStacktrace) {
-		stackSkip := defaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
-		frames := stack.Tracer(stackSkip)
+		stackSkip := DefaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
+		frames := stack.Tracer(stackSkip, e.HasFlag(FlagStacktrace))
 
 		if len(frames) > 0 {
 			if e.HasFlag(FlagCaller) {
@@ -77,10 +77,10 @@ func (o *TextEncoder) Encode(e *Entry) ([]byte, error) {
 			}
 			if e.HasFlag(FlagStacktrace) {
 				buffer := buffer.Get()
-				defer buffer.Free()
 				stackfmt := stack.NewStackFormatter(buffer)
 				stackfmt.FormatFrames(frames)
 				stacktraces = buffer.String()
+				buffer.Free()
 			}
 		}
 	}
@@ -92,7 +92,7 @@ func (o *TextEncoder) Encode(e *Entry) ([]byte, error) {
 				(p == ModuleFieldName && !o.cfg.ShowModuleName)) {
 			continue
 		}
-		writePart(e, p)
+		writePart(e, p, &o.cfg)
 		if p != o.cfg.PartsOrder[len(o.cfg.PartsOrder)-1] { // Skip space for last part
 			e.WriteByte(' ')
 		}
@@ -107,14 +107,18 @@ func (o *TextEncoder) Encode(e *Entry) ([]byte, error) {
 }
 
 // writePart appends a formatted part to buf.
-func writePart(e *Entry, p string) {
+func writePart(e *Entry, p string, cfg *TextEncoderConfig) {
 	switch p {
 	case LevelFieldName:
 		defaultFormatLevel(e)
 	case ModuleFieldName:
 		defaultModuleName(e)
 	case TimestampFieldName:
-		defaultFormatTimestamp(e, "")
+		timeFormat := cfg.TimeFormat
+		if timeFormat == "" {
+			timeFormat = textDefaultTimeFormat
+		}
+		defaultFormatTimestamp(e, timeFormat)
 	case MessageFieldName:
 		defaultFormatMessage(e)
 	case CallerFieldName:
@@ -161,9 +165,6 @@ func defaultModuleName(e *Entry) {
 }
 
 func defaultFormatTimestamp(e *Entry, timeFormat string) {
-	if timeFormat == "" {
-		timeFormat = textDefaultTimeFormat
-	}
 	e.Data = time.Now().AppendFormat(e.Data, timeFormat)
 }
 
@@ -177,6 +178,7 @@ func defaultFormatCaller(e *Entry) {
 		return
 	}
 	ansiColorize(e.GetCaller(), colorBold, true, e)
+	return
 }
 
 func defaultFormatFieldName(e *Entry, name string) {

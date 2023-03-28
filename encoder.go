@@ -14,7 +14,8 @@ import (
 var (
 	_ encoder = (*json.Encoder)(nil)
 
-	defaultCallerSkip int = 3
+	//DefaultCallerSkip is the default number of stack frames to skip when reporting caller information.
+	DefaultCallerSkip int = 3
 
 	enc = json.Encoder{}
 

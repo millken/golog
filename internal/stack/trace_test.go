@@ -9,7 +9,7 @@ import (
 
 func TestTrace(t *testing.T) {
 	require := require.New(t)
-	frames := Tracer(0)
+	frames := Tracer(0, true)
 	if len(frames) == 0 {
 		t.Fatal("no frames")
 	}
