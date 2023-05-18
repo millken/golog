@@ -2,9 +2,9 @@ package stack
 
 import (
 	"runtime"
-	"sync"
 
 	"github.com/millken/golog/internal/buffer"
+	"github.com/millken/gosync"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	m sync.Map
+	m gosync.Map[uint, []runtime.Frame]
 )
 
 // Tracer returns a slice of Frames, calling runtime.Callers.
@@ -47,7 +47,7 @@ func Tracer(skip int, stacktrace bool) []runtime.Frame {
 		hash *= prime32
 	}
 	if item, ok := m.Load(hash); ok {
-		return item.([]runtime.Frame)
+		return item
 	}
 	frames := runtime.CallersFrames(fpcs[:n])
 	for f, more := frames.Next(); more; f, more = frames.Next() {

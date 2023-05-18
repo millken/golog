@@ -161,8 +161,9 @@ func TestGlobal_Panic(t *testing.T) {
 	var buf bytes.Buffer
 	require := require.New(t)
 	cfg := golog.Config{
-		Level:    golog.INFO,
-		Encoding: golog.TextEncoding,
+		Level:        golog.INFO,
+		Encoding:     golog.TextEncoding,
+		CallerLevels: []golog.Level{},
 		TextEncoder: golog.TextEncoderConfig{
 			DisableTimestamp: true,
 			DisableColor:     true,

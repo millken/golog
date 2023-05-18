@@ -3,7 +3,7 @@ package golog
 import (
 	"io"
 
-	"github.com/millken/golog/internal/sync"
+	"github.com/millken/gosync"
 )
 
 type Flag uint8
@@ -108,7 +108,7 @@ func (e *Entry) Reset() {
 }
 
 var (
-	entryPool = sync.NewPool(
+	entryPool = gosync.NewPool(
 		func() *Entry {
 			return &Entry{
 				Data:   make([]byte, 0, 4096),

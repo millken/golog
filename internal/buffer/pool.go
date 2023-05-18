@@ -1,6 +1,8 @@
 package buffer
 
-import "github.com/millken/golog/internal/sync"
+import (
+	"github.com/millken/gosync"
+)
 
 var (
 	_pool = NewPool()
@@ -10,13 +12,13 @@ var (
 
 // A Pool is a type-safe wrapper around a sync.Pool.
 type Pool struct {
-	p *sync.Pool[*Buffer]
+	p *gosync.Pool[*Buffer]
 }
 
 // NewPool constructs a new Pool.
 func NewPool() Pool {
 	return Pool{
-		p: sync.NewPool(func() *Buffer {
+		p: gosync.NewPool(func() *Buffer {
 			return &Buffer{bs: make([]byte, 0, _size)}
 		}),
 	}
@@ -25,7 +27,7 @@ func NewPool() Pool {
 // NewPoolSize constructs a new Pool.
 func NewPoolSize(size int) Pool {
 	return Pool{
-		p: sync.NewPool(func() *Buffer {
+		p: gosync.NewPool(func() *Buffer {
 			return &Buffer{bs: make([]byte, 0, size)}
 		}),
 	}

@@ -24,8 +24,9 @@ const (
 )
 
 var (
-	rwmutex = &sync.RWMutex{}
-	configs = newConfigs()
+	rwmutex          = &sync.RWMutex{}
+	configs          = newConfigs()
+	enableNativeTime bool
 )
 
 // Configs - configs for golog.
@@ -112,6 +113,16 @@ func GetConfigs() *Configs {
 	rwmutex.RLock()
 	defer rwmutex.RUnlock()
 	return configs
+}
+
+// EnableNativeTime - enable native time
+func EnableNativeTime() {
+	enableNativeTime = true
+}
+
+// EnabledNativeTime - check if native time is enabled
+func EnabledNativeTime() bool {
+	return enableNativeTime
 }
 
 // SetLevel - set log level.

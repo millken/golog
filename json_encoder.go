@@ -4,8 +4,8 @@ import (
 	"errors"
 	"runtime"
 	"strconv"
-	"time"
 
+	"github.com/millken/golog/internal/atime"
 	"github.com/millken/golog/internal/buffer"
 	"github.com/millken/golog/internal/stack"
 )
@@ -34,7 +34,7 @@ func (o *JSONEncoder) Encode(e *Entry) ([]byte, error) {
 	e.Data = enc.AppendBeginMarker(e.Data)
 	if !o.cfg.DisableTimestamp {
 		e.Data = enc.AppendKey(e.Data, TimestampFieldName)
-		e.Data = enc.AppendTime(e.Data, time.Now(), TimeFieldFormat)
+		e.Data = enc.AppendTime(e.Data, atime.Now(enableNativeTime), TimeFieldFormat)
 	}
 	e.Data = enc.AppendKey(e.Data, LevelFieldName)
 	e.Data = enc.AppendString(e.Data, e.Level.String())

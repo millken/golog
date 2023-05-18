@@ -14,28 +14,20 @@ var (
 // Log is an implementation of Logger interface.
 // It encapsulates default or custom logger to provide module and level based logging.
 type Log struct {
-	module        string
-	fields        []Field
-	once          sync.Once
-	writer        io.Writer
-	encoder       Encoder
-	callerMap     map[Level]bool
-	callerSkip    int
-	stacktraceMap map[Level]bool
-	level         Level
+	module     string
+	fields     []Field
+	once       sync.Once
+	writer     io.Writer
+	encoder    Encoder
+	callerLvl  uint32
+	callerSkip int
+	tracerLvl  uint32
+	level      Level
 }
 
 func newLogger() *Log {
-	callerMap := make(map[Level]bool, len(Levels))
-	stacktraceMap := make(map[Level]bool, len(Levels))
-	for _, v := range Levels {
-		callerMap[v] = false
-		stacktraceMap[v] = false
-	}
 	return &Log{
-		callerMap:     callerMap,
-		stacktraceMap: stacktraceMap,
-		fields:        []Field{},
+		fields: []Field{},
 	}
 }
 
@@ -94,10 +86,10 @@ func (l *Log) initConfig(cfg Config) error {
 		l.level = cfg.Level
 	}
 	for _, v := range cfg.CallerLevels {
-		l.callerMap[v] = true
+		l.callerLvl |= uint32(v)
 	}
 	for _, v := range cfg.StacktraceLevels {
-		l.stacktraceMap[v] = true
+		l.tracerLvl |= uint32(v)
 	}
 	return nil
 }
@@ -321,29 +313,23 @@ func (l *Log) output(level Level, msg string, args []interface{}) { //nolint:fun
 }
 
 func (l *Log) isCallerEnabled(level Level) bool {
-	if enabled, ok := l.callerMap[level]; ok {
-		return enabled
-	}
-	return false
+	return l.callerLvl&uint32(level) == uint32(level)
 }
 
 func (l *Log) isStacktraceEnabled(level Level) bool {
-	if enabled, ok := l.stacktraceMap[level]; ok {
-		return enabled
-	}
-	return false
+	return l.tracerLvl&uint32(level) == uint32(level)
 }
 
 // clone returns a copy of this "l" Logger.
 func (l *Log) clone() *Log {
 	return &Log{
-		level:         l.level,
-		module:        l.module,
-		writer:        l.writer,
-		fields:        l.fields,
-		encoder:       l.encoder,
-		callerMap:     l.callerMap,
-		stacktraceMap: l.stacktraceMap,
-		once:          sync.Once{},
+		level:     l.level,
+		module:    l.module,
+		writer:    l.writer,
+		fields:    l.fields,
+		encoder:   l.encoder,
+		callerLvl: l.callerLvl,
+		tracerLvl: l.tracerLvl,
+		once:      sync.Once{},
 	}
 }
