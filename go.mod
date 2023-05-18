@@ -1,6 +1,6 @@
 module github.com/millken/golog
 
-go 1.18
+go 1.19
 
 require (
 	github.com/goccy/go-json v0.10.2
