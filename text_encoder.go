@@ -9,8 +9,8 @@ import (
 
 	"github.com/goccy/go-json"
 
-	"github.com/millken/golog/internal/atime"
 	"github.com/millken/golog/internal/buffer"
+	"github.com/millken/golog/internal/fasttime"
 	"github.com/millken/golog/internal/stack"
 )
 
@@ -166,7 +166,7 @@ func defaultModuleName(e *Entry) {
 }
 
 func defaultFormatTimestamp(e *Entry, timeFormat string) {
-	e.Data = atime.Now(enableNativeTime).AppendFormat(e.Data, timeFormat)
+	e.Data = fasttime.Now().AppendFormat(e.Data, timeFormat)
 }
 
 func defaultFormatMessage(e *Entry) {
