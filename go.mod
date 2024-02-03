@@ -1,6 +1,6 @@
 module github.com/millken/golog
 
-go 1.19
+go 1.20
 
 require (
 	github.com/goccy/go-json v0.10.2
@@ -12,5 +12,6 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/millken/x/buffer v0.0.0-20240202130519-b017bd4fab71 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 )

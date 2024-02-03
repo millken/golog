@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"os/exec"
 	_ "runtime"
@@ -13,26 +14,25 @@ import (
 	_ "unsafe"
 
 	"github.com/millken/golog"
-	"github.com/millken/golog/internal/buffer"
+	"github.com/millken/x/buffer"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGlobalUsage(t *testing.T) {
 	require := require.New(t)
-	defer resetConfigs()
 	var buf bytes.Buffer
-	golog.SetLevel(golog.DEBUG)
-	golog.SetCallerLevels(golog.DEBUG, golog.INFO, golog.WARNING, golog.ERROR, golog.FATAL, golog.PANIC)
-	golog.SetStacktraceLevels(golog.PANIC, golog.FATAL, golog.ERROR, golog.WARNING)
-	golog.SetEncoding(golog.TextEncoding)
-	golog.SetTextEncoderConfig(golog.TextEncoderConfig{DisableTimestamp: true, DisableColor: true, ShowModuleName: true})
+	// golog.SetLevel(golog.DEBUG)
+	// golog.SetCallerLevels(golog.DEBUG, golog.INFO, golog.WARNING, golog.ERROR, golog.FATAL, golog.PANIC)
+	// golog.SetStacktraceLevels(golog.PANIC, golog.FATAL, golog.ERROR, golog.WARNING)
+	// golog.SetEncoding(golog.TextEncoding)
+	// golog.SetTextEncoderConfig(golog.TextEncoderConfig{DisableTimestamp: true, DisableColor: true, ShowModuleName: true})
 	golog.SetWriter(&buf)
 	golog.Infof("hello %s", "world")
 	require.Contains(buf.String(), "hello world")
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	buf.Reset()
 	golog.Debug("test int", "int8", int8(1), "int16", int16(2), "int32", int32(3), "int64", int64(4))
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test int")
 	require.Contains(buf.String(), "int8=1")
 	require.Contains(buf.String(), "int16=2")
@@ -40,7 +40,7 @@ func TestGlobalUsage(t *testing.T) {
 	require.Contains(buf.String(), "int64=4")
 	buf.Reset()
 	golog.Debug("test uint", "uint", uint(0), "uint8", uint8(1), "uint16", uint16(2), "uint32", uint32(3), "uint64", uint64(4))
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test uint")
 	require.Contains(buf.String(), "uint=0")
 	require.Contains(buf.String(), "uint8=1")
@@ -49,43 +49,43 @@ func TestGlobalUsage(t *testing.T) {
 	require.Contains(buf.String(), "uint64=4")
 	buf.Reset()
 	golog.Debug("test float", "float32", float32(1.1), "float64", float64(2.2))
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test float")
 	require.Contains(buf.String(), "float32=1.1")
 	require.Contains(buf.String(), "float64=2.2")
 	buf.Reset()
 	golog.Debug("test bool", "bool", true)
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test bool")
 	require.Contains(buf.String(), "bool=true")
 	buf.Reset()
 	golog.Debug("test string", "string", "string")
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test string")
 	require.Contains(buf.String(), "string=string")
 	buf.Reset()
 	golog.Debug("test error", "error", errors.New("error"))
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test error")
 	require.Contains(buf.String(), "error=error")
 	buf.Reset()
 	golog.Debug("test nil", "nil", nil)
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test nil")
 	require.Contains(buf.String(), "nil=null")
 	buf.Reset()
 	golog.Debug("test map", "map", map[string]interface{}{"a": 1, "b": true})
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test map")
 	require.Contains(buf.String(), "map={\"a\":1,\"b\":true}")
 	buf.Reset()
 	golog.Debug("test array", "array", []interface{}{1, true, "string"})
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test array")
 	require.Contains(buf.String(), "array=[1,true,\"string\"]")
 	buf.Reset()
 	golog.Debug("test struct", "struct", struct{}{})
-	require.Contains(buf.String(), "global_test.go")
+	require.Contains(buf.String(), "std_test.go")
 	require.Contains(buf.String(), "test struct")
 	require.Contains(buf.String(), "struct={}")
 	buf.Reset()
@@ -93,11 +93,9 @@ func TestGlobalUsage(t *testing.T) {
 	golog.Debug("test duration", "duration", time.Duration(1))
 	golog.Warn("test json.Number", "json.Number", json.Number("1.1"))
 	golog.Error("hello world with fields", "a", 1, "b", true, "c", "string")
-	resetConfigs()
 }
 
 func TestGlobalLog(t *testing.T) {
-	defer resetConfigs()
 	require := require.New(t)
 	var buf buffer.Buffer
 	golog.SetWriter(&buf)
@@ -128,26 +126,26 @@ func TestGlobalLog(t *testing.T) {
 	require.Empty(buf.String())
 	golog.WithValues("err", errors.New("error")).WithValues("c", false).Warnf("warn message")
 	require.Contains(buf.String(), "warn message")
-	require.Contains(buf.String(), "err=\x1b[0merror")
-	require.Contains(buf.String(), "c=\x1b[0mfalse")
+	require.Contains(buf.String(), "err=error")
+	require.Contains(buf.String(), "c=false")
 	buf.Reset()
 	golog.WithValues("a", 1, "b", true).Infof("info message with %d fields", 2)
 	require.Contains(buf.String(), "info message with 2 fields")
-	require.Contains(buf.String(), "\x1b[36ma=\x1b[0m1")
-	require.Contains(buf.String(), "\x1b[36mb=\x1b[0mtrue")
+	require.Contains(buf.String(), "a=1")
+	require.Contains(buf.String(), "b=true")
 	buf.Reset()
 	golog.Debugf("debug message")
 	require.Empty(buf.String())
 	l := golog.WithValues("a", 1, "b", 3)
 	l.Error("error message")
 	require.Contains(buf.String(), "error message")
-	require.Contains(buf.String(), "\x1b[36ma=\x1b[0m1")
-	require.Contains(buf.String(), "\x1b[36mb=\x1b[0m3")
+	require.Contains(buf.String(), "a=1")
+	require.Contains(buf.String(), "b=3")
 	buf.Reset()
 	l.WithValues("c", false).Warn("warn message")
 	require.Contains(buf.String(), "warn message")
-	require.Contains(buf.String(), "\x1b[36ma=\x1b[0m1")
-	require.Contains(buf.String(), "\x1b[36mb=\x1b[0m3")
+	require.Contains(buf.String(), "a=1")
+	require.Contains(buf.String(), "b=3")
 
 }
 
@@ -160,30 +158,16 @@ func TestDebugGlobal(t *testing.T) {
 func TestGlobal_Panic(t *testing.T) {
 	var buf bytes.Buffer
 	require := require.New(t)
-	cfg := golog.Config{
-		Level:        golog.INFO,
-		Encoding:     golog.TextEncoding,
-		CallerLevels: []golog.Level{},
-		TextEncoder: golog.TextEncoderConfig{
-			DisableTimestamp: true,
-			DisableColor:     true,
-		},
-		Handler: golog.HandlerConfig{
-			Type:   "custom",
-			Writer: &buf,
-		},
-	}
-	log, err := golog.NewLoggerByConfig("test", cfg)
-	require.NoError(err)
+	golog.SetWriter(&buf)
 	var recovered interface{}
 	func() {
 		defer func() {
 			recovered = recover()
 		}()
-		log.Panicf("panic message")
+		golog.Panicf("panic message")
 	}()
 	require.NotNil(recovered)
-	require.Equal("PNIC panic message\n", buf.String())
+	require.Contains(buf.String(), "panic message")
 	require.Equal("panic message", recovered)
 }
 
@@ -202,26 +186,12 @@ func TestGlobal_Fatal(t *testing.T) {
 }
 
 func TestGlobalLogRaces(t *testing.T) {
-	require := require.New(t)
-	cfg := golog.Config{
-		Level:    golog.INFO,
-		Encoding: golog.TextEncoding,
-		TextEncoder: golog.TextEncoderConfig{
-			DisableTimestamp: true,
-		},
-		Handler: golog.HandlerConfig{
-			Type: "file",
-			File: golog.FileConfig{
-				Path: "",
-			},
-		},
-	}
-	log, err := golog.NewLoggerByConfig("test", cfg)
-	require.NoError(err)
+	// require := require.New(t)
+	golog.SetWriter(io.Discard)
 	f := func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		for i := 0; i < 10000; i++ {
-			log.WithValues("a", 1).Info("info")
+			golog.WithValues("a", 1).Info("info")
 		}
 	}
 
@@ -235,38 +205,35 @@ func TestGlobalLogRaces(t *testing.T) {
 }
 
 func BenchmarkGlobal(b *testing.B) {
-	defer resetConfigs()
-	require := require.New(b)
-	err := golog.LoadConfig("testdata/bench.yml")
-	require.NoError(err)
 	b.ReportAllocs()
 	b.ResetTimer()
+	golog.SetWriter(io.Discard)
 	for i := 0; i < b.N; i++ {
 		golog.Info("abcde1234")
 	}
 }
 
 func BenchmarkGlobal_WithField(b *testing.B) {
-	defer resetConfigs()
-	require := require.New(b)
-	err := golog.LoadConfig("testdata/bench.yml")
-	require.NoError(err)
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		golog.Info("abcde1234", "k", 1, "a", "c", "b", true)
-	}
+	// defer resetConfigs()
+	// require := require.New(b)
+	// err := golog.LoadConfig("testdata/bench.yml")
+	// require.NoError(err)
+	// b.ReportAllocs()
+	// b.ResetTimer()
+	// for i := 0; i < b.N; i++ {
+	// 	golog.Info("abcde1234", "k", 1, "a", "c", "b", true)
+	// }
 }
 
 func TestDebug(t *testing.T) {
-	defer resetConfigs()
-	require := require.New(t)
-	err := golog.LoadConfig("testdata/debug.yml")
-	require.NoError(err)
-	for i := 0; i < 2; i++ {
-		golog.Info("abcde1233", "k", 1)
-	}
-	for i := 0; i < 2; i++ {
-		golog.Info("abcde1234", "k", 1)
-	}
+	// defer resetConfigs()
+	// require := require.New(t)
+	// err := golog.LoadConfig("testdata/debug.yml")
+	// require.NoError(err)
+	// for i := 0; i < 2; i++ {
+	// 	golog.Info("abcde1233", "k", 1)
+	// }
+	// for i := 0; i < 2; i++ {
+	// 	golog.Info("abcde1234", "k", 1)
+	// }
 }

@@ -3,8 +3,8 @@ package stack
 import (
 	"runtime"
 
-	"github.com/millken/golog/internal/buffer"
 	"github.com/millken/gosync"
+	"github.com/millken/x/buffer"
 )
 
 const (

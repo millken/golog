@@ -48,7 +48,7 @@ func (l Level) String() string {
 	case DEBUG:
 		return "debug"
 	}
-	return "unknown"
+	return ""
 }
 
 // MarshalYAML implements the yaml.Marshaler interface.

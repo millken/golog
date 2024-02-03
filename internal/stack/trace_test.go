@@ -3,7 +3,7 @@ package stack
 import (
 	"testing"
 
-	"github.com/millken/golog/internal/buffer"
+	"github.com/millken/x/buffer"
 	"github.com/stretchr/testify/require"
 )
 
