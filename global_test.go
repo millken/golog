@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	_ "runtime"
@@ -157,6 +159,16 @@ func TestDebugGlobal(t *testing.T) {
 	l.Warn("warn message", "c", false)
 }
 
+func TestDebugGlobal2(t *testing.T) {
+	defer resetConfigs()
+	require := require.New(t)
+	err := golog.LoadConfig("testdata/yaml_001.yml")
+	require.NoError(err)
+	for i := 0; i < 3; i++ {
+		golog.Info("abcde1234")
+
+	}
+}
 func TestGlobal_Panic(t *testing.T) {
 	var buf bytes.Buffer
 	require := require.New(t)
@@ -255,6 +267,17 @@ func BenchmarkGlobal_WithField(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		golog.Info("abcde1234", "k", 1, "a", "c", "b", true)
+	}
+}
+
+func BenchmarkSlog_WithValues(b *testing.B) {
+	defer resetConfigs()
+	olog := slog.NewTextHandler(io.Discard, nil)
+	slog := slog.New(olog)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		slog.With("k", 1, "a", "c", "b", true).Info("abcde1234")
 	}
 }
 

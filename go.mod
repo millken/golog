@@ -1,12 +1,12 @@
 module github.com/millken/golog
 
-go 1.19
+go 1.22
 
 require (
-	github.com/goccy/go-json v0.10.2
-	github.com/millken/gosync v0.0.4
+	github.com/goccy/go-json v0.10.3
+	github.com/millken/gosync v0.0.5
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.9.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

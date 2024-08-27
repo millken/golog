@@ -6,7 +6,7 @@ default:
   handler:
     type: file
     file:
-      path: /var/log/golog.log
+      path: stdout
 modules:
   mudule/1:
     level: debug
