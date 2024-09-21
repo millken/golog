@@ -61,7 +61,7 @@ func TestConfig(t *testing.T) {
 		configs.Default.StacktraceLevels,
 	)
 	require.Equal("file", configs.Default.Handler.Type)
-	require.Equal("/var/log/golog.log", configs.Default.Handler.File.Path)
+	require.Equal("stdout", configs.Default.Handler.File.Path)
 
 	require.Equal(1, len(configs.Modules))
 	require.Equal(golog.DEBUG, configs.Modules["mudule/1"].Level)

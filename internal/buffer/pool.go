@@ -12,7 +12,7 @@ var (
 
 // A Pool is a type-safe wrapper around a sync.Pool.
 type Pool struct {
-	p *gosync.Pool[*Buffer]
+	p *gosync.Pool[Buffer, *Buffer]
 }
 
 // NewPool constructs a new Pool.
