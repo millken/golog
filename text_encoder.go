@@ -156,7 +156,6 @@ func defaultFormatLevel(e *Entry) {
 	default:
 		ansiColorize("????", colorBold, noColor, e)
 	}
-	return
 }
 
 func defaultModuleName(e *Entry) {
@@ -179,7 +178,6 @@ func defaultFormatCaller(e *Entry) {
 		return
 	}
 	ansiColorize(e.GetCaller(), colorBold, true, e)
-	return
 }
 
 func defaultFormatFieldName(e *Entry, name string) {
@@ -190,8 +188,6 @@ func defaultFormatFieldName(e *Entry, name string) {
 		return
 	}
 	ansiColorize(name+equal, colorCyan, false, e)
-
-	return
 }
 
 func defaultFormatFieldValue(e *Entry, value interface{}) {
@@ -274,7 +270,6 @@ func ansiColorize(s string, c int, disabled bool, e *Entry) {
 	_, _ = e.WriteString("m")
 	_, _ = e.WriteString(s)
 	_, _ = e.WriteString(ansiReset)
-	return
 }
 
 func textDefaultPartsOrder() []string {

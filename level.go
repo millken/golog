@@ -62,7 +62,7 @@ func (l *Level) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&v); err != nil {
 		return err
 	}
-	level, err := parseLevel(v)
+	level, err := ParseLevel(v)
 	if err != nil {
 		return err
 	}
@@ -70,8 +70,8 @@ func (l *Level) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-// parseLevel parses a string into a log level.
-func parseLevel(level string) (Level, error) {
+// ParseLevel parses a string into a log level.
+func ParseLevel(level string) (Level, error) {
 	var l Level
 	switch strings.ToLower(level) {
 	case "panic":
