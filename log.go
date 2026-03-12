@@ -51,10 +51,9 @@ func NewLoggerByConfig(module string, cfg Config) (*Log, error) {
 }
 
 func (l *Log) init() {
-	var err error
 	l.once.Do(func() {
 		mc := GetModuleConfig(l.module)
-		if err = l.initConfig(mc); err != nil {
+		if err := l.initConfig(mc); err != nil {
 			panic(err)
 		}
 	})

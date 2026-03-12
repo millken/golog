@@ -4,17 +4,9 @@ import (
 	"runtime"
 
 	"github.com/millken/golog/internal/buffer"
-	"github.com/millken/gosync"
 )
 
-const (
-	offset32 = 2166136261
-	prime32  = 16777619
-)
-
-var (
-	m gosync.Map[uint, []runtime.Frame]
-)
+// Tracer returns a slice of Frames, calling runtime.Callers.
 
 // Tracer returns a slice of Frames, calling runtime.Callers.
 func Tracer(skip int, stacktrace bool) []runtime.Frame {
@@ -41,14 +33,6 @@ func Tracer(skip int, stacktrace bool) []runtime.Frame {
 	if n == 0 {
 		return nil
 	}
-	hash := uint(offset32)
-	for _, pc := range fpcs[:n] {
-		hash ^= uint(pc)
-		hash *= prime32
-	}
-	if item, ok := m.Load(hash); ok {
-		return item
-	}
 	frames := runtime.CallersFrames(fpcs[:n])
 	for f, more := frames.Next(); more; f, more = frames.Next() {
 		stack = append(stack, f)
@@ -56,7 +40,6 @@ func Tracer(skip int, stacktrace bool) []runtime.Frame {
 	if len(stack) == 0 {
 		return nil
 	}
-	m.Store(hash, stack)
 	return stack
 }
 

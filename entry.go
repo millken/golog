@@ -124,12 +124,12 @@ func acquireEntry() *Entry {
 
 // releaseEntry releases the entry.
 func releaseEntry(e *Entry) {
-	e.Message = e.Message[:0]
+	e.Message = ""
 	e.Data = e.Data[:0]
 	e.Fields = e.Fields[:0]
 	e.fieldsLen = 0
 	e.callerSkip = 0
-	e.caller = e.caller[:0]
+	e.caller = ""
 	e.flag = 0
 	entryPool.Put(e)
 }

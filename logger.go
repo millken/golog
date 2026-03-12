@@ -1,3 +1,21 @@
+// Package golog provides a high-performance structured logging library
+// with support for multiple output formats, log rotation, and module-based
+// configuration.
+//
+// Basic usage:
+//
+//	golog.Info("Hello, world!", "key", "value")
+//	golog.Errorf("Error occurred: %v", err)
+//
+// Creating a module-specific logger:
+//
+//	logger := golog.New("my/module")
+//	logger.Info("Module message", "user", "john")
+//
+// Configuration:
+//
+//	golog.SetLevel(golog.DEBUG)
+//	golog.SetEncoding(golog.JSONEncoding)
 package golog
 
 import (

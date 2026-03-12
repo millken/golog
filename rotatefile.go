@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -50,7 +49,7 @@ type RotateFile struct {
 	bufferWriter      *bufio.Writer
 	currentBackupName string
 	mu                sync.Mutex
-	wokerOnce         sync.Once
+	workerOnce        sync.Once
 	workerCh          chan bool
 }
 
@@ -177,7 +176,7 @@ func (f *RotateFile) rotate() error {
 	if err := f.openNew(); err != nil {
 		return err
 	}
-	f.wokerOnce.Do(func() {
+	f.workerOnce.Do(func() {
 		f.workerCh = make(chan bool, 1)
 		go func() {
 			for range f.workerCh {
@@ -209,7 +208,7 @@ func (f *RotateFile) doWorker() {
 }
 
 func (f *RotateFile) oldLogFiles() ([]logInfo, error) {
-	files, err := ioutil.ReadDir(f.dir())
+	entries, err := os.ReadDir(f.dir())
 	if err != nil {
 		return nil, fmt.Errorf("can't read log file directory: %s", err)
 	}
@@ -219,18 +218,19 @@ func (f *RotateFile) oldLogFiles() ([]logInfo, error) {
 	ext := filepath.Ext(filename)
 	prefix := filename[:len(filename)-len(ext)] + "-"
 
-	for _, fi := range files {
-		if fi.IsDir() {
+	for _, entry := range entries {
+		if entry.IsDir() {
 			continue
 		}
-		filename := fi.Name()
-		if strings.HasPrefix(filename, prefix) {
-			ext := filepath.Ext(filename)
+		name := entry.Name()
+		if strings.HasPrefix(name, prefix) {
+			ext := filepath.Ext(name)
 			// ext include unix timestamp of the logfile
 			if len(ext) > 10 {
 				timestamp, err := strconv.ParseInt(ext[1:], 10, 64)
 				if err == nil {
-					logFiles = append(logFiles, logInfo{timestamp, fi})
+					info, _ := entry.Info()
+					logFiles = append(logFiles, logInfo{timestamp, info})
 				}
 			}
 		}

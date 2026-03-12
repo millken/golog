@@ -88,9 +88,9 @@ func (o *TextEncoder) Encode(e *Entry) ([]byte, error) {
 
 	for _, p := range o.cfg.PartsOrder {
 		if (p == CallerFieldName && !e.HasFlag(FlagCaller)) ||
-			(p == ErrorStackFieldName && !e.HasFlag(FlagStacktrace) ||
-				(p == TimestampFieldName && o.cfg.DisableTimestamp) ||
-				(p == ModuleFieldName && !o.cfg.ShowModuleName)) {
+			(p == ErrorStackFieldName && !e.HasFlag(FlagStacktrace)) ||
+			(p == TimestampFieldName && o.cfg.DisableTimestamp) ||
+			(p == ModuleFieldName && !o.cfg.ShowModuleName) {
 			continue
 		}
 		writePart(e, p, &o.cfg)
