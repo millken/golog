@@ -5,8 +5,8 @@ package golog
 
 import (
 	"net"
+	"reflect"
 	"time"
-	"unsafe"
 
 	"github.com/millken/golog/internal/json"
 )
@@ -20,7 +20,7 @@ var (
 	enc = json.Encoder{}
 
 	// ErrorMarshalFunc allows customization of global error marshaling
-	ErrorMarshalFunc = func(err error) interface{} {
+	ErrorMarshalFunc = func(err error) any {
 		return err
 	}
 )
@@ -48,7 +48,7 @@ type encoder interface {
 	AppendInt32(dst []byte, val int32) []byte
 	AppendInt64(dst []byte, val int64) []byte
 	AppendInt8(dst []byte, val int8) []byte
-	AppendInterface(dst []byte, i interface{}) []byte
+	AppendInterface(dst []byte, i any) []byte
 	AppendInts(dst []byte, vals []int) []byte
 	AppendInts16(dst []byte, vals []int16) []byte
 	AppendInts32(dst []byte, vals []int32) []byte
@@ -75,11 +75,12 @@ type encoder interface {
 	AppendUints8(dst []byte, vals []uint8) []byte
 }
 
-func isNilValue(i interface{}) bool {
-	return (*[2]uintptr)(unsafe.Pointer(&i))[1] == 0
+func isNilValue(i any) bool {
+	v := reflect.ValueOf(i)
+	return v.Kind() == reflect.Ptr && v.IsNil()
 }
 
-func appendVal(dst []byte, value interface{}) []byte {
+func appendVal(dst []byte, value any) []byte {
 	switch val := value.(type) {
 	case string:
 		dst = enc.AppendString(dst, val)
@@ -115,7 +116,7 @@ func appendVal(dst []byte, value interface{}) []byte {
 			}
 
 			if i < (len(val) - 1) {
-				enc.AppendArrayDelim(dst)
+				dst = enc.AppendArrayDelim(dst)
 			}
 		}
 		dst = enc.AppendArrayEnd(dst)

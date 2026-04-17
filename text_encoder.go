@@ -1,16 +1,14 @@
 package golog
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/goccy/go-json"
-
 	"github.com/millken/golog/internal/buffer"
-	"github.com/millken/golog/internal/fasttime"
 	"github.com/millken/golog/internal/stack"
 )
 
@@ -165,7 +163,7 @@ func defaultModuleName(e *Entry) {
 }
 
 func defaultFormatTimestamp(e *Entry, timeFormat string) {
-	e.Data = fasttime.Now().AppendFormat(e.Data, timeFormat)
+	e.Data = time.Now().AppendFormat(e.Data, timeFormat)
 }
 
 func defaultFormatMessage(e *Entry) {
@@ -190,7 +188,7 @@ func defaultFormatFieldName(e *Entry, name string) {
 	ansiColorize(name+equal, colorCyan, false, e)
 }
 
-func defaultFormatFieldValue(e *Entry, value interface{}) {
+func defaultFormatFieldValue(e *Entry, value any) {
 	switch fValue := value.(type) {
 	case string:
 		if needsQuote(fValue) {
@@ -219,7 +217,7 @@ func defaultFormatFieldValue(e *Entry, value interface{}) {
 	case uint64:
 		e.Data = strconv.AppendUint(e.Data, fValue, 10)
 	case float32:
-		e.Data = strconv.AppendFloat(e.Data, float64(fValue), 'f', -1, 64)
+		e.Data = strconv.AppendFloat(e.Data, float64(fValue), 'f', -1, 32)
 	case float64:
 		e.Data = strconv.AppendFloat(e.Data, float64(fValue), 'f', -1, 64)
 	case bool:

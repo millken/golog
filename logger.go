@@ -52,24 +52,24 @@ const (
 // Field is a key/value pair.
 type Field struct {
 	Key string
-	Val interface{}
+	Val any
 }
 
 // Logger represents a general-purpose logger.
 type Logger interface {
-	WithValues(keysAndVals ...interface{}) Logger
-	Panicf(msg string, args ...interface{})
-	Fatalf(msg string, args ...interface{})
-	Errorf(msg string, args ...interface{})
-	Warnf(msg string, args ...interface{})
-	Infof(msg string, args ...interface{})
-	Debugf(msg string, args ...interface{})
-	Panic(msg string, keysAndVals ...interface{})
-	Fatal(msg string, keysAndVals ...interface{})
-	Error(msg string, keysAndVals ...interface{})
-	Warn(msg string, keysAndVals ...interface{})
-	Info(msg string, keysAndVals ...interface{})
-	Debug(msg string, keysAndVals ...interface{})
+	WithValues(keysAndVals ...any) Logger
+	Panicf(msg string, args ...any)
+	Fatalf(msg string, args ...any)
+	Errorf(msg string, args ...any)
+	Warnf(msg string, args ...any)
+	Infof(msg string, args ...any)
+	Debugf(msg string, args ...any)
+	Panic(msg string, keysAndVals ...any)
+	Fatal(msg string, keysAndVals ...any)
+	Error(msg string, keysAndVals ...any)
+	Warn(msg string, keysAndVals ...any)
+	Info(msg string, keysAndVals ...any)
+	Debug(msg string, keysAndVals ...any)
 }
 
 // Encoder is a interface for encoding log entry.

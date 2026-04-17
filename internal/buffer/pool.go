@@ -1,7 +1,7 @@
 package buffer
 
 import (
-	"github.com/millken/gosync"
+	"sync"
 )
 
 var (
@@ -12,30 +12,30 @@ var (
 
 // A Pool is a type-safe wrapper around a sync.Pool.
 type Pool struct {
-	p *gosync.Pool[Buffer, *Buffer]
+	p *sync.Pool
 }
 
 // NewPool constructs a new Pool.
 func NewPool() Pool {
 	return Pool{
-		p: gosync.NewPool(func() *Buffer {
+		p: &sync.Pool{New: func() any {
 			return &Buffer{bs: make([]byte, 0, _size)}
-		}),
+		}},
 	}
 }
 
 // NewPoolSize constructs a new Pool.
 func NewPoolSize(size int) Pool {
 	return Pool{
-		p: gosync.NewPool(func() *Buffer {
+		p: &sync.Pool{New: func() any {
 			return &Buffer{bs: make([]byte, 0, size)}
-		}),
+		}},
 	}
 }
 
 // Get retrieves a Buffer from the pool, creating one if necessary.
 func (p Pool) Get() *Buffer {
-	buf := p.p.Get()
+	buf := p.p.Get().(*Buffer)
 	buf.Reset()
 	buf.pool = p
 	return buf

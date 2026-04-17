@@ -2,12 +2,13 @@ package golog
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 
-	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -26,7 +27,7 @@ const (
 var (
 	rwmutex          = &sync.RWMutex{}
 	configs          = newConfigs()
-	enableNativeTime bool
+	enableNativeTime atomic.Bool
 )
 
 // Configs - configs for golog.
@@ -105,7 +106,7 @@ func newConfigs() *Configs {
 func ResetConfigs() {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
-	loggerProviderOnce = sync.Once{} // reset logger provider
+	loggerProviderFactoryFn.Store(newLoggerProviderFactory()) // reset logger provider
 	configs = newConfigs()
 }
 
@@ -117,12 +118,12 @@ func GetConfigs() *Configs {
 
 // EnableNativeTime - enable native time
 func EnableNativeTime() {
-	enableNativeTime = true
+	enableNativeTime.Store(true)
 }
 
 // EnabledNativeTime - check if native time is enabled
 func EnabledNativeTime() bool {
-	return enableNativeTime
+	return enableNativeTime.Load()
 }
 
 // SetLevel - set log level.
@@ -180,20 +181,20 @@ func LoadConfig(path string) error {
 	var out Configs
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return errors.Wrap(err, "failed to read config content")
+		return fmt.Errorf("failed to read config content: %w", err)
 	}
 	ext := filepath.Ext(path)
 	switch ext {
 	case ".json":
 		if err := json.Unmarshal(data, &out); err != nil {
-			return errors.Wrap(err, "failed to unmarshal json")
+			return fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	case ".yaml", ".yml":
 		if err := yaml.Unmarshal(data, &out); err != nil {
-			return errors.Wrap(err, "failed to unmarshal yaml")
+			return fmt.Errorf("failed to unmarshal yaml: %w", err)
 		}
 	default:
-		return errors.Errorf("unsupported config file extension: %s", ext)
+		return fmt.Errorf("unsupported config file extension: %s", ext)
 	}
 
 	rwmutex.Lock()

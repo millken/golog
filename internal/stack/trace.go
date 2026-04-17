@@ -7,8 +7,6 @@ import (
 )
 
 // Tracer returns a slice of Frames, calling runtime.Callers.
-
-// Tracer returns a slice of Frames, calling runtime.Callers.
 func Tracer(skip int, stacktrace bool) []runtime.Frame {
 	const depth = 20
 	var stack []runtime.Frame

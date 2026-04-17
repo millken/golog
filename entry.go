@@ -2,8 +2,7 @@ package golog
 
 import (
 	"io"
-
-	"github.com/millken/gosync"
+	"sync"
 )
 
 type Flag uint8
@@ -108,18 +107,19 @@ func (e *Entry) Reset() {
 }
 
 var (
-	entryPool = gosync.NewPool(
-		func() *Entry {
+	entryPool = sync.Pool{
+		New: func() any {
 			return &Entry{
 				Data:   make([]byte, 0, 4096),
-				Fields: make([]Field, 0, 500),
+				Fields: make([]Field, 0, 16),
 			}
-		})
+		},
+	}
 )
 
 // acquireEntry returns a new entry.
 func acquireEntry() *Entry {
-	return entryPool.Get() //nolint:errcheck
+	return entryPool.Get().(*Entry)
 }
 
 // releaseEntry releases the entry.

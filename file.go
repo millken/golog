@@ -43,3 +43,11 @@ func NewFile(cfg FileConfig) (*File, error) {
 func (w *File) Write(b []byte) (n int, err error) {
 	return w.writer.Write(b)
 }
+
+// Close closes the underlying writer if it implements io.Closer.
+func (w *File) Close() error {
+	if c, ok := w.writer.(io.Closer); ok {
+		return c.Close()
+	}
+	return nil
+}

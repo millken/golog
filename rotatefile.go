@@ -100,15 +100,23 @@ func (f *RotateFile) open() error {
 	f.currentBackupName = t.Format(f.backupTimeFormat())
 
 	f.file, err = os.OpenFile(f.Filename(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
 	f.bufferWriter = bufio.NewWriter(f.file)
-	return err
+	return nil
 }
 
 // Close implements io.Closer, and closes the current logfile.
 func (f *RotateFile) Close() error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	return f.close()
+	err := f.close()
+	if f.workerCh != nil {
+		close(f.workerCh)
+		f.workerCh = nil
+	}
+	return err
 }
 
 // close closes the file if it is open.
@@ -148,7 +156,7 @@ func (f *RotateFile) Write(d []byte) (int, error) {
 		return 0, err
 	}
 	if rotate {
-		if err := f.rotate(); err != nil {
+		if err = f.rotate(); err != nil {
 			return 0, err
 		}
 	}
@@ -178,8 +186,9 @@ func (f *RotateFile) rotate() error {
 	}
 	f.workerOnce.Do(func() {
 		f.workerCh = make(chan bool, 1)
+		ch := f.workerCh
 		go func() {
-			for range f.workerCh {
+			for range ch {
 				f.doWorker()
 			}
 		}()
@@ -202,7 +211,9 @@ func (f *RotateFile) doWorker() {
 	}
 	if f.cfg.MaxBackups > 0 && f.cfg.MaxBackups < len(files) {
 		for _, fi := range files[0 : len(files)-f.cfg.MaxBackups] {
-			os.Remove(filepath.Join(f.dir(), fi.Name()))
+			if err := os.Remove(filepath.Join(f.dir(), fi.Name())); err != nil {
+				log.Printf("golog: failed to remove old log file: %v", err)
+			}
 		}
 	}
 }

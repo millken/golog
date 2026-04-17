@@ -1,12 +1,11 @@
 package json
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"net"
 	"strconv"
-
-	"github.com/goccy/go-json"
 )
 
 // AppendNil inserts a 'Nil' object into the dst byte array.
@@ -363,7 +362,7 @@ func (Encoder) AppendFloats64(dst []byte, vals []float64) []byte {
 
 // AppendInterface marshals the input interface to a string and
 // appends the encoded string to the input byte slice.
-func (e Encoder) AppendInterface(dst []byte, i interface{}) []byte {
+func (e Encoder) AppendInterface(dst []byte, i any) []byte {
 	marshaled, err := json.Marshal(i)
 	if err != nil {
 		return e.AppendString(dst, fmt.Sprintf("marshaling error: %v", err))

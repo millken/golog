@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"sync"
 )
 
@@ -99,173 +100,136 @@ func (l *Log) CallerSkip(skip int) *Log {
 	return l
 }
 
+func formatMessage(format string, args ...any) string {
+	if len(args) == 0 {
+		return format
+	}
+	return fmt.Sprintf(format, args...)
+}
+
+func (l *Log) logf(level Level, format string, args ...any) {
+	if l.level < level {
+		return
+	}
+	msg := formatMessage(format, args...)
+	l.output(level, msg, nil, 1)
+}
+
 // Fatalf calls underlying logger.Fatal.
-func (l *Log) Fatalf(format string, args ...interface{}) {
+func (l *Log) Fatalf(format string, args ...any) {
 	if l.level < FATAL {
 		return
 	}
-
-	var msg string
-	if len(args) > 0 {
-		msg = fmt.Sprintf(format, args...)
-	} else {
-		msg = format
-	}
-	l.output(FATAL, msg, nil)
+	msg := formatMessage(format, args...)
+	l.output(FATAL, msg, nil, 1)
 	os.Exit(1)
 }
 
 // Panicf calls underlying logger.Panic.
-func (l *Log) Panicf(format string, args ...interface{}) {
+func (l *Log) Panicf(format string, args ...any) {
 	if l.level < PANIC {
 		return
 	}
-
-	var msg string
-	if len(args) > 0 {
-		msg = fmt.Sprintf(format, args...)
-	} else {
-		msg = format
-	}
-	l.output(PANIC, msg, nil)
+	msg := formatMessage(format, args...)
+	l.output(PANIC, msg, nil, 1)
 	panic(msg)
 }
 
-// Debugf calls error log function if DEBUG level enabled.
-func (l *Log) Debugf(format string, args ...interface{}) {
-	if l.level < DEBUG {
-		return
-	}
-
-	var msg string
-	if len(args) > 0 {
-		msg = fmt.Sprintf(format, args...)
-	} else {
-		msg = format
-	}
-	l.output(DEBUG, msg, nil)
+// Debugf calls debug log function if DEBUG level enabled.
+func (l *Log) Debugf(format string, args ...any) {
+	l.logf(DEBUG, format, args...)
 }
 
-// Infof calls error log function if INFO level enabled.
-func (l *Log) Infof(format string, args ...interface{}) {
-	if l.level < INFO {
-		return
-	}
-
-	var msg string
-	if len(args) > 0 {
-		msg = fmt.Sprintf(format, args...)
-	} else {
-		msg = format
-	}
-	l.output(INFO, msg, nil)
+// Infof calls info log function if INFO level enabled.
+func (l *Log) Infof(format string, args ...any) {
+	l.logf(INFO, format, args...)
 }
 
-// Warnf calls error log function if WARNING level enabled.
-func (l *Log) Warnf(format string, args ...interface{}) {
-	if l.level < WARNING {
-		return
-	}
-
-	var msg string
-	if len(args) > 0 {
-		msg = fmt.Sprintf(format, args...)
-	} else {
-		msg = format
-	}
-	l.output(WARNING, msg, nil)
+// Warnf calls warn log function if WARNING level enabled.
+func (l *Log) Warnf(format string, args ...any) {
+	l.logf(WARNING, format, args...)
 }
 
 // Errorf calls error log function if ERROR level enabled.
-func (l *Log) Errorf(format string, args ...interface{}) {
-	if l.level < ERROR {
-		return
-	}
-
-	var msg string
-	if len(args) > 0 {
-		msg = fmt.Sprintf(format, args...)
-	} else {
-		msg = format
-	}
-	l.output(ERROR, msg, nil)
+func (l *Log) Errorf(format string, args ...any) {
+	l.logf(ERROR, format, args...)
 }
 
 // Fatal calls underlying logger.Fatal.
-func (l *Log) Fatal(msg string, keysAndVals ...interface{}) {
+func (l *Log) Fatal(msg string, keysAndVals ...any) {
 	if l.level < FATAL {
 		return
 	}
 
-	l.output(FATAL, msg, keysAndVals)
+	l.output(FATAL, msg, keysAndVals, 0)
 	os.Exit(1)
 }
 
 // Panic calls underlying logger.Panic.
-func (l *Log) Panic(msg string, keysAndVals ...interface{}) {
+func (l *Log) Panic(msg string, keysAndVals ...any) {
 	if l.level < PANIC {
 		return
 	}
 
-	l.output(PANIC, msg, keysAndVals)
+	l.output(PANIC, msg, keysAndVals, 0)
 	panic(msg)
 }
 
 // Debug calls error log function if DEBUG level enabled.
-func (l *Log) Debug(msg string, keysAndVals ...interface{}) {
+func (l *Log) Debug(msg string, keysAndVals ...any) {
 	if l.level < DEBUG {
 		return
 	}
 
-	l.output(DEBUG, msg, keysAndVals)
+	l.output(DEBUG, msg, keysAndVals, 0)
 }
 
 // Info calls error log function if INFO level enabled.
-func (l *Log) Info(msg string, keysAndVals ...interface{}) {
+func (l *Log) Info(msg string, keysAndVals ...any) {
 	if l.level < INFO {
 		return
 	}
 
-	l.output(INFO, msg, keysAndVals)
+	l.output(INFO, msg, keysAndVals, 0)
 }
 
 // Warn calls error log function if WARNING level enabled.
-func (l *Log) Warn(msg string, keysAndVals ...interface{}) {
+func (l *Log) Warn(msg string, keysAndVals ...any) {
 	if l.level < WARNING {
 		return
 	}
 
-	l.output(WARNING, msg, keysAndVals)
+	l.output(WARNING, msg, keysAndVals, 0)
 }
 
 // Error calls error log function if ERROR level enabled.
-func (l *Log) Error(msg string, keysAndVals ...interface{}) {
+func (l *Log) Error(msg string, keysAndVals ...any) {
 	if l.level < ERROR {
 		return
 	}
-	l.output(ERROR, msg, keysAndVals)
+	l.output(ERROR, msg, keysAndVals, 0)
 }
 
 // WithValues returns a logger configured with the key-value pairs.
-func (l *Log) WithValues(keysAndVals ...interface{}) Logger {
+func (l *Log) WithValues(keysAndVals ...any) Logger {
 	clone := l.clone()
-	for i := 0; i < len(keysAndVals); {
-		if i == len(keysAndVals)-1 {
-			break
-		}
+	for i := 0; i+1 < len(keysAndVals); i += 2 {
 		key, val := keysAndVals[i], keysAndVals[i+1]
 		keyStr, isString := key.(string)
 		if !isString {
+			fmt.Fprintf(os.Stderr, "golog: WithValues received non-string key: %v, ignoring remaining args\n", key)
 			break
 		}
 
 		clone.fields = append(clone.fields, field(keyStr, val))
-		i += 2
+	}
+	if len(keysAndVals)%2 != 0 {
+		fmt.Fprintf(os.Stderr, "golog: WithValues received odd number of arguments, ignoring last key: %v\n", keysAndVals[len(keysAndVals)-1])
 	}
 	return clone
 }
 
-func (l *Log) output(level Level, msg string, args []interface{}) { //nolint:funlen
+func (l *Log) output(level Level, msg string, args []any, extraCallerSkip int) { //nolint:funlen
 	e := acquireEntry()
 	defer releaseEntry(e)
 	e.Module = l.module
@@ -275,10 +239,7 @@ func (l *Log) output(level Level, msg string, args []interface{}) { //nolint:fun
 		e.Fields = append(e.Fields, f)
 		n++
 	}
-	for i := 0; i < len(args); {
-		if i == len(args)-1 {
-			break
-		}
+	for i := 0; i+1 < len(args); i += 2 {
 		key, val := args[i], args[i+1]
 		keyStr, isString := key.(string)
 		if !isString {
@@ -287,13 +248,12 @@ func (l *Log) output(level Level, msg string, args []interface{}) { //nolint:fun
 
 		e.Fields = append(e.Fields, field(keyStr, val))
 		n++
-		i += 2
 	}
 	e.SetFieldsLen(n)
 
 	e.Message = msg
 	e.Level = level
-	e.SetCallerSkip(l.callerSkip)
+	e.SetCallerSkip(l.callerSkip + extraCallerSkip)
 
 	if l.isCallerEnabled(e.Level) {
 		e.SetFlag(FlagCaller)
@@ -303,12 +263,12 @@ func (l *Log) output(level Level, msg string, args []interface{}) { //nolint:fun
 	}
 	b, err := l.encoder.Encode(e)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "golog: failed to encode log: %v\n", err)
+		return
 	}
 	if _, err := l.writer.Write(b); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to write log: %v", err)
+		fmt.Fprintf(os.Stderr, "golog: failed to write log: %v\n", err)
 	}
-	e.Reset()
 }
 
 func (l *Log) isCallerEnabled(level Level) bool {
@@ -321,11 +281,12 @@ func (l *Log) isStacktraceEnabled(level Level) bool {
 
 // clone returns a copy of this "l" Logger.
 func (l *Log) clone() *Log {
+	fields := slices.Clone(l.fields)
 	return &Log{
 		level:     l.level,
 		module:    l.module,
 		writer:    l.writer,
-		fields:    l.fields,
+		fields:    fields,
 		encoder:   l.encoder,
 		callerLvl: l.callerLvl,
 		tracerLvl: l.tracerLvl,
