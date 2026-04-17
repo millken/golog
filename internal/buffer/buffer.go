@@ -1,4 +1,4 @@
-package buffer // import "go.uber.org/zap/buffer"
+package buffer
 
 import (
 	"strconv"

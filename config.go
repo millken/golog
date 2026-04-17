@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"sync/atomic"
 
 	"gopkg.in/yaml.v3"
 )
@@ -18,19 +17,18 @@ type Encoding string
 const (
 	defaultLogLevel = INFO
 	defaultModule   = "-"
-	//JSONEncoding is the json encoding.
+	// JSONEncoding is the json encoding.
 	JSONEncoding Encoding = "json"
-	//TextEncoding is the text encoding.
+	// TextEncoding is the text encoding.
 	TextEncoding Encoding = "text"
 )
 
 var (
-	rwmutex          = &sync.RWMutex{}
-	configs          = newConfigs()
-	enableNativeTime atomic.Bool
+	rwmutex = &sync.RWMutex{}
+	configs = newConfigs()
 )
 
-// Configs - configs for golog.
+// Configs holds the default and module-specific configs.
 type Configs struct {
 	Default Config            `json:"default" yaml:"default"`
 	Modules map[string]Config `json:"modules" yaml:"modules"`
@@ -44,7 +42,7 @@ type Config struct {
 	Encoding    Encoding          `json:"encoding" yaml:"encoding"`
 	TextEncoder TextEncoderConfig `json:"textEncoder" yaml:"textEncoder"`
 	JSONEncoder JSONEncoderConfig `json:"jsonEncoder" yaml:"jsonEncoder"`
-	//CallerLevels is the default levels for show caller info.
+	// CallerLevels is the default levels for show caller info.
 	CallerLevels []Level `json:"callerLevels" yaml:"callerLevels"`
 	// StacktraceLevels is the default levels for show stacktrace.
 	StacktraceLevels []Level       `json:"stacktraceLevels" yaml:"stacktraceLevels"`
@@ -79,9 +77,21 @@ type JSONEncoderConfig struct {
 	ShowModuleName bool `json:"showModuleName" yaml:"showModuleName"`
 }
 
+// HandlerType defines the type of log handler.
+type HandlerType string
+
+const (
+	// HandlerTypeFile writes logs to a file (stdout/stderr/path).
+	HandlerTypeFile HandlerType = "file"
+	// HandlerTypeRotateFile writes logs to a file with time-based rotation.
+	HandlerTypeRotateFile HandlerType = "rotateFile"
+	// HandlerTypeCustom uses a user-provided io.Writer.
+	HandlerTypeCustom HandlerType = "custom"
+)
+
 // HandlerConfig is a configuration for a writer.
 type HandlerConfig struct {
-	Type       string           `json:"type" yaml:"type"`
+	Type       HandlerType      `json:"type" yaml:"type"`
 	Writer     io.Writer        `json:"-" yaml:"-"`
 	File       FileConfig       `json:"file" yaml:"file"`
 	RotateFile RotateFileConfig `json:"rotateFile" yaml:"rotateFile"`
@@ -102,7 +112,7 @@ func newConfigs() *Configs {
 	}
 }
 
-// ResetConfigs - reset configs.
+// ResetConfigs resets all configs to default values.
 func ResetConfigs() {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
@@ -110,73 +120,69 @@ func ResetConfigs() {
 	configs = newConfigs()
 }
 
-func GetConfigs() *Configs {
+// GetConfigs returns a deep copy of the current configs.
+func GetConfigs() Configs {
 	rwmutex.RLock()
 	defer rwmutex.RUnlock()
-	return configs
+	cp := *configs
+	cp.Modules = make(map[string]Config, len(configs.Modules))
+	for k, v := range configs.Modules {
+		cp.Modules[k] = v
+	}
+	return cp
 }
 
-// EnableNativeTime - enable native time
-func EnableNativeTime() {
-	enableNativeTime.Store(true)
-}
-
-// EnabledNativeTime - check if native time is enabled
-func EnabledNativeTime() bool {
-	return enableNativeTime.Load()
-}
-
-// SetLevel - set log level.
+// SetLevel sets the default log level. Only affects loggers created after this call.
 func SetLevel(level Level) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
 	configs.Default.Level = level
 }
 
-// SetEncoding - set log encoding.
+// SetEncoding sets the default log encoding. Only affects loggers created after this call.
 func SetEncoding(encoding Encoding) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
 	configs.Default.Encoding = encoding
 }
 
-// SetTextEncoderConfig - set text encoder config.
+// SetTextEncoderConfig sets the text encoder config. Only affects loggers created after this call.
 func SetTextEncoderConfig(cfg TextEncoderConfig) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
 	configs.Default.TextEncoder = cfg
 }
 
-// SetJSONEncoderConfig - set json encoder config.
+// SetJSONEncoderConfig sets the json encoder config. Only affects loggers created after this call.
 func SetJSONEncoderConfig(cfg JSONEncoderConfig) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
 	configs.Default.JSONEncoder = cfg
 }
 
-// SetCallerLevels - set caller levels.
+// SetCallerLevels sets the caller levels. Only affects loggers created after this call.
 func SetCallerLevels(levels ...Level) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
 	configs.Default.CallerLevels = levels
 }
 
-// SetStacktraceLevels - set stacktrace levels.
+// SetStacktraceLevels sets the stacktrace levels. Only affects loggers created after this call.
 func SetStacktraceLevels(levels ...Level) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
 	configs.Default.StacktraceLevels = levels
 }
 
-// SetWriter - set writer.
+// SetWriter sets the default writer. Only affects loggers created after this call.
 func SetWriter(writer io.Writer) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
-	configs.Default.Handler.Type = "custom"
+	configs.Default.Handler.Type = HandlerTypeCustom
 	configs.Default.Handler.Writer = writer
 }
 
-// LoadConfig - load config from file.
+// LoadConfig loads config from a YAML or JSON file. Only affects loggers created after this call.
 func LoadConfig(path string) error {
 	var out Configs
 	data, err := os.ReadFile(path)
@@ -203,14 +209,14 @@ func LoadConfig(path string) error {
 	return nil
 }
 
-// SetModuleConfig - setting config for given module.
+// SetModuleConfig sets the config for the given module. Only affects loggers created after this call.
 func SetModuleConfig(module string, cfg Config) {
 	rwmutex.Lock()
 	defer rwmutex.Unlock()
 	configs.Modules[module] = cfg
 }
 
-// GetModuleConfig - getting config for given module.
+// GetModuleConfig returns the config for the given module.
 func GetModuleConfig(module string) Config {
 	rwmutex.RLock()
 	defer rwmutex.RUnlock()

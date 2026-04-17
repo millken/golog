@@ -1,7 +1,6 @@
 package golog
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -122,14 +121,14 @@ func existsWithContent(path string, content []byte, t testing.TB) {
 	require.NoError(err)
 	require.Equal(int64(len(content)), info.Size())
 
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	require.Nil(err)
 	require.Equal(content, b)
 }
 
 func fileCount(dir string, exp int, t testing.TB) {
 	require := require.New(t)
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	require.NoError(err)
 	require.Equal(exp, len(files))
 }

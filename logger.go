@@ -72,7 +72,7 @@ type Logger interface {
 	Debug(msg string, keysAndVals ...any)
 }
 
-// Encoder is a interface for encoding log entry.
+// Encoder is an interface for encoding log entry.
 type Encoder interface {
 	Encode(*Entry) ([]byte, error)
 }

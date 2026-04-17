@@ -8,11 +8,9 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
-	_ "runtime"
 	"sync"
 	"testing"
 	"time"
-	_ "unsafe"
 
 	"github.com/millken/golog"
 	"github.com/millken/golog/internal/buffer"
@@ -181,7 +179,7 @@ func TestGlobal_Panic(t *testing.T) {
 			DisableColor:     true,
 		},
 		Handler: golog.HandlerConfig{
-			Type:   "custom",
+			Type:   golog.HandlerTypeCustom,
 			Writer: &buf,
 		},
 	}
@@ -222,7 +220,7 @@ func TestGlobalLogRaces(t *testing.T) {
 			DisableTimestamp: true,
 		},
 		Handler: golog.HandlerConfig{
-			Type: "file",
+			Type: golog.HandlerTypeFile,
 			File: golog.FileConfig{
 				Path: "",
 			},

@@ -47,7 +47,7 @@ func (o *JSONEncoder) Encode(e *Entry) ([]byte, error) {
 
 	var frames []runtime.Frame
 	if e.HasFlag(FlagCaller) || e.HasFlag(FlagStacktrace) {
-		stackSkip := DefaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
+		stackSkip := int(DefaultCallerSkip.Load()) + e.CallerSkip() + o.cfg.CallerSkipFrame
 		frames = stack.Tracer(stackSkip, e.HasFlag(FlagStacktrace))
 	}
 

@@ -373,6 +373,9 @@ func (e Encoder) AppendInterface(dst []byte, i any) []byte {
 // AppendObjectData takes in an object that is already in a byte array
 // and adds it to the dst.
 func (Encoder) AppendObjectData(dst []byte, o []byte) []byte {
+	if len(o) == 0 {
+		return dst
+	}
 	// Three conditions apply here:
 	// 1. new content starts with '{' - which should be dropped   OR
 	// 2. new content starts with '{' - which should be replaced with ','

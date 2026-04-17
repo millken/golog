@@ -66,7 +66,7 @@ func (o *TextEncoder) Encode(e *Entry) ([]byte, error) {
 		e.SetFlag(FlagName)
 	}
 	if e.HasFlag(FlagCaller) || e.HasFlag(FlagStacktrace) {
-		stackSkip := DefaultCallerSkip + e.CallerSkip() + o.cfg.CallerSkipFrame
+		stackSkip := int(DefaultCallerSkip.Load()) + e.CallerSkip() + o.cfg.CallerSkipFrame
 		frames := stack.Tracer(stackSkip, e.HasFlag(FlagStacktrace))
 
 		if len(frames) > 0 {

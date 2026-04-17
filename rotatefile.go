@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -42,7 +42,7 @@ type RotateFileConfig struct {
 	Async bool `json:"async" yaml:"async"`
 }
 
-// RotateFile rotate log to file
+// RotateFile rotates log files based on time.
 type RotateFile struct {
 	cfg               RotateFileConfig
 	file              *os.File
@@ -99,7 +99,7 @@ func (f *RotateFile) open() error {
 	}
 	f.currentBackupName = t.Format(f.backupTimeFormat())
 
-	f.file, err = os.OpenFile(f.Filename(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	f.file, err = os.OpenFile(f.Filename(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (f *RotateFile) reopenIfNeeded() (bool, error) {
 	return true, nil
 }
 
-// Write writes data to a file
+// Write writes data to a file.
 func (f *RotateFile) Write(d []byte) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -170,7 +170,7 @@ func (f *RotateFile) Write(d []byte) (int, error) {
 	return n, f.bufferWriter.Flush()
 }
 
-// Rotate close the existing log file and create a new one.
+// Rotate closes the existing log file and creates a new one.
 func (f *RotateFile) Rotate() error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -247,7 +247,9 @@ func (f *RotateFile) oldLogFiles() ([]logInfo, error) {
 		}
 	}
 
-	sort.Sort(byFormatTime(logFiles))
+	slices.SortFunc(logFiles, func(a, b logInfo) int {
+		return int(a.timestamp - b.timestamp)
+	})
 
 	return logFiles, nil
 }
@@ -291,19 +293,4 @@ func (f *RotateFile) backupName() string {
 type logInfo struct {
 	timestamp int64
 	os.FileInfo
-}
-
-// byFormatTime sorts by newest time formatted in the name.
-type byFormatTime []logInfo
-
-func (b byFormatTime) Less(i, j int) bool {
-	return b[i].timestamp < b[j].timestamp
-}
-
-func (b byFormatTime) Swap(i, j int) {
-	b[i], b[j] = b[j], b[i]
-}
-
-func (b byFormatTime) Len() int {
-	return len(b)
 }

@@ -15,7 +15,6 @@ func resetConfigs() {
 
 func TestSetConfig(t *testing.T) {
 	defer resetConfigs()
-	configs := golog.GetConfigs()
 	require := require.New(t)
 	golog.SetLevel(golog.INFO)
 	golog.SetEncoding(golog.TextEncoding)
@@ -25,6 +24,8 @@ func TestSetConfig(t *testing.T) {
 	golog.SetWriter(buf)
 	golog.SetTextEncoderConfig(golog.TextEncoderConfig{DisableTimestamp: true})
 	golog.SetJSONEncoderConfig(golog.JSONEncoderConfig{DisableTimestamp: true})
+
+	configs := golog.GetConfigs()
 	require.Equal(golog.INFO, configs.Default.Level)
 	require.Equal(golog.TextEncoding, configs.Default.Encoding)
 	sort.Slice(configs.Default.CallerLevels, func(i, j int) bool {
@@ -36,6 +37,7 @@ func TestSetConfig(t *testing.T) {
 	require.True(configs.Default.JSONEncoder.DisableTimestamp)
 
 	golog.SetModuleConfig("mudule/1", golog.Config{Level: golog.DEBUG, Encoding: golog.JSONEncoding})
+	configs = golog.GetConfigs()
 	require.Equal(1, len(configs.Modules))
 	require.Equal(golog.DEBUG, configs.Modules["mudule/1"].Level)
 }
@@ -60,7 +62,7 @@ func TestConfig(t *testing.T) {
 	require.Equal([]golog.Level{golog.PANIC, golog.FATAL, golog.ERROR, golog.WARNING},
 		configs.Default.StacktraceLevels,
 	)
-	require.Equal("file", configs.Default.Handler.Type)
+	require.Equal(golog.HandlerTypeFile, configs.Default.Handler.Type)
 	require.Equal("stdout", configs.Default.Handler.File.Path)
 
 	require.Equal(1, len(configs.Modules))
@@ -81,7 +83,7 @@ func TestConfig2(t *testing.T) {
 	require.Equal(golog.INFO, configs.Default.Level)
 	require.Equal(golog.JSONEncoding, configs.Default.Encoding)
 
-	require.Equal("rotateFile", configs.Default.Handler.Type)
+	require.Equal(golog.HandlerTypeRotateFile, configs.Default.Handler.Type)
 	require.Equal("", configs.Default.Handler.File.Path)
 	require.Equal("/var/log/golog.log", configs.Default.Handler.RotateFile.Filename)
 	require.Equal(3, configs.Default.Handler.RotateFile.MaxBackups)

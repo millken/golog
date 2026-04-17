@@ -1,21 +1,30 @@
-//go:build !binary_log
-// +build !binary_log
-
 package golog
 
 import (
 	"net"
-	"reflect"
+	"sync/atomic"
 	"time"
 
 	"github.com/millken/golog/internal/json"
 )
 
-var (
-	_ encoder = (*json.Encoder)(nil)
+// isNilValue checks if an interface value wraps a nil pointer.
+func isNilValue(i any) bool {
+	if i == nil {
+		return true
+	}
+	v, ok := i.(interface{ IsNil() bool })
+	if !ok {
+		return false
+	}
+	return v.IsNil()
+}
 
-	//DefaultCallerSkip is the default number of stack frames to skip when reporting caller information.
-	DefaultCallerSkip int = 3
+var (
+	_ appender = (*json.Encoder)(nil)
+
+	// DefaultCallerSkip is the default number of stack frames to skip when reporting caller information.
+	DefaultCallerSkip atomic.Int32
 
 	enc = json.Encoder{}
 
@@ -25,7 +34,11 @@ var (
 	}
 )
 
-type encoder interface {
+func init() {
+	DefaultCallerSkip.Store(3)
+}
+
+type appender interface {
 	AppendArrayDelim(dst []byte) []byte
 	AppendArrayEnd(dst []byte) []byte
 	AppendArrayStart(dst []byte) []byte
@@ -73,11 +86,6 @@ type encoder interface {
 	AppendUints32(dst []byte, vals []uint32) []byte
 	AppendUints64(dst []byte, vals []uint64) []byte
 	AppendUints8(dst []byte, vals []uint8) []byte
-}
-
-func isNilValue(i any) bool {
-	v := reflect.ValueOf(i)
-	return v.Kind() == reflect.Ptr && v.IsNil()
 }
 
 func appendVal(dst []byte, value any) []byte {
@@ -262,8 +270,7 @@ func appendVal(dst []byte, value any) []byte {
 		dst = enc.AppendInts64(dst, val)
 	case []uint:
 		dst = enc.AppendUints(dst, val)
-	// case []uint8:
-	// 	dst = enc.AppendUints8(dst, val)
+		// []uint8 is handled by []byte above (they are the same type in Go).
 	case []uint16:
 		dst = enc.AppendUints16(dst, val)
 	case []uint32:

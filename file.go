@@ -1,6 +1,7 @@
 package golog
 
 import (
+	"bufio"
 	"io"
 	"os"
 )
@@ -30,7 +31,7 @@ func NewFile(cfg FileConfig) (*File, error) {
 		if err != nil {
 			return nil, err
 		}
-		writer = f
+		writer = bufio.NewWriterSize(f, 4096)
 	}
 
 	return &File{
@@ -44,8 +45,17 @@ func (w *File) Write(b []byte) (n int, err error) {
 	return w.writer.Write(b)
 }
 
-// Close closes the underlying writer if it implements io.Closer.
+// Flush flushes any buffered data to the underlying writer.
+func (w *File) Flush() error {
+	if f, ok := w.writer.(*bufio.Writer); ok {
+		return f.Flush()
+	}
+	return nil
+}
+
+// Close flushes any buffered data and closes the underlying writer if it implements io.Closer.
 func (w *File) Close() error {
+	_ = w.Flush()
 	if c, ok := w.writer.(io.Closer); ok {
 		return c.Close()
 	}

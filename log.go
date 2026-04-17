@@ -63,11 +63,11 @@ func (l *Log) init() {
 func (l *Log) initConfig(cfg Config) error {
 	var err error
 	switch cfg.Handler.Type {
-	case "file":
+	case HandlerTypeFile:
 		l.writer, err = NewFile(cfg.Handler.File)
-	case "rotateFile":
+	case HandlerTypeRotateFile:
 		l.writer, err = NewRotateFile(cfg.Handler.RotateFile)
-	case "custom":
+	case HandlerTypeCustom:
 		l.writer = cfg.Handler.Writer
 	default:
 		l.writer, err = NewFile(FileConfig{Path: "stdout"})
@@ -96,7 +96,7 @@ func (l *Log) initConfig(cfg Config) error {
 
 // CallerSkip is used to set the number of caller frames to skip.
 func (l *Log) CallerSkip(skip int) *Log {
-	l.callerSkip += skip
+	l.callerSkip = skip
 	return l
 }
 
@@ -175,7 +175,7 @@ func (l *Log) Panic(msg string, keysAndVals ...any) {
 	panic(msg)
 }
 
-// Debug calls error log function if DEBUG level enabled.
+// Debug calls debug log function if DEBUG level enabled.
 func (l *Log) Debug(msg string, keysAndVals ...any) {
 	if l.level < DEBUG {
 		return
@@ -184,7 +184,7 @@ func (l *Log) Debug(msg string, keysAndVals ...any) {
 	l.output(DEBUG, msg, keysAndVals, 0)
 }
 
-// Info calls error log function if INFO level enabled.
+// Info calls info log function if INFO level enabled.
 func (l *Log) Info(msg string, keysAndVals ...any) {
 	if l.level < INFO {
 		return
@@ -193,7 +193,7 @@ func (l *Log) Info(msg string, keysAndVals ...any) {
 	l.output(INFO, msg, keysAndVals, 0)
 }
 
-// Warn calls error log function if WARNING level enabled.
+// Warn calls warn log function if WARNING level enabled.
 func (l *Log) Warn(msg string, keysAndVals ...any) {
 	if l.level < WARNING {
 		return
@@ -283,13 +283,14 @@ func (l *Log) isStacktraceEnabled(level Level) bool {
 func (l *Log) clone() *Log {
 	fields := slices.Clone(l.fields)
 	return &Log{
-		level:     l.level,
-		module:    l.module,
-		writer:    l.writer,
-		fields:    fields,
-		encoder:   l.encoder,
-		callerLvl: l.callerLvl,
-		tracerLvl: l.tracerLvl,
-		once:      sync.Once{},
+		level:      l.level,
+		module:     l.module,
+		writer:     l.writer,
+		fields:     fields,
+		encoder:    l.encoder,
+		callerLvl:  l.callerLvl,
+		callerSkip: l.callerSkip,
+		tracerLvl:  l.tracerLvl,
+		once:       sync.Once{},
 	}
 }

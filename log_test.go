@@ -2,6 +2,7 @@ package golog_test
 
 import (
 	"encoding/json"
+	"sync"
 	"testing"
 	"time"
 
@@ -159,6 +160,62 @@ func TestLog_JSON_Output(t *testing.T) {
 	l4.WithValues("c", 3).Warnf("warn %s", "test")
 }
 
+func TestWithValues_CallerSkip(t *testing.T) {
+	defer resetConfigs()
+	require := require.New(t)
+	var buf buffer.Buffer
+	golog.SetWriter(&buf)
+	golog.SetLevel(golog.INFO)
+	golog.SetEncoding(golog.TextEncoding)
+	golog.SetCallerLevels(golog.INFO)
+	golog.SetTextEncoderConfig(golog.TextEncoderConfig{DisableTimestamp: true, DisableColor: true})
+
+	buf.Reset()
+	l := golog.New("skip-test")
+	l.Info("direct")
+	require.Contains(buf.String(), "log_test.go")
+
+	buf.Reset()
+	l.WithValues("k", "v").Info("with values")
+	require.Contains(buf.String(), "log_test.go", "WithValues should preserve callerSkip")
+}
+
+func TestWithValues_ChainRace(t *testing.T) {
+	defer resetConfigs()
+	require := require.New(t)
+	cfg := golog.Config{
+		Level:    golog.INFO,
+		Encoding: golog.TextEncoding,
+		TextEncoder: golog.TextEncoderConfig{
+			DisableTimestamp: true,
+		},
+		Handler: golog.HandlerConfig{
+			Type: golog.HandlerTypeFile,
+			File: golog.FileConfig{Path: ""},
+		},
+	}
+	log, err := golog.NewLoggerByConfig("race-test", cfg)
+	require.NoError(err)
+
+	l1 := log.WithValues("a", 1)
+	l2 := l1.WithValues("b", 2)
+	l3 := l2.WithValues("c", 3)
+
+	f := func(wg *sync.WaitGroup, logger golog.Logger) {
+		defer wg.Done()
+		for i := 0; i < 1000; i++ {
+			logger.Info("info", "i", i)
+		}
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go f(&wg, l1)
+	go f(&wg, l2)
+	go f(&wg, l3)
+	wg.Wait()
+}
+
 func TestDebugLog(t *testing.T) {
 	t.Skip()
 	defer resetConfigs()
@@ -181,7 +238,7 @@ func BenchmarkLogText(b *testing.B) {
 			DisableColor:     fakeDisableColor,
 		},
 		Handler: golog.HandlerConfig{
-			Type: "file",
+			Type: golog.HandlerTypeFile,
 			File: golog.FileConfig{
 				Path: "",
 			},
@@ -212,7 +269,7 @@ func BenchmarkLogText_WithField(b *testing.B) {
 			DisableColor:     fakeDisableColor,
 		},
 		Handler: golog.HandlerConfig{
-			Type: "file",
+			Type: golog.HandlerTypeFile,
 			File: golog.FileConfig{
 				Path: "",
 			},
@@ -247,7 +304,7 @@ func BenchmarkLogJSON(b *testing.B) {
 			DisableTimestamp: fakeDisableTimestamp,
 		},
 		Handler: golog.HandlerConfig{
-			Type: "file",
+			Type: golog.HandlerTypeFile,
 			File: golog.FileConfig{
 				Path: "",
 			},
@@ -278,7 +335,7 @@ func BenchmarkLogJSON_WithField(b *testing.B) {
 			ShowModuleName:   false,
 		},
 		Handler: golog.HandlerConfig{
-			Type: "file",
+			Type: golog.HandlerTypeFile,
 			File: golog.FileConfig{
 				Path: "",
 			},

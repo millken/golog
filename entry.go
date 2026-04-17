@@ -101,9 +101,17 @@ func (e *Entry) HasFlag(flag Flag) bool {
 	return e.flag&flag == flag
 }
 
-// Reset resets the entry data.
+// Reset resets all entry fields to zero values.
 func (e *Entry) Reset() {
+	e.Module = ""
+	e.Message = ""
+	e.Level = 0
 	e.Data = e.Data[:0]
+	e.Fields = e.Fields[:0]
+	e.fieldsLen = 0
+	e.callerSkip = 0
+	e.caller = ""
+	e.flag = 0
 }
 
 var (
@@ -124,7 +132,9 @@ func acquireEntry() *Entry {
 
 // releaseEntry releases the entry.
 func releaseEntry(e *Entry) {
+	e.Module = ""
 	e.Message = ""
+	e.Level = 0
 	e.Data = e.Data[:0]
 	e.Fields = e.Fields[:0]
 	e.fieldsLen = 0
